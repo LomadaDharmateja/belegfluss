@@ -1,0 +1,10 @@
+packages:
+  - apps/web
+
+# pnpm 12 runs install scripts only for packages listed here with `true` (supply-chain safety).
+# All of these ship prebuilt binaries; their install scripts are not needed.
+allowBuilds:
+  sharp: false
+  unrs-resolver: false
+  "@parcel/watcher": false # via next-intl (message extraction, unused)
+  "@swc/core": false # via next-intl (message extraction, unused)

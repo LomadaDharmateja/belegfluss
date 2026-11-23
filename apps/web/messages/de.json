@@ -1,0 +1,87 @@
+{
+  "app": {
+    "name": "Belegfluss",
+    "tagline": "Dein Posteingang für E-Rechnungen",
+    "loading": "Wird geladen …"
+  },
+  "nav": {
+    "inbox": "Posteingang",
+    "settings": "Einstellungen",
+    "signIn": "Anmelden",
+    "signOut": "Abmelden"
+  },
+  "landing": {
+    "title": "Alle eingehenden Rechnungen an einem Ort",
+    "subtitle": "XRechnung, ZUGFeRD, PDFs und Fotos: gesammelt, geprüft und bereit für deine Steuerberatung. Auf Deutsch und Englisch.",
+    "pointCollect": "E-Rechnungen, PDFs und Belegfotos in einem Posteingang sammeln",
+    "pointCheck": "Probleme in einfacher Sprache erklärt (bald verfügbar)",
+    "pointHandoff": "Alles in einem Schritt an die Steuerberatung übergeben (bald verfügbar)",
+    "signIn": "Mit E-Mail anmelden",
+    "signInHint": "Du bekommst einen Einmalcode per E-Mail. Kein Passwort nötig.",
+    "notConfigured": "Die Anmeldung ist in dieser Umgebung noch nicht eingerichtet."
+  },
+  "inbox": {
+    "title": "Posteingang",
+    "empty": "Noch keine Dokumente. Füge oben deine erste Rechnung hinzu.",
+    "loadError": "Deine Dokumente konnten nicht geladen werden. Bitte versuche es erneut.",
+    "count": "{count, plural, =0 {Keine Dokumente} one {# Dokument} other {# Dokumente}}"
+  },
+  "upload": {
+    "title": "Rechnungen hinzufügen",
+    "hint": "PDF-, XML- (XRechnung, ZUGFeRD), PNG- oder JPEG-Dateien hier ablegen.",
+    "choose": "Dateien auswählen",
+    "maxSize": "Bis zu {size} pro Datei.",
+    "uploading": "{name} wird hochgeladen …",
+    "done": "{name} wurde hinzugefügt.",
+    "duplicate": "{name} war bereits in deinem Posteingang.",
+    "failed": "{name}: {reason}"
+  },
+  "documents": {
+    "name": "Datei",
+    "type": "Typ",
+    "size": "Größe",
+    "uploaded": "Hinzugefügt",
+    "status": "Status",
+    "statusValues": {
+      "received": "Eingegangen"
+    },
+    "types": {
+      "pdf": "PDF",
+      "xml": "XML",
+      "png": "Bild (PNG)",
+      "jpeg": "Bild (JPEG)",
+      "other": "Sonstiges"
+    }
+  },
+  "settings": {
+    "title": "Einstellungen",
+    "language": "Sprache",
+    "languageHint": "Wähle die Sprache der App. Deine Auswahl wird in diesem Browser gespeichert."
+  },
+  "languages": {
+    "de": "Deutsch",
+    "en": "English"
+  },
+  "errors": {
+    "generic": "Etwas ist schiefgelaufen. Bitte versuche es erneut.",
+    "network": "Der Server ist nicht erreichbar. Bitte prüfe deine Verbindung.",
+    "upload": {
+      "too_large": "Die Datei ist zu groß.",
+      "unsupported_type": "Dieser Dateityp wird nicht unterstützt. Bitte verwende PDF, XML, PNG oder JPEG.",
+      "empty": "Die Datei ist leer."
+    },
+    "auth": {
+      "missing_token": "Bitte melde dich erneut an.",
+      "invalid_token": "Deine Sitzung ist ungültig. Bitte melde dich erneut an.",
+      "token_expired": "Deine Sitzung ist abgelaufen. Bitte melde dich erneut an.",
+      "insufficient_scope": "Deinem Konto fehlt der Zugriff auf Belegfluss.",
+      "not_configured": "Die Anmeldung ist auf dem Server nicht eingerichtet."
+    },
+    "org": {
+      "not_found": "Diese Organisation wurde nicht gefunden."
+    },
+    "document": {
+      "not_found": "Dieses Dokument wurde nicht gefunden."
+    }
+  }
+}

@@ -1,0 +1,87 @@
+{
+  "app": {
+    "name": "Belegfluss",
+    "tagline": "Your e-invoice inbox",
+    "loading": "Loading…"
+  },
+  "nav": {
+    "inbox": "Inbox",
+    "settings": "Settings",
+    "signIn": "Sign in",
+    "signOut": "Sign out"
+  },
+  "landing": {
+    "title": "All your incoming invoices in one place",
+    "subtitle": "XRechnung, ZUGFeRD, PDFs and photos: collected, checked and ready for your accountant. In German and English.",
+    "pointCollect": "Collect e-invoices, PDFs and receipt photos in one inbox",
+    "pointCheck": "Problems explained in plain language (coming soon)",
+    "pointHandoff": "Hand everything to your accountant in one step (coming soon)",
+    "signIn": "Sign in with your email",
+    "signInHint": "You receive a one-time code by email. No password needed.",
+    "notConfigured": "Sign-in is not configured in this environment yet."
+  },
+  "inbox": {
+    "title": "Inbox",
+    "empty": "No documents yet. Add your first invoice above.",
+    "loadError": "Your documents could not be loaded. Please try again.",
+    "count": "{count, plural, =0 {No documents} one {# document} other {# documents}}"
+  },
+  "upload": {
+    "title": "Add invoices",
+    "hint": "Drop PDF, XML (XRechnung, ZUGFeRD), PNG or JPEG files here.",
+    "choose": "Choose files",
+    "maxSize": "Up to {size} per file.",
+    "uploading": "Uploading {name}…",
+    "done": "{name} was added.",
+    "duplicate": "{name} was already in your inbox.",
+    "failed": "{name}: {reason}"
+  },
+  "documents": {
+    "name": "File",
+    "type": "Type",
+    "size": "Size",
+    "uploaded": "Added",
+    "status": "Status",
+    "statusValues": {
+      "received": "Received"
+    },
+    "types": {
+      "pdf": "PDF",
+      "xml": "XML",
+      "png": "Image (PNG)",
+      "jpeg": "Image (JPEG)",
+      "other": "Other"
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "language": "Language",
+    "languageHint": "Choose the language of the app. Your choice is saved in this browser."
+  },
+  "languages": {
+    "de": "Deutsch",
+    "en": "English"
+  },
+  "errors": {
+    "generic": "Something went wrong. Please try again.",
+    "network": "The server could not be reached. Please check your connection.",
+    "upload": {
+      "too_large": "The file is too large.",
+      "unsupported_type": "This file type is not supported. Please use PDF, XML, PNG or JPEG.",
+      "empty": "The file is empty."
+    },
+    "auth": {
+      "missing_token": "Please sign in again.",
+      "invalid_token": "Your session is not valid. Please sign in again.",
+      "token_expired": "Your session has expired. Please sign in again.",
+      "insufficient_scope": "Your account is missing access to Belegfluss.",
+      "not_configured": "Sign-in is not configured on the server."
+    },
+    "org": {
+      "not_found": "This organisation was not found."
+    },
+    "document": {
+      "not_found": "This document was not found."
+    }
+  }
+}
