@@ -1,0 +1,36 @@
+name: compose-smoke
+
+# The whole stack, built from the Dockerfiles, must start and answer.
+on:
+  pull_request:
+    paths: ["apps/**", "compose.yaml", ".dockerignore", "pnpm-lock.yaml", ".github/workflows/compose-smoke.yml"]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Build and start (waits for health checks)
+        run: docker compose up --build --detach --wait --wait-timeout 180
+      - name: API answers
+        run: |
+          curl --fail --silent http://127.0.0.1:8000/health
+          test "$(curl --silent --output /dev/null --write-out '%{http_code}' http://127.0.0.1:8000/me)" = "401"
+      - name: Web answers in German and English
+        run: |
+          curl --fail --silent -H "Accept-Language: de-DE" http://127.0.0.1:3000/ | grep -q 'lang="de"'
+          curl --fail --silent -H "Accept-Language: en-GB" http://127.0.0.1:3000/ | grep -q 'lang="en"'
+      - name: Migrations ran
+        run: docker compose exec -T postgres psql -U belegfluss -d belegfluss -tAc "select count(*) from documents"
+      - name: Logs on failure
+        if: failure()
+        run: docker compose logs --no-color
+      - name: Stop
+        if: always()
+        run: docker compose down --volumes

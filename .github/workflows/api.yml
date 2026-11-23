@@ -1,0 +1,36 @@
+name: api
+
+on:
+  pull_request:
+    paths: ["apps/api/**", "apps/web/src/api/openapi.json", ".github/workflows/api.yml"]
+  push:
+    branches: [main]
+    paths: ["apps/api/**", "apps/web/src/api/openapi.json", ".github/workflows/api.yml"]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: apps/api
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@1db35dd8eee11c5894872e0b383ae6c406cf738d # v10.4.0
+        with:
+          version: "0.12.1"
+          enable-cache: true
+          cache-dependency-glob: apps/api/uv.lock
+      - name: Install (Python version from .python-version)
+        run: uv sync --locked
+      - name: Lint
+        run: uv run ruff check .
+      - name: Format
+        run: uv run ruff format --check .
+      - name: Types (mypy strict)
+        run: uv run mypy src
+      - name: Tests (real PostgreSQL + Azurite via testcontainers)
+        run: uv run pytest
