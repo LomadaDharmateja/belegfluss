@@ -1,0 +1,67 @@
+# KoSIT validator smoke test — 2026-11-23T01:02:13Z
+# Validator v1.6.3 (sha256 799e64be…a7c9), XRechnung config 2026-08-31 (sha256 2530cd10…21a8), test suite 2026-08-31 (sha256 1e81ef75…e3d7)
+# Runtime: docker image eclipse-temurin:21-jre
+
+## Inputs
+valid-xrechnung_ubl.xml  = test suite instances/standard/01.01a-INVOICE_ubl.xml (unchanged)
+valid-xrechnung_cii.xml  = test suite instances/standard/01.01a-INVOICE_uncefact.xml (unchanged)
+broken-total_ubl.xml     = 01.01a UBL with TaxInclusiveAmount changed 336.9 -> 346.90
+plain-en16931_ubl.xml    = 01.01a UBL with CustomizationID changed to urn:cen.eu:en16931:2017
+
+## 1. CLI mode
+$ docker run --rm -v $PWD:/v -w /v eclipse-temurin:21-jre java -jar dl-validator/validator-1.6.3-standalone.jar -s dl-config/cfg/scenarios.xml -r dl-config/cfg -o work/out -h work/in/valid-xrechnung_ubl.xml work/in/valid-xrechnung_cii.xml work/in/broken-total_ubl.xml work/in/plain-en16931_ubl.xml
+Processing of 4 objects started
+Processing of 4 objects completed in 762ms
+Results:
+--------------------------------------------------------------------------------------------------------------------------------------
+|File                                      |Schema |Schematron|Acceptance|Error/Description                                           |
+|/v/work/in/broken-total_ubl.xml           |   Y   |    N     |  REJECT  |[BR-CO-15]-Invoice total amount with VAT (BT-112) = Invoice |
+|                                          |       |          |          |total amount without VAT (BT-109) + Invoice total VAT amount|
+|                                          |       |          |          | (BT-110).;[BR-CO-16]-Amount due for payment (BT-115) = I...|
+|/v/work/in/plain-en16931_ubl.xml          |   Y   |    Y     |ACCEPTABLE|                                                            |
+|/v/work/in/valid-xrechnung_cii.xml        |   Y   |    N     |ACCEPTABLE|
+              [BR-DE-TMP-32] Eine Rechnung sollte zur Angab|
+|                                          |       |          |          |e des Liefer-/Leistungsdatums entweder BT-72 "Actual deliver|
+|                                          |       |          |          |y date", BG-14 "Invoicing period" oder in jeder Rechnungs...|
+|/v/work/in/valid-xrechnung_ubl.xml        |   Y   |    N     |ACCEPTABLE|
+        [BR-DE-TMP-32] Eine Rechnung sollte zur Angabe des |
+|                                          |       |          |          |Liefer-/Leistungsdatums entweder BT-72 "Actual delivery date|
+|                                          |       |          |          |", BG-14 "Invoicing period" oder in jeder Rechnungspositi...|
+--------------------------------------------------------------------------------------------------------------------------------------
+Acceptable:  3  Rejected:  1
+
+
+##############################
+#     Validation failed!     #
+##############################
+exit code: 1
+
+## 2. Report XML excerpt (broken-total_ubl-report.xml)
+<rep:scenarioMatched>
+<rep:validationStepResult id="val-xsd" valid="true">
+<rep:validationStepResult id="val-sch.1" valid="false">
+<rep:message id="val-sch.1.1" level="error" xpathLocation="…" code="BR-CO-15">
+<rep:message id="val-sch.1.2" level="error" xpathLocation="…" code="BR-CO-16">
+<rep:validationStepResult id="val-sch.2" valid="true">
+<rep:message id="val-sch.2.1" level="information" xpathLocation="…" code="BR-DE-TMP-32">
+<rep:validationStepResult id="val-xml" valid="true"/>
+<rep:assessment><rep:reject>
+valid-xrechnung_ubl: <rep:assessment><rep:accept>
+
+## 3. Daemon mode (HTTP)
+$ docker run -d --rm --name kosit-smoke -p 127.0.0.1:8081:8080 -v $PWD:/v:ro -w /v eclipse-temurin:21-jre java -jar dl-validator/validator-1.6.3-standalone.jar -s dl-config/cfg/scenarios.xml -r dl-config/cfg -D -H 0.0.0.0 -P 8080 -G
+$ curl -s http://127.0.0.1:8081/server/health
+<healthtype xmlns:ns2="http://www.xoev.de/de/validator/framework/1/daemon"><ns2:status>UP</ns2:status><ns2:application><ns2:name>KoSIT Validator</ns2:name><ns2:version>1.6.3</ns2:version><ns2:build>${build.number}</ns2:build></ns2:application><ns2:memory><ns2:freeMemory>…</ns2:freeMemory><ns2:maxMemory>1994391552</ns2:maxMemory><ns2:totalMemory>…</ns2:totalMemory></ns2:memory></healthtype>
+$ curl -s -X POST -H Content-Type: application/xml --data-binary @work/in/valid-xrechnung_ubl.xml http://127.0.0.1:8081/valid-xrechnung_ubl.xml
+  -> HTTP 200, report 29674 bytes, 0.408323s
+$ curl -s -X POST -H Content-Type: application/xml --data-binary @work/in/valid-xrechnung_cii.xml http://127.0.0.1:8081/valid-xrechnung_cii.xml
+  -> HTTP 200, report 33909 bytes, 0.092723s
+$ curl -s -X POST -H Content-Type: application/xml --data-binary @work/in/broken-total_ubl.xml http://127.0.0.1:8081/broken-total_ubl.xml
+  -> HTTP 406, report 31150 bytes, 0.058234s
+$ curl -s -X POST -H Content-Type: application/xml --data-binary @work/in/plain-en16931_ubl.xml http://127.0.0.1:8081/plain-en16931_ubl.xml
+  -> HTTP 200, report 26818 bytes, 0.054134s
+$ printf 'hello' | curl -s -X POST -H 'Content-Type: application/xml' --data-binary @- http://127.0.0.1:8081/x.xml
+  -> HTTP 422
+$ curl -s http://127.0.0.1:8081/ (GET, GUI disabled with -G)
+  -> HTTP 405
+(daemon stopped)
