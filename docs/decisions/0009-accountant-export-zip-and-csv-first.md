@@ -1,6 +1,6 @@
 # ADR-0009: Accountant export — ZIP of originals + CSV summary first
 
-- **Status:** Proposed
+- **Status:** Accepted (2026-11-23)
 - **Date:** 2026-11-23
 - **Milestone:** M0 (implemented in M2 basic, M6 automated)
 

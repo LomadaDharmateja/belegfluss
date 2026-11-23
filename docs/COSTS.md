@@ -1,7 +1,11 @@
 # Costs
 
-Every cloud resource is estimated here **before** it is created (Azure pricing calculator), and the measured cost
-is added afterwards. Anything above a few euros per month needs explicit approval first.
+**Policy (agreed 2026-11-23):**
+- Free tiers first.
+- Paid services are used where they clearly add value, e.g. Azure OpenAI for extraction, or a larger model where
+  accuracy needs it.
+- Every paid resource is estimated here (Azure pricing calculator) and the estimate is shared **before** the
+  resource is created. The measured cost is added afterwards.
 
 | Milestone | Resource | Estimate (€/month) | Measured (€/month) | Evidence |
 |---|---|---|---|---|

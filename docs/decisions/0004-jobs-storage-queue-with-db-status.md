@@ -1,6 +1,6 @@
 # ADR-0004: Background processing with Azure Storage Queue, DB status as source of truth
 
-- **Status:** Proposed
+- **Status:** Accepted (2026-11-23)
 - **Date:** 2026-11-23
 - **Milestone:** M0 (implemented in M2)
 

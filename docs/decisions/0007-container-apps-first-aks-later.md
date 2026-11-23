@@ -1,6 +1,6 @@
 # ADR-0007: Azure Container Apps first (M4), AKS later (M8, time-boxed)
 
-- **Status:** Proposed
+- **Status:** Accepted (2026-11-23)
 - **Date:** 2026-11-23
 - **Milestone:** M0 (applies to M4 and M8)
 

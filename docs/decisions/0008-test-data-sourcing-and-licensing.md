@@ -1,6 +1,6 @@
 # ADR-0008: Test data — fetch official suites pinned, generate our own, never commit unlicensed samples
 
-- **Status:** Proposed
+- **Status:** Accepted (2026-11-23)
 - **Date:** 2026-11-23
 - **Milestone:** M0 (implemented in M2, extended in M3)
 

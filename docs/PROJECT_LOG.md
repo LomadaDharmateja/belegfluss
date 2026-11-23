@@ -49,3 +49,19 @@ A dated diary: what was done, why, what was learned, what broke. Newest entry at
 
 **Next**
 - Review and approve the M0 PR; answer the open questions; start interviews; then M1 (local foundation).
+
+---
+
+## 2026-11-23 — M0 review outcome
+
+**Decisions by the project owner**
+- **M0 approved.** ADRs 0001–0009 are now *Accepted*. ADR-0003 is still conditional on the Entra External ID data
+  location, which is checked in M1.
+- **Proposal P1 (deploy right after M2) declined.** Azure deployment (M4) happens only after the full workflow is
+  built and evaluated (M1–M3). The roadmap order is unchanged.
+- **P2 (interviews during M1) and P3 (PDF-vs-XML check as a headline feature) adopted.**
+- **Cost policy:** free tiers first. Paid services (e.g. Azure OpenAI, a larger model where accuracy needs it) are
+  fine where they add value. Estimates go into `docs/COSTS.md` and are shared before anything paid is created.
+
+**Next**
+- Merge PR #1, then plan M1 (local foundation).

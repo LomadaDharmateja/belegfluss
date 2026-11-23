@@ -1,6 +1,6 @@
 # ADR-0002: Plain-folder monorepo with native tooling
 
-- **Status:** Proposed
+- **Status:** Accepted (2026-11-23)
 - **Date:** 2026-11-23
 - **Milestone:** M0 (applies from M1)
 

@@ -1,6 +1,6 @@
 # ADR-0003: Sign-in with Microsoft Entra External ID from M1
 
-- **Status:** Proposed (conditional, see "Condition")
+- **Status:** Accepted (2026-11-23), conditional: see "Condition"
 - **Date:** 2026-11-23
 - **Milestone:** M0 (implemented in M1)
 

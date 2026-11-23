@@ -1,6 +1,6 @@
 # ADR-0005: Run the official KoSIT validator in daemon mode as an internal-only container
 
-- **Status:** Proposed
+- **Status:** Accepted (2026-11-23)
 - **Date:** 2026-11-23
 - **Milestone:** M0 (implemented in M2)
 

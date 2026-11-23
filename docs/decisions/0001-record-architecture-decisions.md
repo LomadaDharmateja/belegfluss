@@ -1,6 +1,6 @@
 # ADR-0001: Record architecture decisions as short ADRs
 
-- **Status:** Proposed
+- **Status:** Accepted (2026-11-23)
 - **Date:** 2026-11-23
 - **Milestone:** M0
 

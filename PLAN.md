@@ -1,13 +1,13 @@
 # Belegfluss — Plan
 
 > Living roadmap. Updated at the end of every session. Changes to the plan are explained in an ADR and logged in
-> [docs/PROJECT_LOG.md](docs/PROJECT_LOG.md). Last update: **2026-11-23 (M0)**.
+> [docs/PROJECT_LOG.md](docs/PROJECT_LOG.md). Last update: **2026-11-23 (M0 approved)**.
 
 ## Status
 
 | # | Milestone | Key output | Status |
 |---|---|---|---|
-| M0 | Research & design | Verified research, interview guide, architecture, ADRs 0001–0009, this plan | 🟡 in review (PR) |
+| M0 | Research & design | Verified research, interview guide, architecture, ADRs 0001–0009, this plan | ✅ done (PR #1, approved 2026-11-23) |
 | M1 | Local foundation | Monorepo, FastAPI + Postgres + Next.js (DE/EN), auth, upload, Docker Compose, CI | ⏳ next |
 | M2 | Reading & validating | XML parsing (UBL/CII/ZUGFeRD), official validator, LLM extraction, checks, review UI, basic export | ⏳ |
 | M3 | Evaluation & quality gates | Labelled set, field-level accuracy report, CI gate | ⏳ |
@@ -19,7 +19,8 @@
 | M9 | Hardening | Security review, GDPR features complete, EU AI Act assessment, load test, restore test | ⏳ |
 | M10 | Launch & write-up | Final docs, demo video, final claims audit, public write-up | ⏳ |
 
-**Proposed re-plan, awaiting decision (P1):** see [§4](#4-proposed-changes-to-the-roadmap).
+**Order confirmed (2026-11-23):** Azure deployment (M4) comes only after the full workflow is built and evaluated
+(M1–M3). See [§4](#4-proposed-changes-to-the-roadmap) for the review outcome of proposals P1–P3.
 
 ## 1. Definition of done (every milestone)
 
@@ -36,8 +37,9 @@ A milestone is done when **all** of these hold:
 4. **Clean-up pass:** dead code deleted, names and structure simplified.
 5. **Security & privacy:** no secrets in git (secret scan green), no invoice content in logs, new data flows listed
    in ARCHITECTURE §7.
-6. **Cost:** any new cloud resource is estimated and recorded in [docs/COSTS.md](docs/COSTS.md) **before** it is
-   created. Anything above a few euros per month needs explicit approval.
+6. **Cost:** free tiers first. Paid services are used where they clearly add value (e.g. Azure OpenAI for
+   extraction, or a larger model where accuracy needs it). Every paid resource is estimated in
+   [docs/COSTS.md](docs/COSTS.md) and the estimate is shared **before** the resource is created.
 7. **Git:** milestone branch `m<n>-<topic>`, small Conventional Commits, one PR with a summary, merged after review.
 
 ## 2. Milestones in detail
@@ -196,7 +198,7 @@ A milestone is done when **all** of these hold:
   - Serve with vLLM (OpenAI-compatible endpoint, so the same extractor interface).
   - Compare accuracy, latency and cost per document vs Azure OpenAI on the held-out set.
   - ADR: use in prod or not.
-  - **GPU cost approval first.**
+  - **GPU cost estimate shared first** (paid GPU time is acceptable where it adds value).
 - **Acceptance criteria:** comparison report with reproducible configs, and a cost table.
 
 ### M8 — Kubernetes
@@ -254,20 +256,23 @@ Likelihood/impact: L = low, M = medium, H = high.
 | L4 | Licences: FeRD samples, EUPL examples, n8n Sustainable Use License | M | M | ADR-0008; n8n ADR in M6 | M2, M6 |
 | L5 | Rules change (new BMF letters every October so far; reporting system planned, F21–F22) | H | M | Research doc dated; re-check BMF FAQ before M5 and after each October | ongoing |
 | L6 | EU AI Act obligations | L | M | Written assessment in M9; transparency labels for AI-extracted fields from M2 | M2, M9 |
-| **C1** | Azure costs creep (always-on DB, registry, log ingestion, AKS nodes, GPUs) | M | M | Budget alerts from first deploy; scale-to-zero; estimates in COSTS.md before creating; approval above a few €/month | M4+ |
+| **C1** | Azure costs creep (always-on DB, registry, log ingestion, AKS nodes, GPUs) | M | M | Budget alerts from first deploy; scale-to-zero; estimates in COSTS.md shared before creating; free tiers first | M4+ |
 | C2 | LLM costs in CI evals | M | L | Recorded responses for PRs; live eval nightly with a cap | M3 |
-| C3 | GPU cost for M7 | H | M | Short rented sessions or spot capacity; approval first; small model | M7 |
+| C3 | GPU cost for M7 | H | M | Short rented sessions or spot capacity; estimate shared first; small model | M7 |
 
 ## 4. Proposed changes to the roadmap
 
-These are **proposals**. Nothing changes until approved (then: ADR + log entry).
+Review outcome (2026-11-23): **P1 declined**, **P2 and P3 adopted**. Logged in
+[PROJECT_LOG](docs/PROJECT_LOG.md). The roadmap order is unchanged, so no ADR was needed.
 
-- **P1 — Deploy a thin slice to Azure right after M2 (swap M3 and M4).** A live URL with XML invoices (fully
+- **P1 — Deploy a thin slice to Azure right after M2 (swap M3 and M4). → Declined.** Deploy only after the
+  workflow is built and evaluated (M1–M3). Original reasoning, kept for the record: A live URL with XML invoices (fully
   deterministic, tested on official data) makes the pilot possible about one milestone earlier. The LLM path is
   labelled "beta" until the M3 gate exists. *Cost:* Azure spending starts earlier (a few € per month in dev).
   *Risk:* LLM quality without a gate, mitigated by review-before-export.
-- **P2 — Run interviews during M1, not after.** They decide M2 priorities (e.g. DATEV export, bilingual focus).
-- **P3 — Make the "PDF vs. XML mismatch" check a headline feature.** It is legally grounded (F15), rare in free
+- **P2 — Run interviews during M1, not after. → Adopted.** They decide M2 priorities (e.g. DATEV export,
+  bilingual focus).
+- **P3 — Make the "PDF vs. XML mismatch" check a headline feature. → Adopted.** It is legally grounded (F15), rare in free
   viewers, and easy to explain.
 
 ## 5. Proposed improvements (engineering depth and credibility)
@@ -298,5 +303,6 @@ How this project is run, so that every claim stays checkable:
    libraries, no speculative abstractions.
 5. **Privacy & safety:** EU only; no invoice content in logs; no secrets in git; only official test data and
    synthetic data until the pilot is legally ready; the LLM never writes SQL or data.
-6. **Cost:** budget alerts from the first deployment; ask before anything above a few euros per month.
+6. **Cost:** free tiers first; paid where it clearly adds value; estimate shared before creating; budget alerts
+   from the first deployment.
 7. **Git:** one branch per milestone, Conventional Commits, one PR per milestone.

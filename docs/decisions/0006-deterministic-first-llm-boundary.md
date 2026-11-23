@@ -1,6 +1,6 @@
 # ADR-0006: Deterministic processing first; the LLM only for unstructured documents
 
-- **Status:** Proposed
+- **Status:** Accepted (2026-11-23)
 - **Date:** 2026-11-23
 - **Milestone:** M0 (implemented in M2, evaluated in M3)
 
