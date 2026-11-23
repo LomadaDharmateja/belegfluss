@@ -17,8 +17,8 @@ def schema_json() -> str:
 def main() -> None:
     if len(sys.argv) != 2:
         raise SystemExit("usage: python -m belegfluss.openapi_export <output-file>")
-    Path(sys.argv[1]).write_text(schema_json(), encoding="utf-8", newline="
-")
+    # newline="\n": identical bytes on Windows and Linux (CI compares the file).
+    Path(sys.argv[1]).write_text(schema_json(), encoding="utf-8", newline="\n")
 
 
 if __name__ == "__main__":
