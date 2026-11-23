@@ -53,10 +53,16 @@ So that you get an email before anything costs real money.
    - **Country/Region**: **Germany**. This **cannot be changed later**.
 5. **Add a subscription** tab: your subscription; resource group **Create new** → `rg-belegfluss-identity`.
 6. **Review + Create** → **Create**. Creation can take up to 30 minutes; watch the **Notifications** pane.
-7. Switch to the new tenant: **Settings** (gear icon) → **Directories + subscriptions** → **Switch**.
+7. Switch to the new tenant **in the Entra admin center**: **Settings** (gear icon) → **Directories +
+   subscriptions** → **Switch** next to Belegfluss Dev. The Azure portal and the Entra admin center each remember
+   their own directory, so switching in one doesn't switch the other.
 8. Open the tenant **Overview** and note the **Tenant ID** and **Primary domain**. If a **data location** or
    "Country or region" field is shown anywhere in the overview or properties, note it too.
 9. Official guide: <https://learn.microsoft.com/en-us/entra/external-id/customers/how-to-create-external-tenant-portal>
+
+> **Before Steps 4–6:** the top-right corner, under your account name, must show **BELEGFLUSS DEV**. If it shows
+> DEFAULT DIRECTORY, you are in your personal directory: apps and user flows created there don't work with
+> Belegfluss sign-in. A user flow named `B2X_1_...` is a sign that it was created in the wrong directory.
 
 ## Step 4: Register the API (the backend)
 
