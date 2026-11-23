@@ -17,6 +17,21 @@ step.
    identity verification.
 3. At the end you have an **Azure subscription** (pay-as-you-go). Nothing is created or charged yet.
 
+**Already signed in to Azure, but no subscription?** In the portal open **Subscriptions** → **Add** and choose
+**Pay-as-you-go**.
+
+**Don't use "Azure for Students" for Belegfluss**, even if you are eligible:
+- Microsoft limits these subscriptions to a few allowed regions by policy, and Europe is "usually restricted"
+  ([Microsoft staff answer, Tech Community, 2025](https://techcommunity.microsoft.com/discussions/microsoft-learn-for-educators/azure-for-students---locations-now-restricted-by-policy/4442469)).
+  Belegfluss must run in the EU.
+- The offer is meant for education, non-commercial research, or building software for those purposes
+  ([Azure for Students FAQ](https://azure.microsoft.com/en-us/free/students/)). From M5, Belegfluss serves real
+  businesses.
+- Cost Management lists the offer (MS-AZR-0170P) as **not supported**, so the budget alert in Step 2 may not work
+  ([Microsoft Learn](https://learn.microsoft.com/en-us/azure/cost-management-billing/costs/understand-cost-mgt-data)).
+- The subscription is disabled when the $100 credit or the 12 months run out
+  ([offer terms](https://azure.microsoft.com/en-us/pricing/offers/ms-azr-0170p/)).
+
 ## Step 2: Create a budget alert (free)
 
 So that you get an email before anything costs real money.
