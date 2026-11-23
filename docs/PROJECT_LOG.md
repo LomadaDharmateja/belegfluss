@@ -65,3 +65,60 @@ A dated diary: what was done, why, what was learned, what broke. Newest entry at
 
 **Next**
 - Merge PR #1, then plan M1 (local foundation).
+
+---
+
+## 2026-11-23 — M1 planning and Phase A (local foundation, no Azure needed)
+
+**Decisions in planning (owner)**
+- Sign-in tenant through a normal Azure account (free sign-up, €0 in M1, budget alert right after creation),
+  not the 30-day trial.
+- Sign-in method: email one-time code (no passwords).
+
+**Done**
+- `docs/setup/entra-external-id.md`: step-by-step guide for the owner (Azure account → budget alert → external
+  tenant → API + SPA registrations → email-OTP user flow). No client secrets anywhere.
+- API (`apps/api`), Python 3.14 / FastAPI 0.165:
+  - token validation (signature, issuer, audience, expiry, scope; `tid`+`oid`), with no bypass in app code
+  - personal organisation on first sign-in; org-scoped routes, where non-members get 404
+  - upload with size limit, type detection from content, SHA-256, unchanged originals in Blob, per-org duplicate
+    detection, audit events without file names
+  - SQLAlchemy 2.1 + Alembic on PostgreSQL 18
+  - **63 tests** against real PostgreSQL and Azurite (testcontainers)
+- Web (`apps/web`), Next.js 16.4 / React 19.3:
+  - next-intl DE/EN without locale in the URL
+  - MSAL React sign-in with runtime configuration (one image for all environments)
+  - typed client generated from OpenAPI
+  - inbox with upload and list
+  - **25 Vitest + 5 Playwright tests**
+- Docker Compose stack (Postgres, Azurite, API, web). Verified: all healthy, migrations on start, DE/EN, blob
+  write/read.
+- CI workflows: API, web, compose smoke test, gitleaks (binary pinned by checksum), Dependabot; actions pinned by
+  commit SHA.
+- ADRs 0010–0013 proposed (i18n, API contract, persistence, tenancy).
+
+**Learned / changed from the plan**
+- **TypeScript 5.9 instead of the planned 6.0.3.** openapi-typescript declares a peer dependency on TypeScript 5,
+  and the official Next.js 16.4 scaffold uses `^5`. typescript-eslint doesn't support TypeScript 7 yet either.
+- **ESLint stays on 9** (deprecated warning): eslint-plugin-react, -import and -jsx-a11y don't support ESLint 10
+  yet.
+- pnpm 12 blocks install scripts by default. `@parcel/watcher` and `@swc/core` (pulled in by next-intl's unused
+  extraction tooling) ship prebuilt binaries, so their scripts are denied in `pnpm-workspace.yaml`.
+- Next.js 16 "Cache Components" is opt-in and left off. Next.js says it becomes the default in the next major
+  version, so that's a planned migration.
+- MSAL React 5 calls `initialize()` and `handleRedirectPromise()` itself (read in its source). Our provider only
+  creates the client after hydration, using `useSyncExternalStore`, which satisfies the React Compiler lint rules
+  without suppressions.
+- `UseDevelopmentStorage=true` points to `127.0.0.1` only (read in the Azure SDK source). Docker Compose uses a
+  dedicated Azurite dev account instead, with a fake key marked inline for gitleaks.
+- Starlette's test client now prefers `httpx2`; testcontainers moved modules to `testcontainers.community.*`. Both
+  were switched, so the test run is warning-free.
+
+**What broke**
+- A `sed` edit put a real line break into a Python string, and a chained command committed it although the export
+  had failed. Fixed in the next commit and verified (ruff, mypy, 63 tests). Lesson: use `set -e` when chaining
+  checks and commits.
+- First web test run: the placeholder check matched words inside ICU plural branches. The test regex was fixed.
+
+**Next**
+- CI results on draft PR #2 → Phase B once the owner has created the tenant → M1 docs and claims audit.
