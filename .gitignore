@@ -1,0 +1,67 @@
+# --- Local AI-assistant instructions (kept out of git) ---
+CLAUDE.md
+
+# --- Secrets / local config ---
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.pfx
+.claude/settings.local.json
+
+# --- OS / editors ---
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.swp
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+dist/
+build/
+*.egg-info/
+
+# --- Node / Next.js ---
+node_modules/
+.next/
+out/
+coverage/
+*.tsbuildinfo
+.pnpm-store/
+npm-debug.log*
+pnpm-debug.log*
+
+# --- Terraform ---
+.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+*.tfvars
+!*.tfvars.example
+.terraform.lock.hcl.bak
+
+# --- Test data fetched by script (pinned + checksummed, see ADR-0008) ---
+testdata/external/
+# FeRD ZUGFeRD samples: local only, never commit (no redistribution licence)
+testdata/ferd/
+
+# --- Eval / ML artefacts (large) ---
+eval/cache/
+ml/checkpoints/
+ml/runs/
+
+# --- Local emulator data ---
+__azurite_db_*.json
+__blobstorage__/
+__queuestorage__/
