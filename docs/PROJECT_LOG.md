@@ -122,3 +122,31 @@ A dated diary: what was done, why, what was learned, what broke. Newest entry at
 
 **Next**
 - CI results on draft PR #2 → Phase B once the owner has created the tenant → M1 docs and claims audit.
+
+## 2026-11-24 — M1 Phase B1: Azure subscription and sign-in tenant
+
+**Done**
+- Subscription question: Azure for Students vs pay-as-you-go. Chose **pay-as-you-go**. Student subscriptions only
+  allow a few regions by policy (Europe usually restricted), the offer is meant for education, Cost Management
+  lists it as unsupported, and it is disabled when the credit or the 12 months run out. Reasons and sources added
+  to `docs/setup/entra-external-id.md`.
+- Owner created the subscription (Azure Plan, active, €0), a **€10/month budget** (alerts: actual 50 %, actual
+  100 %, forecast 100 %, by email) and the external tenant **Belegfluss Dev** (`belegflussdev`).
+- Read-only check in the portal: tenant country **Germany**, data location **"EU Model Clause compliant
+  datacenters"**; the public discovery document reports `tenant_region_scope: EU`. Tenant resource in
+  `rg-belegfluss-identity`, location Europe.
+- Steps 4–6 redone in the external tenant (with the owner's approval, in the owner's browser): `belegfluss-api`
+  (scope `access_as_user`, Admins only; `requestedAccessTokenVersion` was already 2), `belegfluss-web` (SPA,
+  redirect `http://localhost:3000`, no secret, implicit grant off, admin consent granted), user flow
+  `SignUpSignIn` (email one-time passcode, Display Name only) with the web app added.
+- `.env` (git-ignored) filled with the public IDs; issuer and JWKS URL taken from the tenant's discovery document.
+
+**What broke**
+- Steps 4–6 were first done in the owner's **Default Directory** instead of the external tenant: the Azure portal
+  and the Entra admin center each remember their own directory. The guide didn't warn about it; it now does, with
+  a check of the directory label before Step 4. The leftover apps and user flow in the Default Directory are to be
+  deleted by the owner once sign-in works.
+
+**Next**
+- B2: sign in with a real account, check the token's `iss`/`aud`/`scp`/`oid` against the API's verifier.
+- B3: manual end-to-end run in DE/EN with screenshots; then Phase C (M1 docs, claims audit, PR).
