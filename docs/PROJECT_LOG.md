@@ -157,6 +157,15 @@ A dated diary: what was done, why, what was learned, what broke. Newest entry at
   the commit went ahead without the log entry. Logged in a separate commit; checks and commits now run as separate
   steps.
 
+**B2: first real sign-in (owner, email one-time code) and upload, verified**
+- API log: `GET /me` 200, `GET /orgs/{org}/documents` 200, `POST /orgs/{org}/documents` 201. The verifier only
+  accepts a token with a valid RS256 signature from the tenant's JWKS, the exact issuer, audience = API client ID,
+  scope `access_as_user`, and `exp`/`tid`/`oid` present, so the real token passed all of these checks.
+- Database: 1 user (only `idp_tenant_id` = our tenant ID and `idp_object_id`; no email or name), 1 organisation
+  "My business", 1 owner membership, 1 document (`application/pdf`, 4,911 bytes, `received`), audit events
+  `user.created`, `org.created`, `document.uploaded`.
+- Storage: the blob at `orgs/{org}/originals/{sha256}` starts with `%PDF`, and its recomputed SHA-256 matches the
+  database. The API log contains no file names.
+
 **Next**
-- B2: sign in with a real account, check the token's `iss`/`aud`/`scp`/`oid` against the API's verifier.
 - B3: manual end-to-end run in DE/EN with screenshots; then Phase C (M1 docs, claims audit, PR).
