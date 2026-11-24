@@ -1,6 +1,6 @@
 # ADR-0010: Web i18n with next-intl, language not in the URL
 
-- **Status:** Proposed
+- **Status:** Accepted (2026-11-24)
 - **Date:** 2026-11-23
 - **Milestone:** M1
 
@@ -37,7 +37,7 @@ both.
   behind a login.
 - Next.js 16 "Cache Components" is opt-in and **not** enabled. Next.js says it becomes the default in the next
   major version. Migrating is a planned follow-up (read the bundled `cacheComponents` docs first).
-- German UI uses the informal "du". Whether pilot users prefer "Sie" is a question for the interviews.
+- German UI uses the informal "du" (decided by the owner on 2026-11-24).
 
 ## Sources
 

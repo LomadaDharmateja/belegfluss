@@ -1,6 +1,6 @@
 # ADR-0012: Persistence with sync SQLAlchemy 2.1 + psycopg 3 + Alembic; tests against real PostgreSQL
 
-- **Status:** Proposed
+- **Status:** Accepted (2026-11-24)
 - **Date:** 2026-11-23
 - **Milestone:** M1
 

@@ -2,7 +2,7 @@
 
 **A bilingual (German / English) e-invoice inbox for freelancers and small businesses in Germany.**
 
-> **Status: M1, local foundation (done, in review).** Sign-in with an email code, private organisations and
+> **Status: M1, local foundation (done).** Sign-in with an email code, private organisations and
 > document upload run locally in German and English, with CI on every change. Reading and validating invoices comes
 > in M2. See [PLAN.md](PLAN.md) and [what M1 built](docs/milestones/M1.md).
 

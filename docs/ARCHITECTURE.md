@@ -1,7 +1,7 @@
 # Belegfluss — Architecture
 
 > **Status:** agreed design from M0 (2026-11-23). It covers all milestones M1–M10. Decisions are recorded as ADRs in
-> [`docs/decisions/`](decisions/), accepted on 2026-11-23. Facts about e-invoicing come from
+> [`docs/decisions/`](decisions/): 0001–0009 accepted on 2026-11-23, 0010–0013 on 2026-11-24. Facts about e-invoicing come from
 > [research/einvoicing.md](research/einvoicing.md) (fact IDs like F15).
 > This document is kept current. When a milestone changes the design, it is updated together with a superseding ADR.
 > **Built so far:** M1 (2026-11-24): sign-in, organisations, upload, DE/EN, Docker Compose, CI, see

@@ -1,6 +1,6 @@
 # ADR-0011: The API contract is the OpenAPI schema, and the web client is generated from it
 
-- **Status:** Proposed
+- **Status:** Accepted (2026-11-24)
 - **Date:** 2026-11-23
 - **Milestone:** M1
 

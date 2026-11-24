@@ -216,3 +216,17 @@ A dated diary: what was done, why, what was learned, what broke. Newest entry at
 **Open**
 - Diagrams: both changed diagrams render on GitHub (checked in the branch view; mermaid-cli not installed).
 - ADRs 0010–0013 wait for the owner's review. Interviews (M1 task 7) are still open.
+
+## 2026-11-24 — M1 review outcome
+
+**Decisions (owner)**
+- ADRs 0010–0013 accepted.
+- German UI keeps the informal "du" (recorded in ADR-0010).
+- PR #2 approved for merge.
+- **User interviews deferred.** The owner can't run them right now. M2's priorities follow the law and the official
+  formats, so they don't depend on the answers. Choices that did depend on interviews stay at their safe defaults
+  (ZIP + CSV export, no DATEV format yet). Interviews or a short questionnaire must happen before M5 (pilot
+  onboarding). Risks U1/U2 stay open until then. Recorded in PLAN §3 and §4 (P2).
+
+**Next**
+- M2 planning: explain the approach, options and costs (first paid service: Azure OpenAI) before building.

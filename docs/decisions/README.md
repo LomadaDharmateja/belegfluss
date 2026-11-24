@@ -13,7 +13,7 @@ Format and rules: [ADR-0001](0001-record-architecture-decisions.md).
 | [0007](0007-container-apps-first-aks-later.md) | Container Apps in M4, AKS in M8 (time-boxed) | Accepted |
 | [0008](0008-test-data-sourcing-and-licensing.md) | Test data: fetch pinned official suites, generate our own, never commit unlicensed samples | Accepted |
 | [0009](0009-accountant-export-zip-and-csv-first.md) | Accountant export: ZIP of originals + CSV summary first | Accepted |
-| [0010](0010-web-i18n-next-intl-without-url-locale.md) | Web i18n with next-intl, language not in the URL | Proposed |
-| [0011](0011-typed-api-contract-openapi.md) | OpenAPI is the contract; web client types are generated, drift fails CI | Proposed |
-| [0012](0012-persistence-sync-sqlalchemy-and-real-db-tests.md) | Sync SQLAlchemy 2.1 + psycopg 3 + Alembic; tests against real PostgreSQL | Proposed |
-| [0013](0013-tenancy-org-scoped-routes.md) | Organisation-scoped routes with one membership check (RLS in M9) | Proposed |
+| [0010](0010-web-i18n-next-intl-without-url-locale.md) | Web i18n with next-intl, language not in the URL | Accepted |
+| [0011](0011-typed-api-contract-openapi.md) | OpenAPI is the contract; web client types are generated, drift fails CI | Accepted |
+| [0012](0012-persistence-sync-sqlalchemy-and-real-db-tests.md) | Sync SQLAlchemy 2.1 + psycopg 3 + Alembic; tests against real PostgreSQL | Accepted |
+| [0013](0013-tenancy-org-scoped-routes.md) | Organisation-scoped routes with one membership check (RLS in M9) | Accepted |

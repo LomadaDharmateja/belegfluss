@@ -1,6 +1,6 @@
 # ADR-0013: Multi-tenancy with organisation-scoped routes and one membership check
 
-- **Status:** Proposed
+- **Status:** Accepted (2026-11-24)
 - **Date:** 2026-11-23
 - **Milestone:** M1
 
