@@ -158,7 +158,7 @@ Scope: README, ARCHITECTURE (M2a parts), ADRs 0014–0015, THIRD_PARTY, COSTS, P
 | 16 | gpt-5-mini Data Zone price $0.275 / $2.20 per 1M tokens | COSTS | ✅ confirmed | Azure Retail Prices API, 2026-11-24 |
 | 17 | M2b development costs about €2–4 | COSTS, PLAN | ⚠️ caveat | Estimate from assumed tokens per document; measured in M2b |
 | 18 | M2a cloud cost €0 | COSTS | ✅ confirmed | No Azure resource created in M2a |
-| 19 | All links in the changed docs resolve; diagrams render | all | see below | Recorded below |
+| 19 | All links in the changed docs resolve; diagrams render | all | ✅ confirmed | 2026-11-24: 81/81 public web links return 2xx/3xx (one XML namespace identifier in code formatting is not a link); 5/5 private repo links via `gh api`; all relative links and anchors resolve; the flow diagram here and ARCHITECTURE §4.1 and §6 render on GitHub |
 
 ## Next
 
