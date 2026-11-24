@@ -162,6 +162,6 @@ Scope: README, ARCHITECTURE (M2a parts), ADRs 0014–0015, THIRD_PARTY, COSTS, P
 
 ## Next
 
-- Review ADR-0014 and ADR-0015 (Proposed), then merge PR #7.
+- Review outcome (2026-11-24): ADR-0014 and ADR-0015 accepted, PR #7 merged.
 - M2b plan: LLM extraction (gpt-5-mini, EU Data Zone), review step, export. Needs your Azure CLI install and a yes
   before the Azure OpenAI resource is created.

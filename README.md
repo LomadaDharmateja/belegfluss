@@ -2,7 +2,7 @@
 
 **A bilingual (German / English) e-invoice inbox for freelancers and small businesses in Germany.**
 
-> **Status: M2a, reading & validating (in review).** XRechnung and ZUGFeRD invoices are read exactly, checked by
+> **Status: M2a, reading & validating (done).** XRechnung and ZUGFeRD invoices are read exactly, checked by
 > the official KoSIT validator and by plain business checks, and problems are explained in German or English. Runs
 > locally (Docker Compose), with CI on every change. Next: AI reading of plain PDFs and photos, review and export
 > (M2b). See [PLAN.md](PLAN.md), [M1](docs/milestones/M1.md) and [M2a](docs/milestones/M2a.md).

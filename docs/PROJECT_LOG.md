@@ -275,3 +275,8 @@ A dated diary: what was done, why, what was learned, what broke. Newest entry at
 - Owner reviews ADR-0014/0015 → merge PR #7. Then the M2b plan (Azure CLI install, explicit yes before creating Azure
   OpenAI). Open: Dependabot PRs #3–#6 (two are major runtime upgrades: Python 3.15, Node 26), unit codes shown as
   words.
+
+## 2026-11-24 — M2a review outcome
+
+- Owner accepted ADR-0014 and ADR-0015 and approved PR #7 for merge.
+- Next: M2b plan (LLM extraction, review, export).

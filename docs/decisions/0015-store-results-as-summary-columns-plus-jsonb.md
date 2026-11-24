@@ -1,6 +1,6 @@
 # ADR-0015: Store read invoices as summary columns plus the full model as JSONB; findings in their own table
 
-- **Status:** Proposed
+- **Status:** Accepted (2026-11-24)
 - **Date:** 2026-11-24
 - **Milestone:** M2a
 

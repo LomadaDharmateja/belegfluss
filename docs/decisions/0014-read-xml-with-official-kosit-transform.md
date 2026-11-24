@@ -1,6 +1,6 @@
 # ADR-0014: Read e-invoice XML with the official KoSIT step-1 transform (via Saxon), not our own mapping
 
-- **Status:** Proposed
+- **Status:** Accepted (2026-11-24)
 - **Date:** 2026-11-24
 - **Milestone:** M2a
 
