@@ -1,14 +1,14 @@
 # Belegfluss — Plan
 
 > Living roadmap. Updated at the end of every session. Changes to the plan are explained in an ADR and logged in
-> [docs/PROJECT_LOG.md](docs/PROJECT_LOG.md). Last update: **2026-11-24 (M1 Phase B1)**.
+> [docs/PROJECT_LOG.md](docs/PROJECT_LOG.md). Last update: **2026-11-24 (M1 Phase C)**.
 
 ## Status
 
 | # | Milestone | Key output | Status |
 |---|---|---|---|
 | M0 | Research & design | Verified research, interview guide, architecture, ADRs 0001–0009, this plan | ✅ done (PR #1, approved 2026-11-23) |
-| M1 | Local foundation | Monorepo, FastAPI + Postgres + Next.js (DE/EN), auth, upload, Docker Compose, CI | 🟡 Phases A and B done (draft PR #2); Phase C (docs, claims audit) next |
+| M1 | Local foundation | Monorepo, FastAPI + Postgres + Next.js (DE/EN), auth, upload, Docker Compose, CI | 🟢 built and verified, in review (PR #2, [M1.md](docs/milestones/M1.md)); ADRs 0010–0013 to review; interviews (task 7) open |
 | M2 | Reading & validating | XML parsing (UBL/CII/ZUGFeRD), official validator, LLM extraction, checks, review UI, basic export | ⏳ |
 | M3 | Evaluation & quality gates | Labelled set, field-level accuracy report, CI gate | ⏳ |
 | M4 | Azure with Terraform | Container Apps, Postgres, Blob/Queue, Key Vault, Managed Identity, Entra, Azure OpenAI, CI/CD, budget alert | ⏳ |

@@ -4,6 +4,8 @@
 > [`docs/decisions/`](decisions/), accepted on 2026-11-23. Facts about e-invoicing come from
 > [research/einvoicing.md](research/einvoicing.md) (fact IDs like F15).
 > This document is kept current. When a milestone changes the design, it is updated together with a superseding ADR.
+> **Built so far:** M1 (2026-11-24): sign-in, organisations, upload, DE/EN, Docker Compose, CI, see
+> [milestones/M1.md](milestones/M1.md). Sections marked "M1 as built" describe the running code; the rest is design.
 
 ## 1. Goals and constraints
 
@@ -190,6 +192,9 @@ Messages that fail repeatedly go to a **poison queue** and the document is marke
 
 ## 6. Data model (sketch)
 
+M1 as built: ORGANIZATION, USER, MEMBERSHIP, DOCUMENT and AUDIT_EVENT with the fields shown here. The other
+entities are the design for M2 and later.
+
 ```mermaid
 erDiagram
     ORGANIZATION ||--o{ MEMBERSHIP : has
@@ -206,12 +211,12 @@ erDiagram
     ORGANIZATION {
         uuid id
         string name
-        string vat_status "regular or kleinunternehmer"
+        string vat_status "regular or kleinunternehmer (M2+)"
     }
     USER {
         uuid id
-        string idp_subject "from Entra External ID"
-        string locale "de or en"
+        string idp_tenant_id "token tid"
+        string idp_object_id "token oid, no email or name"
     }
     MEMBERSHIP {
         uuid org_id
@@ -221,10 +226,14 @@ erDiagram
     DOCUMENT {
         uuid id
         uuid org_id
-        string sha256
-        string media_type
-        string source "upload or email"
-        string status "received, processing, ready, needs_review, approved, failed"
+        string sha256 "unique per org"
+        string media_type "from content"
+        int size_bytes
+        string original_filename
+        string blob_name "orgs/org/originals/sha256"
+        string source "upload (M1), email (M6)"
+        string status "received (M1), later processing, ready, needs_review, approved, failed"
+        uuid uploaded_by
     }
     INVOICE {
         uuid id
@@ -250,14 +259,17 @@ erDiagram
     AUDIT_EVENT {
         uuid id
         uuid org_id
-        uuid actor_id
-        string action
+        uuid actor_user_id
+        string action "e.g. document.uploaded"
+        uuid target_id
         datetime at
     }
 ```
 
-Rules: every table that holds customer data has `org_id`. Every query goes through a small data-access layer that
-requires `org_id` (tested). PostgreSQL row-level security is considered as defence in depth in M9. The audit log is
+Rules: every table that holds customer data has `org_id`. Every route that touches customer data is
+`/orgs/{org_id}/…` and depends on one membership check; queries filter by `org_id` (and by `org_id` + `id` for a
+single document). Cross-organisation access is tested ([ADR-0013](decisions/0013-tenancy-org-scoped-routes.md)). The
+language choice is a browser cookie for now ([ADR-0010](decisions/0010-web-i18n-next-intl-without-url-locale.md)). PostgreSQL row-level security is considered as defence in depth in M9. The audit log is
 append-only and holds **no invoice content**, only IDs and actions.
 
 ## 7. Security and GDPR boundaries
@@ -343,6 +355,9 @@ flowchart LR
 Sign-in uses the real (free) Entra External ID dev tenant. Automated tests use locally signed test tokens, so CI
 needs no internet login.
 
+M1 as built: `postgres`, `azurite`, `api` and `web`, all ports bound to 127.0.0.1. The worker and validator join in
+M2.
+
 ### 8.2 M4–M7: Azure Container Apps (Terraform)
 
 ```mermaid
@@ -411,7 +426,7 @@ Each row is detailed in an ADR. ✅ = recommended.
 
 | Option | Pros | Cons |
 |---|---|---|
-| ✅ Microsoft Entra External ID | Azure-native CIAM; first 50,000 MAU free; email+password, one-time passcode, Google, Apple, custom OIDC; no password storage on our side; MSAL for the SPA, standard JWT validation in FastAPI | Vendor-specific setup; local dev needs internet; EU data location of external tenants to be confirmed |
+| ✅ Microsoft Entra External ID | Azure-native CIAM; first 50,000 MAU free; email+password, one-time passcode, Google, Apple, custom OIDC; no password storage on our side; MSAL for the SPA, standard JWT validation in FastAPI | Vendor-specific setup; local dev needs internet. EU data location confirmed for our tenant (M1) |
 | Azure AD B2C | Mature | **Not sold to new customers since 1 May 2025** |
 | Own auth (fastapi-users or Auth.js + email magic links) | Full control, works offline | We store credentials or tokens and own the security risk; doesn't build Azure identity experience |
 | Keycloak (self-hosted) | Open source, EU hosting under our control | One more stateful service to run, patch and back up |
@@ -465,8 +480,8 @@ numbers and Berater/Mandant numbers (F46). DATEV APIs not before real demand.
 
 | Topic | Options | Current leaning | Decide in |
 |---|---|---|---|
-| i18n in Next.js | next-intl · i18next · built-in routing only | next-intl (type-safe messages, App Router support) | M1 ADR |
-| Typed API client | openapi-typescript + openapi-fetch · orval · hand-written | openapi-typescript + openapi-fetch (generated types, CI drift check) | M1 ADR |
+| i18n in Next.js | next-intl · i18next · built-in routing only | **Decided:** next-intl without locale in the URL | [ADR-0010](decisions/0010-web-i18n-next-intl-without-url-locale.md) |
+| Typed API client | openapi-typescript + openapi-fetch · orval · hand-written | **Decided:** openapi-typescript + openapi-fetch, CI drift check | [ADR-0011](decisions/0011-typed-api-contract-openapi.md) |
 | XML parsing | own lxml mapping for UBL and CII · official KoSIT visualisation step-1 XSLT (UBL/CII → one semantic model) via Saxon | Spike both in M2; prefer the official transform if it runs cleanly from Python | M2 ADR |
 | Live updates in UI | polling · server-sent events · WebSockets | polling first, SSE later | M2 |
 | Container registry | Azure Container Registry · GitHub Container Registry | ACR (Azure story, Managed Identity pull) — check cost | M4 ADR |
@@ -480,7 +495,7 @@ numbers and Berater/Mandant numbers (F46). DATEV APIs not before real demand.
 |---|---|---|
 | Entra External ID is Microsoft's CIAM solution; Azure AD B2C not sold to new customers since 1 May 2025 | [External ID overview](https://learn.microsoft.com/en-us/entra/external-id/customers/overview-customers-ciam), [B2C overview](https://learn.microsoft.com/en-us/azure/active-directory-b2c/overview) | ✅ |
 | External ID: first 50,000 MAU free | [pricing](https://azure.microsoft.com/en-us/pricing/details/microsoft-entra-external-id/) | ✅ |
-| External tenant country/region is chosen at creation and can't be changed; Entra stores most data in the EU Data Boundary for EU tenants, but **external tenant locations "may differ"** | [create external tenant](https://learn.microsoft.com/en-us/entra/external-id/customers/how-to-create-external-tenant-portal), [data residency](https://learn.microsoft.com/en-us/entra/fundamentals/data-residency), [EU storage](https://learn.microsoft.com/en-us/entra/fundamentals/data-storage-eu) | ⚠️ confirm at tenant creation (M1) |
+| External tenant country/region is chosen at creation and can't be changed; Entra stores most data in the EU Data Boundary for EU tenants, but **external tenant locations "may differ"** | [create external tenant](https://learn.microsoft.com/en-us/entra/external-id/customers/how-to-create-external-tenant-portal), [data residency](https://learn.microsoft.com/en-us/entra/fundamentals/data-residency), [EU storage](https://learn.microsoft.com/en-us/entra/fundamentals/data-storage-eu) | ✅ confirmed for our tenant on 2026-11-24: Germany, "EU Model Clause compliant datacenters", `tenant_region_scope: EU` |
 | Container Apps scale to zero (no usage charges at zero); event-driven jobs and `azure-queue` scaler | [scaling](https://learn.microsoft.com/en-us/azure/container-apps/scale-app), [jobs](https://learn.microsoft.com/en-us/azure/container-apps/jobs) | ✅ |
 | Container Apps free grant per subscription/month: 180,000 vCPU-s, 360,000 GiB-s, 2M requests | [pricing](https://azure.microsoft.com/en-us/pricing/details/container-apps/) | ✅ |
 | Azure OpenAI "Data Zone Standard" processes data only within the EU data zone | [deployment types](https://learn.microsoft.com/en-us/azure/foundry/foundry-models/concepts/deployment-types) | ✅ |

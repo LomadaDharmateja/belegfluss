@@ -192,3 +192,27 @@ A dated diary: what was done, why, what was learned, what broke. Newest entry at
 
 **Next**
 - Phase C: M1 docs (three parts + claims audit), ARCHITECTURE/COSTS updates, ADRs 0010–0013 for review, PR ready.
+
+## 2026-11-24 — M1 Phase C: docs, claims audit, clean-up
+
+**Done**
+- Leftovers in the owner's Default Directory deleted (with the owner's approval): app registrations
+  `belegfluss-api` and `belegfluss-web`, user flow `B2X_1_SignUpSignIn`. `aad-extensions-app` (created by Azure)
+  kept.
+- [docs/milestones/M1.md](milestones/M1.md): three parts, test evidence with CI links, screenshots, changes from the
+  plan, what broke, claims audit (24 claims).
+- Fixed during the audit:
+  - ADR-0003: condition marked as met; implementation notes (`tid` + `oid`, issuer host)
+  - ARCHITECTURE: data model and tenancy rule updated to what M1 built; i18n/API-client choices marked as decided;
+    EU data location confirmed
+  - ADR-0011: package size stated as measured; ADR-0012: test duration as measured
+  - COSTS: M1 row (€0.00 measured) and the budget alert
+  - README: status, screenshots, pointer to M1 evidence
+- Clean-up: scanned for exported code that nothing imports. Only `defaultLocale` was exported without need; the
+  export was removed. No dead code found in the API.
+- Checks: API 63 tests (29.9 s), ruff, format, mypy strict; web lint, types, 28 unit tests. Link check: 46/46 public
+  links, 5/5 private repo links (via `gh api`), all relative links and anchors.
+
+**Open**
+- Diagrams were not rendered with mermaid-cli (not installed); syntax kept simple, check on GitHub.
+- ADRs 0010–0013 wait for the owner's review. Interviews (M1 task 7) are still open.

@@ -2,8 +2,9 @@
 
 **A bilingual (German / English) e-invoice inbox for freelancers and small businesses in Germany.**
 
-> **Status: M1, local foundation (in progress).** Sign-in, organisations and document upload run locally in
-> German and English. Reading and validating invoices comes in M2. See [PLAN.md](PLAN.md).
+> **Status: M1, local foundation (done, in review).** Sign-in with an email code, private organisations and
+> document upload run locally in German and English, with CI on every change. Reading and validating invoices comes
+> in M2. See [PLAN.md](PLAN.md) and [what M1 built](docs/milestones/M1.md).
 
 ## The problem
 
@@ -30,6 +31,13 @@ an invoice is correct.
 7. Dashboard: totals, VAT, open items, problems found.
 
 Not in scope: sending invoices, payments, bookkeeping, tax advice.
+
+## Screenshots (M1, local)
+
+| | |
+|---|---|
+| ![Inbox with official XRechnung test invoices](docs/milestones/evidence/m1-02-inbox-upload-en.jpg) | ![The same inbox in German, with translated errors](docs/milestones/evidence/m1-05-inbox-errors-de.jpg) |
+| Inbox: official test invoice added, duplicate recognised | German: translated errors, German dates and numbers |
 
 ## Design
 
@@ -65,7 +73,8 @@ CI runs all of this on every pull request, plus a Docker Compose smoke test and 
 
 ## Results
 
-None yet. Every number published here will link to evidence (test output, eval report or dashboard).
+No product results yet (extraction accuracy comes with M3, usage with M5). Every number published here will link to
+evidence. M1's test results and screenshots are in [docs/milestones/M1.md](docs/milestones/M1.md#test-results-evidence).
 
 ## Project docs
 

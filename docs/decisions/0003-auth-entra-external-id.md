@@ -1,6 +1,6 @@
 # ADR-0003: Sign-in with Microsoft Entra External ID from M1
 
-- **Status:** Accepted (2026-11-23), conditional: see "Condition"
+- **Status:** Accepted (2026-11-23). Condition met on 2026-11-24: see "Implementation notes (M1)"
 - **Date:** 2026-11-23
 - **Milestone:** M0 (implemented in M1)
 
@@ -44,6 +44,20 @@ Facts checked (2026-11-23):
 **Condition:** when creating the external tenant in M1 we choose Germany as country/region and record where its data
 is stored. If the data location is outside the EU, this ADR is superseded (fallback: Keycloak in our EU
 environment).
+
+## Implementation notes (M1, 2026-11-24)
+
+Added after implementation; the decision itself is unchanged.
+
+- **Condition met.** Tenant "Belegfluss Dev" was created with country Germany. Its properties show the data
+  location "EU Model Clause compliant datacenters", and its OpenID discovery document reports
+  `tenant_region_scope: EU`.
+- **User identity is `tid` + `oid`, not the token subject.** Microsoft names `oid` as the stable user ID; details in
+  [ADR-0013](0013-tenancy-org-scoped-routes.md).
+- **The web app needs the tenant ID as well.** The discovery document names the issuer on
+  `<tenant-id>.ciamlogin.com`, while sign-in runs on `<subdomain>.ciamlogin.com`. MSAL (msal-common 16.17,
+  `Authority.validateIssuer`) accepts a different issuer host only if it is listed in `knownAuthorities`, so both
+  hosts are listed (`ENTRA_TENANT_ID`).
 
 ## Consequences
 

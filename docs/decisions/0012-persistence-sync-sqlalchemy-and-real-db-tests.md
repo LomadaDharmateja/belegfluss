@@ -33,8 +33,8 @@ Tests must catch real database behaviour: unique constraints, cascades, migratio
 
 ## Consequences
 
-- Tests need Docker (available locally and on GitHub runners). The suite takes ~10–30 s, most of it container
-  start-up.
+- Tests need Docker (available locally and on GitHub runners). The suite took 29.9 s for 63 tests on the dev
+  laptop (one run, 2026-11-24), most of it container start-up.
 - If concurrency ever becomes a bottleneck, the thread pool size and replicas are tuned first, before switching to
   async (new ADR).
 

@@ -10,6 +10,12 @@
 | Milestone | Resource | Estimate (€/month) | Measured (€/month) | Evidence |
 |---|---|---|---|---|
 | M0 | none (local Docker, public downloads) | 0 | 0 | No cloud resources created |
+| M1 | Azure subscription (pay-as-you-go, no monthly fee) + Entra External ID tenant "Belegfluss Dev" (free for the first 50,000 monthly active users) | 0 | 0.00 | Portal, 2026-11-24: subscription current cost €0.00; budget "belegfluss" evaluated spend €0.00 |
+
+**Budget alert (since M1):** €10 per month on the subscription, alerts by email at 50 % and 100 % of actual cost and
+at 100 % of forecast cost. Checked in the portal on 2026-11-24. Azure for Students was not used: it restricts
+regions, and Cost Management lists it as unsupported (reasons in
+[docs/setup/entra-external-id.md](setup/entra-external-id.md)).
 
 ## Notes for M4 (to estimate before deploying)
 

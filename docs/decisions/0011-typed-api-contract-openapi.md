@@ -14,8 +14,9 @@ Pydantic models.
 
 1. **Hand-written TypeScript client and types:** no tooling, but drift is guaranteed over time.
 2. **orval:** generates clients and React hooks. Powerful, but more generated code and configuration.
-3. **openapi-typescript + openapi-fetch:** generates *types only* (`schema.d.ts`). `openapi-fetch` is a ~6 kB typed
-   wrapper around `fetch`, with middleware for the auth header.
+3. **openapi-typescript + openapi-fetch:** generates *types only* (`schema.d.ts`). `openapi-fetch` is a small typed
+   wrapper around `fetch` (its README says 6 kB; the 0.17 build measured 17 kB raw, 4.4 kB gzipped), with
+   middleware for the auth header.
 
 ## Decision
 
