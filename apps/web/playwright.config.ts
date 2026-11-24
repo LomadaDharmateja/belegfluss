@@ -19,6 +19,6 @@ export default defineConfig({
     command: `next start --port ${PORT}`,
     url: `http://localhost:${PORT}`,
     reuseExistingServer: !process.env.CI,
-    env: { ENTRA_CLIENT_ID: "", ENTRA_TENANT_SUBDOMAIN: "", ENTRA_API_SCOPE: "" },
+    env: { ENTRA_CLIENT_ID: "", ENTRA_TENANT_SUBDOMAIN: "", ENTRA_TENANT_ID: "", ENTRA_API_SCOPE: "" },
   },
 });

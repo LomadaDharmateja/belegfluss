@@ -46,6 +46,7 @@ services:
     environment:
       ENTRA_CLIENT_ID: ${ENTRA_CLIENT_ID:-}
       ENTRA_TENANT_SUBDOMAIN: ${ENTRA_TENANT_SUBDOMAIN:-}
+      ENTRA_TENANT_ID: ${ENTRA_TENANT_ID:-}
       ENTRA_API_SCOPE: ${ENTRA_API_SCOPE:-}
       API_BASE_URL: http://localhost:8000 # called from the browser
     ports: ["127.0.0.1:3000:3000"]

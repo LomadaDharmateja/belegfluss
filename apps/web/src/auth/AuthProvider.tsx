@@ -34,7 +34,7 @@ function createMsal(config: AuthConfig): PublicClientApplication {
     auth: {
       clientId: config.clientId,
       authority: config.authority,
-      knownAuthorities: [new URL(config.authority).host],
+      knownAuthorities: config.knownAuthorities,
       redirectUri: window.location.origin,
       postLogoutRedirectUri: window.location.origin,
     },
