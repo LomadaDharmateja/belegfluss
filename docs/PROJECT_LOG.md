@@ -214,5 +214,5 @@ A dated diary: what was done, why, what was learned, what broke. Newest entry at
   links, 5/5 private repo links (via `gh api`), all relative links and anchors.
 
 **Open**
-- Diagrams were not rendered with mermaid-cli (not installed); syntax kept simple, check on GitHub.
+- Diagrams: both changed diagrams render on GitHub (checked in the branch view; mermaid-cli not installed).
 - ADRs 0010–0013 wait for the owner's review. Interviews (M1 task 7) are still open.
