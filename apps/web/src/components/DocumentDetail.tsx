@@ -3,15 +3,35 @@
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
-import type { ApiClient, DocumentDetailOut } from "@/api/client";
+import {
+  approveDocument,
+  correctInvoice,
+  reopenDocument,
+  type ApiClient,
+  type DetailOutcome,
+  type DocumentDetailOut,
+  type InvoiceCorrection,
+} from "@/api/client";
 import { useApiClient } from "@/auth/useApiClient";
+import { ApprovalBox } from "./ApprovalBox";
 import { FindingsList } from "./FindingsList";
 import { InvoiceView } from "./InvoiceView";
+import { ReviewForm } from "./ReviewForm";
 import { StatusBadge } from "./StatusBadge";
 
 const POLL_MS = 2000;
 
-type State = { status: "loading" } | { status: "error" } | { status: "ready"; detail: DocumentDetailOut };
+type State =
+  | { status: "loading" }
+  | { status: "error" }
+  | { status: "ready"; orgId: string; detail: DocumentDetailOut };
+
+/** What the page can do with a document; each returns an error code to show, or null. */
+type Actions = {
+  correct: (correction: InvoiceCorrection) => Promise<string | null>;
+  approve: (acknowledgeErrors: boolean) => Promise<string | null>;
+  reopen: () => Promise<string | null>;
+};
 
 async function fetchDetail(api: ApiClient, documentId: string): Promise<State> {
   try {
@@ -21,7 +41,7 @@ async function fetchDetail(api: ApiClient, documentId: string): Promise<State> {
     const response = await api.GET("/orgs/{org_id}/documents/{document_id}", {
       params: { path: { org_id: orgId, document_id: documentId } },
     });
-    return response.data ? { status: "ready", detail: response.data } : { status: "error" };
+    return response.data ? { status: "ready", orgId, detail: response.data } : { status: "error" };
   } catch {
     return { status: "error" };
   }
@@ -51,6 +71,19 @@ export function DocumentDetail({ documentId }: { documentId: string }) {
     return () => clearTimeout(timer);
   }, [pending, version]);
 
+  // A successful change returns the new detail, which replaces the shown one.
+  const apply = async (call: Promise<DetailOutcome>, orgId: string): Promise<string | null> => {
+    const outcome = await call;
+    if (!outcome.ok) return outcome.code;
+    setState({ status: "ready", orgId, detail: outcome.detail });
+    return null;
+  };
+  const actions = (orgId: string): Actions => ({
+    correct: (correction) => apply(correctInvoice(api, orgId, documentId, correction), orgId),
+    approve: (acknowledge) => apply(approveDocument(api, orgId, documentId, acknowledge), orgId),
+    reopen: () => apply(reopenDocument(api, orgId, documentId), orgId),
+  });
+
   return (
     <section className="space-y-6">
       <Link href="/" className="text-sm text-emerald-800 hover:underline">
@@ -62,15 +95,28 @@ export function DocumentDetail({ documentId }: { documentId: string }) {
           {t("loadError")}
         </p>
       )}
-      {state.status === "ready" && <Detail detail={state.detail} pending={pending} />}
+      {state.status === "ready" && (
+        <Detail detail={state.detail} pending={pending} actions={actions(state.orgId)} />
+      )}
     </section>
   );
 }
 
-function Detail({ detail, pending }: { detail: DocumentDetailOut; pending: boolean }) {
+function Detail({
+  detail,
+  pending,
+  actions,
+}: {
+  detail: DocumentDetailOut;
+  pending: boolean;
+  actions: Actions;
+}) {
   const t = useTranslations("detail");
   const tDocuments = useTranslations("documents");
+  const tReview = useTranslations("review");
   const { document, invoice, findings } = detail;
+  const reviews = detail.reviews ?? [];
+  const editable = invoice?.source === "ai" && document.status !== "approved";
   const failureKey = `failureReasons.${document.failure_reason ?? ""}`;
   return (
     <>
@@ -103,6 +149,37 @@ function Detail({ detail, pending }: { detail: DocumentDetailOut; pending: boole
           <h2 className="mb-2 text-lg font-medium text-slate-800">{t("findings")}</h2>
           {findings.length > 0 ? <FindingsList findings={findings} /> : <p className="text-slate-600">{t("noFindings")}</p>}
         </section>
+      )}
+
+      {editable && (
+        // Keyed by the saved values, so the form starts fresh after every save.
+        <ReviewForm
+          key={JSON.stringify(invoice.model)}
+          model={invoice.model}
+          findings={findings}
+          onSave={actions.correct}
+        />
+      )}
+
+      {reviews.length > 0 && (
+        <section className="text-sm">
+          <h2 className="mb-1 font-medium text-slate-800">{tReview("history")}</h2>
+          <ul className="space-y-0.5 text-slate-700">
+            {reviews.map((review, index) => (
+              <li key={index}>
+                {tReview("historyLine", {
+                  field: tReview.has(`fields.${review.field}` as never) ? tReview(`fields.${review.field}` as never) : review.field,
+                  before: review.before ?? tReview("empty"),
+                  after: review.after ?? tReview("empty"),
+                })}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {!pending && document.status !== "failed" && (
+        <ApprovalBox document={document} onApprove={actions.approve} onReopen={actions.reopen} />
       )}
 
       {invoice ? <InvoiceView invoice={invoice} /> : !pending && <p className="text-slate-600">{t("notRead")}</p>}

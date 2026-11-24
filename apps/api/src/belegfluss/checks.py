@@ -196,7 +196,7 @@ def check_mandatory_details(invoice: InvoiceModel, context: Context) -> list[Che
 _SPACES = re.compile(r"\s+")
 
 
-def _normalise(text: str) -> str:
+def normalise_text(text: str) -> str:
     return _SPACES.sub("", text).lower()
 
 
@@ -213,11 +213,11 @@ def amount_spellings(value: Decimal) -> set[str]:
 
 
 def check_pdf_matches_xml(invoice: InvoiceModel, pdf_text: str) -> list[CheckFinding]:
-    text = _normalise(pdf_text)
+    text = normalise_text(pdf_text)
     if not text:
         return [CheckFinding("BF-PDF-NO-TEXT", "info")]
     findings = []
-    if invoice.number and _normalise(invoice.number) not in text:
+    if invoice.number and normalise_text(invoice.number) not in text:
         findings.append(
             CheckFinding(
                 "BF-PDF-XML-MISMATCH-NUMBER", "warning", ("BT-1",), {"number": invoice.number}

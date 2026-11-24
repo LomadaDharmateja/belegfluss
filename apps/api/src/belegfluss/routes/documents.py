@@ -8,14 +8,17 @@ from sqlalchemy import case, func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from belegfluss import audit
+from belegfluss import audit, review
 from belegfluss.db import get_session
 from belegfluss.errors import AppError, error_responses
-from belegfluss.models import Document, Finding, Invoice, Membership
+from belegfluss.models import Document, FieldReview, Finding, Invoice, Membership
 from belegfluss.queue import DocumentQueue
+from belegfluss.review import InvoiceCorrection
 from belegfluss.schemas import (
+    ApproveIn,
     DocumentDetailOut,
     DocumentOut,
+    FieldReviewOut,
     FindingCounts,
     FindingOut,
     InvoiceOut,
@@ -72,6 +75,34 @@ def list_documents(
 _SEVERITY_ORDER = case({"error": 0, "warning": 1}, value=Finding.severity, else_=2)
 
 
+def _find_document(session: Session, org_id: uuid.UUID, document_id: uuid.UUID) -> Document:
+    doc = session.scalars(
+        select(Document).where(Document.org_id == org_id, Document.id == document_id)
+    ).one_or_none()
+    if doc is None:
+        raise AppError(404, "document.not_found", "Document not found.")
+    return doc
+
+
+def _detail(session: Session, doc: Document) -> DocumentDetailOut:
+    invoice = session.scalars(select(Invoice).where(Invoice.document_id == doc.id)).one_or_none()
+    findings = session.scalars(
+        select(Finding).where(Finding.document_id == doc.id).order_by(_SEVERITY_ORDER, Finding.code)
+    ).all()
+    reviews = session.scalars(
+        select(FieldReview).where(FieldReview.document_id == doc.id).order_by(FieldReview.at)
+    ).all()
+    counts = FindingCounts()
+    for finding in findings:
+        setattr(counts, finding.severity, getattr(counts, finding.severity) + 1)
+    return DocumentDetailOut(
+        document=_to_out(doc, invoice, counts),
+        invoice=InvoiceOut.model_validate(invoice, from_attributes=True) if invoice else None,
+        findings=[FindingOut.model_validate(f, from_attributes=True) for f in findings],
+        reviews=[FieldReviewOut.model_validate(r, from_attributes=True) for r in reviews],
+    )
+
+
 @router.get(
     "/{document_id}", response_model=DocumentDetailOut, responses=error_responses(401, 403, 404)
 )
@@ -81,24 +112,8 @@ def get_document(
     _membership: Annotated[Membership, Depends(require_membership)],
     session: Annotated[Session, Depends(get_session)],
 ) -> DocumentDetailOut:
-    """One document with the invoice read from it and all findings (errors first)."""
-    doc = session.scalars(
-        select(Document).where(Document.org_id == org_id, Document.id == document_id)
-    ).one_or_none()
-    if doc is None:
-        raise AppError(404, "document.not_found", "Document not found.")
-    invoice = session.scalars(select(Invoice).where(Invoice.document_id == doc.id)).one_or_none()
-    findings = session.scalars(
-        select(Finding).where(Finding.document_id == doc.id).order_by(_SEVERITY_ORDER, Finding.code)
-    ).all()
-    counts = FindingCounts()
-    for finding in findings:
-        setattr(counts, finding.severity, getattr(counts, finding.severity) + 1)
-    return DocumentDetailOut(
-        document=_to_out(doc, invoice, counts),
-        invoice=InvoiceOut.model_validate(invoice, from_attributes=True) if invoice else None,
-        findings=[FindingOut.model_validate(f, from_attributes=True) for f in findings],
-    )
+    """One document with the invoice read from it, all findings (errors first) and corrections."""
+    return _detail(session, _find_document(session, org_id, document_id))
 
 
 @router.post(
@@ -173,3 +188,59 @@ def _enqueue(queue: DocumentQueue, document_id: uuid.UUID) -> None:
         queue.send(document_id)
     except AzureError as exc:
         logger.warning("document %s: enqueue failed (%s)", document_id, type(exc).__name__)
+
+
+@router.patch(
+    "/{document_id}/invoice",
+    response_model=DocumentDetailOut,
+    responses=error_responses(401, 403, 404, 409, 422),
+)
+def correct_invoice(
+    org_id: uuid.UUID,
+    document_id: uuid.UUID,
+    correction: InvoiceCorrection,
+    membership: Annotated[Membership, Depends(require_membership)],
+    session: Annotated[Session, Depends(get_session)],
+) -> DocumentDetailOut:
+    """Correct fields of an AI-read invoice. Only the fields sent change (ADR-0017)."""
+    doc = _find_document(session, org_id, document_id)
+    review.correct_invoice(session, doc, correction, membership.user_id)
+    session.commit()
+    return _detail(session, doc)
+
+
+@router.post(
+    "/{document_id}/approve",
+    response_model=DocumentDetailOut,
+    responses=error_responses(401, 403, 404, 409),
+)
+def approve_document(
+    org_id: uuid.UUID,
+    document_id: uuid.UUID,
+    body: ApproveIn,
+    membership: Annotated[Membership, Depends(require_membership)],
+    session: Annotated[Session, Depends(get_session)],
+) -> DocumentDetailOut:
+    """Approve for the accountant. With open errors, `acknowledge_errors` must be true."""
+    doc = _find_document(session, org_id, document_id)
+    review.approve(session, doc, membership.user_id, acknowledge_errors=body.acknowledge_errors)
+    session.commit()
+    return _detail(session, doc)
+
+
+@router.post(
+    "/{document_id}/reopen",
+    response_model=DocumentDetailOut,
+    responses=error_responses(401, 403, 404),
+)
+def reopen_document(
+    org_id: uuid.UUID,
+    document_id: uuid.UUID,
+    membership: Annotated[Membership, Depends(require_membership)],
+    session: Annotated[Session, Depends(get_session)],
+) -> DocumentDetailOut:
+    """Undo an approval, e.g. to correct a field."""
+    doc = _find_document(session, org_id, document_id)
+    review.reopen(session, doc, membership.user_id)
+    session.commit()
+    return _detail(session, doc)

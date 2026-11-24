@@ -47,7 +47,8 @@
       "processing": "Wird geprüft",
       "ready": "Geprüft",
       "needs_review": "Bitte prüfen",
-      "failed": "Fehlgeschlagen"
+      "failed": "Fehlgeschlagen",
+      "approved": "Freigegeben"
     },
     "types": {
       "pdf": "PDF",
@@ -75,7 +76,8 @@
     "notRead": "Aus diesem Dokument konnten keine Rechnungsdaten automatisch gelesen werden.",
     "sourceValues": {
       "xml": "E-Rechnung (XML)",
-      "zugferd": "ZUGFeRD / Factur-X (PDF mit XML)"
+      "zugferd": "ZUGFeRD / Factur-X (PDF mit XML)",
+      "ai": "Per KI gelesen (einfache PDF oder Foto)"
     },
     "syntaxValues": {
       "ubl-invoice": "UBL-Rechnung",
@@ -188,8 +190,52 @@
       "BR-DE-16": "Die USt-IdNr. oder Steuernummer des Lieferanten (BT-31/BT-32) fehlt.",
       "BR-DE-17": "Der Rechnungsart-Code (BT-3) gehört nicht zu den Codes, die XRechnung zulässt.",
       "BR-DE-21": "Die Standardkennung (BT-24) ist nicht die XRechnung-Kennung. Die Rechnung folgt vielleicht einem anderen Standard.",
-      "BR-DE-TMP-32": "Das Lieferdatum (BT-72) oder ein Leistungszeitraum (BG-14 oder BG-26 in jeder Position) sollte angegeben sein."
+      "BR-DE-TMP-32": "Das Lieferdatum (BT-72) oder ein Leistungszeitraum (BG-14 oder BG-26 in jeder Position) sollte angegeben sein.",
+      "BF-AI-READ": "Dieses Dokument wurde per KI gelesen. Bitte vergleiche die Felder mit dem Dokument, bevor du es freigibst.",
+      "BF-AI-NOT-IN-DOCUMENT": "{field, select, number {Die Rechnungsnummer} vat_id {Die USt-IdNr.} iban {Die IBAN} gross {Der Gesamtbetrag} issue_date {Das Rechnungsdatum} due_date {Das Fälligkeitsdatum} other {Ein Wert}} aus der KI-Auslesung steht nicht im Text des Dokuments. Vielleicht wurde sie falsch gelesen.",
+      "BF-AI-INVALID-IBAN": "Die IBAN {value} hat falsche Prüfziffern. Sie wurde wahrscheinlich falsch gelesen.",
+      "BF-AI-INVALID-VAT-ID": "Die USt-IdNr. {value} hat kein gültiges Format.",
+      "BF-AI-IMPLAUSIBLE-DATE": "{field, select, number {Die Rechnungsnummer} vat_id {Die USt-IdNr.} iban {Die IBAN} gross {Der Gesamtbetrag} issue_date {Das Rechnungsdatum} due_date {Das Fälligkeitsdatum} other {Ein Wert}} wirkt unplausibel (in der Zukunft, sehr alt oder vor dem Rechnungsdatum)."
     }
+  },
+  "review": {
+    "title": "Prüfen und korrigieren",
+    "hint": "Per KI gelesen. Vergleiche jedes Feld mit dem Dokument und korrigiere es bei Bedarf.",
+    "save": "Korrekturen speichern",
+    "saved": "Korrekturen gespeichert.",
+    "nothingChanged": "Es wurde nichts geändert.",
+    "fields": {
+      "number": "Rechnungsnummer",
+      "issue_date": "Rechnungsdatum",
+      "due_date": "Fällig am",
+      "currency": "Währung",
+      "seller_name": "Lieferant",
+      "seller_vat_id": "USt-IdNr. Lieferant",
+      "iban": "IBAN",
+      "net": "Gesamt ohne USt",
+      "vat": "Umsatzsteuer",
+      "gross": "Gesamt mit USt",
+      "due": "Zu zahlen"
+    },
+    "history": "Korrekturen",
+    "historyLine": "{field}: {before} → {after}",
+    "empty": "leer"
+  },
+  "approval": {
+    "title": "Freigabe",
+    "hint": "Freigegebene Dokumente kommen in den Export für deine Steuerberatung.",
+    "approve": "Freigeben",
+    "acknowledge": "Ich habe die Fehler gesehen und möchte trotzdem freigeben.",
+    "approvedOn": "Freigegeben am {date}.",
+    "reopen": "Erneut öffnen"
+  },
+  "export": {
+    "title": "Export für deine Steuerberatung",
+    "hint": "Alle freigegebenen Dokumente im Zeitraum (nach Rechnungsdatum): Originale unverändert plus eine Übersichtstabelle.",
+    "from": "Von",
+    "to": "Bis",
+    "download": "ZIP herunterladen",
+    "working": "Export wird erstellt …"
   },
   "settings": {
     "title": "Einstellungen",
@@ -219,7 +265,16 @@
       "not_found": "Diese Organisation wurde nicht gefunden."
     },
     "document": {
-      "not_found": "Dieses Dokument wurde nicht gefunden."
+      "not_found": "Dieses Dokument wurde nicht gefunden.",
+      "approved": "Dieses Dokument ist freigegeben. Öffne es erneut, um etwas zu ändern.",
+      "not_ready": "Dieses Dokument wurde noch nicht geprüft.",
+      "has_errors": "Bitte bestätige, dass du die Fehler gesehen hast."
+    },
+    "invoice": {
+      "not_editable": "Nur per KI gelesene Rechnungen können korrigiert werden. Bei E-Rechnungen ist das XML maßgeblich."
+    },
+    "export": {
+      "too_large": "Zu viele Dokumente. Bitte wähle einen kürzeren Zeitraum."
     }
   }
 }

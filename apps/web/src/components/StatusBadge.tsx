@@ -7,6 +7,7 @@ const STYLES: Record<DocumentOut["status"], string> = {
   ready: "bg-emerald-50 text-emerald-800",
   needs_review: "bg-amber-50 text-amber-900",
   failed: "bg-red-50 text-red-800",
+  approved: "bg-emerald-700 text-white",
 };
 
 export function StatusBadge({ status }: { status: DocumentOut["status"] }) {
