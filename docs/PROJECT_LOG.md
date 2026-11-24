@@ -230,3 +230,53 @@ A dated diary: what was done, why, what was learned, what broke. Newest entry at
 
 **Next**
 - M2 planning: explain the approach, options and costs (first paid service: Azure OpenAI) before building.
+
+## 2026-11-24 — M2a: reading and validating invoices
+
+**Planning (with the owner)**
+- M2 split into two PRs: M2a (deterministic, no cloud, €0) and M2b (LLM extraction, review, export; first paid
+  service). Keyless Azure login for M2b via Azure CLI.
+- M2b estimate shared before anything is created: gpt-5-mini Data Zone EU in Germany West Central, $0.275 / $2.20 per
+  1M tokens (Azure Retail Prices API), about €2–4 for development (COSTS.md).
+
+**Done**
+- Spike: official KoSIT step-1 XSLT via saxonche on the 86-file suite: 86/86, 0 mismatches on BT-106/109/110/112/115,
+  ~5 ms per file → adopted (ADR-0014). Evidence: `docs/research/evidence/xslt-spike-2026-11-24.*`.
+- Five step-1 stylesheets vendored unchanged (Apache-2.0) with licence and source note.
+- `scripts/fetch_test_data.py`: pinned, checksummed test suite into `testdata/external/`; cached in CI.
+- Validator container (1.6.3 + configuration 2026-08-31, checksums as in M0, non-root, no GUI, health check).
+  All 86 suite files accepted (median ~30 ms). Memory: 627 MiB at 512 MB heap; 256 MB handled the suite three times
+  (446 MiB) but large attachments are untested, so 512 MB stays.
+- Reading: classification by content, ZUGFeRD XML extraction, safe XML parsing (no network/entities, DOCTYPE
+  rejected, UTF-8 only), invoice model named after EN 16931 terms. Synthetic UBL credit note and CII fixtures.
+- Worker on Storage Queue (sweeper, poison queue, idempotent), results in `invoices` (summary + JSONB) and `findings`
+  (ADR-0015), business checks with 30 `BF-` codes, curated DE/EN explanations for 22 official rules (texts taken from
+  the configuration), KoSIT mandatory-details table read (research F29 updated).
+- Web: list with summary and counts (polling), document page with official result, findings and invoice view.
+- Compose: `validator` (no published port) and `worker`. CI: test data, real validator in tests, smoke test checks the
+  validator is internal.
+- Tests: API 202, web 37 + 5 Playwright; CI green on PR #7. Walkthrough with screenshots (`m2a-01` … `m2a-06`).
+
+**What broke**
+- A real receipt was reported as password-protected: it was encrypted with an empty password. Fixed (try the empty
+  password first), regression test.
+- ZUGFeRD MINIMUM showed "rejected": the configuration has no scenario for it (`noScenarioMatched`), and our own
+  arithmetic was skipped. New outcome `no_scenario`, our checks run, real rejections always need review. Regression
+  tests.
+- The newest Azure queue SDK uses an API version Azurite doesn't list: tests now run Azurite 3.38.0 with
+  `--skipApiVersionCheck`, like Compose.
+- `ADD <url>` files are root-only in Docker; the non-root validator couldn't read its jar. The Docker SDK can't build
+  `ADD --checksum`, so the test fixture builds with the docker CLI.
+- Azure's minimum visibility timeout is 1 s; the poison test waits accordingly.
+- My process: several scripted edits failed on line endings or reformatted text; all were caught by exact-once checks
+  before anything was committed.
+
+**Next**
+- Owner reviews ADR-0014/0015 → merge PR #7. Then the M2b plan (Azure CLI install, explicit yes before creating Azure
+  OpenAI). Open: Dependabot PRs #3–#6 (two are major runtime upgrades: Python 3.15, Node 26), unit codes shown as
+  words.
+
+## 2026-11-24 — M2a review outcome
+
+- Owner accepted ADR-0014 and ADR-0015 and approved PR #7 for merge.
+- Next: M2b plan (LLM extraction, review, export).

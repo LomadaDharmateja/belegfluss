@@ -1,5 +1,6 @@
-"""Test fixtures: real PostgreSQL 18 and Azurite in containers, locally signed access tokens."""
+"""Test fixtures: PostgreSQL 18, Azurite and the KoSIT validator in containers; test tokens."""
 
+import subprocess
 import uuid
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass
@@ -16,6 +17,8 @@ from fastapi.testclient import TestClient
 from sqlalchemy import text
 from testcontainers.community.azurite import AzuriteContainer
 from testcontainers.community.postgres import PostgresContainer
+from testcontainers.core.container import DockerContainer
+from testcontainers.core.wait_strategies import LogMessageWaitStrategy
 
 from belegfluss.auth import TokenVerifier
 from belegfluss.main import create_app
@@ -92,8 +95,38 @@ def migrated_db(postgres_url: str) -> str:
 
 @pytest.fixture(scope="session")
 def azurite_connection_string() -> Iterator[str]:
-    with AzuriteContainer() as azurite:
+    # Same image and flag as compose.yaml: the newest Azure SDKs send API versions that Azurite
+    # doesn't list yet.
+    azurite = AzuriteContainer(
+        "mcr.microsoft.com/azure-storage/azurite:3.38.0",
+        command="azurite --blobHost 0.0.0.0 --queueHost 0.0.0.0 --tableHost 0.0.0.0"
+        " --skipApiVersionCheck",
+    )
+    with azurite:
         yield azurite.get_connection_string()
+
+
+VALIDATOR_IMAGE = "belegfluss-validator:test"
+
+
+@pytest.fixture(scope="session")
+def validator_url() -> Iterator[str]:
+    """The real validator image from services/validator. Built with the docker CLI, because the
+    Dockerfile uses BuildKit features (ADD --checksum) that the Docker SDK can't build."""
+    command = ["docker", "build", "--quiet", "--tag", VALIDATOR_IMAGE, "services/validator"]
+    subprocess.run(  # noqa: S603
+        command,
+        cwd=REPO_ROOT,
+        check=True,
+        capture_output=True,
+    )
+    container = (
+        DockerContainer(VALIDATOR_IMAGE)
+        .with_exposed_ports(8080)
+        .waiting_for(LogMessageWaitStrategy("Daemon started").with_startup_timeout(120))
+    )
+    with container:
+        yield f"http://{container.get_container_host_ip()}:{container.get_exposed_port(8080)}"
 
 
 @pytest.fixture(scope="session")
@@ -105,8 +138,9 @@ def signing_key() -> Any:
 def settings(migrated_db: str, azurite_connection_string: str) -> Settings:
     return Settings(
         database_url=migrated_db,
-        blob_connection_string=azurite_connection_string,
+        storage_connection_string=azurite_connection_string,
         blob_container=f"test-{uuid.uuid4().hex[:12]}",
+        queue_name=f"test-{uuid.uuid4().hex[:12]}",
         auth_issuer=ISSUER,
         auth_audience=AUDIENCE,
         auth_required_scope=SCOPE,
@@ -127,7 +161,10 @@ def client(settings: Settings, signing_key: Any) -> Iterator[TestClient]:
         yield test_client
     with app.state.engine.begin() as connection:
         connection.execute(
-            text("TRUNCATE audit_events, documents, memberships, users, organizations")
+            text(
+                "TRUNCATE findings, invoices, audit_events, documents, memberships, users,"
+                " organizations"
+            )
         )
     app.state.engine.dispose()
 

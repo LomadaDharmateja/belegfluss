@@ -9,6 +9,12 @@ import { UploadDropzone } from "./UploadDropzone";
 
 // Same limit as the API default (BELEGFLUSS_MAX_UPLOAD_BYTES); the API enforces it in any case.
 const MAX_UPLOAD_BYTES = 20 * 1024 * 1024;
+// While documents are being processed, the list refreshes itself (polling, ARCHITECTURE §10.9).
+const POLL_MS = 2000;
+
+export function isPending(documents: DocumentOut[]): boolean {
+  return documents.some((d) => d.status === "received" || d.status === "processing");
+}
 
 type State =
   | { status: "loading" }
@@ -44,6 +50,13 @@ export function Inbox() {
       active = false;
     };
   }, [api, version]);
+
+  const pending = state.status === "ready" && isPending(state.documents);
+  useEffect(() => {
+    if (!pending) return;
+    const timer = setTimeout(() => setVersion((v) => v + 1), POLL_MS);
+    return () => clearTimeout(timer);
+  }, [pending, version]);
 
   return (
     <section className="space-y-8">

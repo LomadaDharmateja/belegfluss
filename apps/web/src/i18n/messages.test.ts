@@ -1,3 +1,5 @@
+import { readdirSync, readFileSync } from "node:fs";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import de from "../../messages/de.json";
 import en from "../../messages/en.json";
@@ -47,6 +49,22 @@ describe("translations", () => {
     ];
     for (const code of serverCodes) {
       expect(enKeys[`errors.${code}`], code).toBeTruthy();
+    }
+  });
+
+  it("every finding code in the API source has a message", () => {
+    // Scans apps/api/src for "BF-..." codes, so a new check can't ship without DE/EN texts.
+    const sourceDir = join(__dirname, "../../../api/src/belegfluss");
+    const files = readdirSync(sourceDir, { recursive: true, encoding: "utf8" }).filter((f) =>
+      f.endsWith(".py"),
+    );
+    const codes = new Set(
+      files.flatMap((f) => [...readFileSync(join(sourceDir, f), "utf8").matchAll(/"(BF-[A-Z0-9-]+)"/g)].map((m) => m[1])),
+    );
+    expect(codes.size).toBeGreaterThan(20);
+    for (const code of codes) {
+      expect(enKeys[`findings.codes.${code}`], code).toBeTruthy();
+      expect(deKeys[`findings.codes.${code}`], code).toBeTruthy();
     }
   });
 });

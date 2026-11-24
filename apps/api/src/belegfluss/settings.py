@@ -8,9 +8,11 @@ class Settings(BaseSettings):
 
     database_url: str = "postgresql+psycopg://belegfluss:belegfluss-dev@localhost:5432/belegfluss"
 
-    # Local development uses Azurite. In Azure (M4) this becomes an account URL + Managed Identity.
-    blob_connection_string: str = "UseDevelopmentStorage=true"
+    # Blob (originals) and Queue (processing jobs) in one storage account. Local development uses
+    # Azurite. In Azure (M4) this becomes an account URL + Managed Identity.
+    storage_connection_string: str = "UseDevelopmentStorage=true"
     blob_container: str = "documents"
+    queue_name: str = "documents"
 
     # Values from the tenant's OpenID discovery document
     # (https://<subdomain>.ciamlogin.com/<tenant-id>/v2.0/.well-known/openid-configuration).
@@ -21,3 +23,9 @@ class Settings(BaseSettings):
 
     cors_origins: list[str] = ["http://localhost:3000"]
     max_upload_bytes: int = 20 * 1024 * 1024
+    max_pdf_pages: int = 50
+
+    # Official KoSIT validator daemon on the internal network (ADR-0005). The configuration version
+    # is stored with every result. It must match services/validator/Dockerfile (checked by a test).
+    validator_url: str = "http://localhost:8081"
+    validator_config: str = "xrechnung-3.0.2-2026-08-31"

@@ -17,5 +17,5 @@ updates:
     schedule: { interval: weekly }
 
   - package-ecosystem: docker
-    directories: ["/apps/api", "/apps/web"]
+    directories: ["/apps/api", "/apps/web", "/services/validator"]
     schedule: { interval: weekly }

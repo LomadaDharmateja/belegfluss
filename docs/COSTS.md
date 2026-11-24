@@ -11,11 +11,26 @@
 |---|---|---|---|---|
 | M0 | none (local Docker, public downloads) | 0 | 0 | No cloud resources created |
 | M1 | Azure subscription (pay-as-you-go, no monthly fee) + Entra External ID tenant "Belegfluss Dev" (free for the first 50,000 monthly active users) | 0 | 0.00 | Portal, 2026-11-24: subscription current cost €0.00; budget "belegfluss" evaluated spend €0.00 |
+| M2a | none (validator, worker, queue run locally in Docker) | 0 | 0 | No Azure resource created |
 
 **Budget alert (since M1):** €10 per month on the subscription, alerts by email at 50 % and 100 % of actual cost and
 at 100 % of forecast cost. Checked in the portal on 2026-11-24. Azure for Students was not used: it restricts
 regions, and Cost Management lists it as unsupported (reasons in
 [docs/setup/entra-external-id.md](setup/entra-external-id.md)).
+
+## Estimate for M2b (shared 2026-11-24, before anything is created)
+
+- **Resource:** Azure OpenAI with a pay-per-token **Data Zone Standard (EU)** deployment of **gpt-5-mini
+  (2025-08-07)** in Germany West Central. Available there per the
+  [region table](https://learn.microsoft.com/en-us/azure/foundry/foundry-models/concepts/models-sold-directly-by-azure-region-availability)
+  (updated 2026-10-19).
+- **Price** ([Azure Retail Prices API](https://prices.azure.com/api/retail/prices), 2026-11-24, per 1M tokens):
+  gpt-5-mini Data Zone $0.275 input / $2.20 output; for comparison gpt-4.1-mini $0.44 / $1.76 and gpt-5.4-mini
+  $0.825 / $4.95.
+- **Assumption:** ~5,000 input tokens (page images, text layer, schema) and up to ~3,000 output tokens (including
+  reasoning) per document → about $0.008 per document. Development: 300–500 live runs → **about €2–4 in total**.
+  CI makes no paid calls. The real token usage of the first calls is measured and replaces this assumption.
+- **To verify when creating:** that the pay-per-token deployment has no monthly base fee.
 
 ## Notes for M4 (to estimate before deploying)
 

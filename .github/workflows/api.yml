@@ -2,10 +2,10 @@ name: api
 
 on:
   pull_request:
-    paths: ["apps/api/**", "apps/web/src/api/openapi.json", ".github/workflows/api.yml"]
+    paths: ["apps/api/**", "apps/web/src/api/openapi.json", "services/validator/**", "scripts/**", ".github/workflows/api.yml"]
   push:
     branches: [main]
-    paths: ["apps/api/**", "apps/web/src/api/openapi.json", ".github/workflows/api.yml"]
+    paths: ["apps/api/**", "apps/web/src/api/openapi.json", "services/validator/**", "scripts/**", ".github/workflows/api.yml"]
 
 permissions:
   contents: read
@@ -13,7 +13,7 @@ permissions:
 jobs:
   test:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
     defaults:
       run:
         working-directory: apps/api
@@ -32,5 +32,14 @@ jobs:
         run: uv run ruff format --check .
       - name: Types (mypy strict)
         run: uv run mypy src
-      - name: Tests (real PostgreSQL + Azurite via testcontainers)
+      # Official XRechnung test suite, pinned by SHA-256 (ADR-0008). CI=true makes a missing suite fail.
+      - name: Cache test data
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: testdata/external
+          key: testdata-${{ hashFiles('scripts/fetch_test_data.py') }}
+      - name: Fetch test data
+        working-directory: .
+        run: python3 scripts/fetch_test_data.py
+      - name: Tests (real PostgreSQL, Azurite and KoSIT validator via testcontainers)
         run: uv run pytest

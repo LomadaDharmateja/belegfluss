@@ -4,8 +4,9 @@
 > [`docs/decisions/`](decisions/): 0001–0009 accepted on 2026-11-23, 0010–0013 on 2026-11-24. Facts about e-invoicing come from
 > [research/einvoicing.md](research/einvoicing.md) (fact IDs like F15).
 > This document is kept current. When a milestone changes the design, it is updated together with a superseding ADR.
-> **Built so far:** M1 (2026-11-24): sign-in, organisations, upload, DE/EN, Docker Compose, CI, see
-> [milestones/M1.md](milestones/M1.md). Sections marked "M1 as built" describe the running code; the rest is design.
+> **Built so far:** M1 (sign-in, organisations, upload, DE/EN, Compose, CI, [M1.md](milestones/M1.md)) and M2a (reading,
+> official validation, worker, business checks, [M2a.md](milestones/M2a.md)). Sections marked "as built" describe the
+> running code; the rest is design.
 
 ## 1. Goals and constraints
 
@@ -149,7 +150,7 @@ sequenceDiagram
     A->>B: put original (key = sha256)
     A->>D: insert document (status = received), audit event
     A->>Q: enqueue {document_id}
-    A-->>W: 202 Accepted {document_id}
+    A-->>W: 201 Created {document, status = received}
     Q->>K: deliver message
     K->>D: lock document, status = processing
     K->>B: read original
@@ -192,8 +193,10 @@ Messages that fail repeatedly go to a **poison queue** and the document is marke
 
 ## 6. Data model (sketch)
 
-M1 as built: ORGANIZATION, USER, MEMBERSHIP, DOCUMENT and AUDIT_EVENT with the fields shown here. The other
-entities are the design for M2 and later.
+As built (M1, M2a): ORGANIZATION, USER, MEMBERSHIP, DOCUMENT, INVOICE, FINDING and AUDIT_EVENT with the fields shown
+here. Invoice lines and the VAT breakdown are part of the INVOICE's JSONB model, not tables
+([ADR-0015](decisions/0015-store-results-as-summary-columns-plus-jsonb.md)). FIELD_REVIEW and EXPORT are the design
+for M2b.
 
 ```mermaid
 erDiagram
@@ -201,8 +204,7 @@ erDiagram
     USER ||--o{ MEMBERSHIP : has
     ORGANIZATION ||--o{ DOCUMENT : owns
     DOCUMENT ||--o| INVOICE : "is read as"
-    INVOICE ||--o{ INVOICE_LINE : contains
-    INVOICE ||--o{ FINDING : has
+    DOCUMENT ||--o{ FINDING : has
     INVOICE ||--o{ FIELD_REVIEW : "corrected by"
     ORGANIZATION ||--o{ EXPORT : creates
     EXPORT }o--o{ INVOICE : includes
@@ -237,24 +239,29 @@ erDiagram
     }
     INVOICE {
         uuid id
-        uuid document_id
-        string format "ubl, cii, zugferd, unstructured"
-        string profile "e.g. xrechnung_3.0, en16931, basic_wl"
-        string seller_name
-        string invoice_number
-        date issue_date
-        decimal gross_total
-        string currency
-        string extraction_method "xml or llm"
+        uuid document_id "unique"
+        string source "xml or zugferd (llm from M2b)"
+        string syntax "ubl-invoice, ubl-creditnote, cii"
+        string specification_id "BT-24 profile"
+        string number "BT-1"
+        date issue_date "BT-2"
+        string seller_name "BT-27"
+        string seller_vat_id "BT-31"
+        decimal gross_total "BT-112, also net, VAT, due"
+        jsonb model "full invoice model incl. lines"
+        string validation_outcome "accepted, rejected, no_scenario, not_processable"
+        string validator_engine "and configuration"
         string pipeline_version
     }
     FINDING {
         uuid id
-        uuid invoice_id
+        uuid document_id
+        string origin "kosit or belegfluss"
         string code "e.g. BR-CO-15, BF-DUPLICATE"
         string severity "error, warning, info"
-        string source "kosit or belegfluss"
-        string bt_ref "e.g. BT-112"
+        string message "official rule text (kosit)"
+        string business_terms "e.g. BT-112"
+        jsonb params "values for the message"
     }
     AUDIT_EVENT {
         uuid id
@@ -355,8 +362,8 @@ flowchart LR
 Sign-in uses the real (free) Entra External ID dev tenant. Automated tests use locally signed test tokens, so CI
 needs no internet login.
 
-M1 as built: `postgres`, `azurite`, `api` and `web`, all ports bound to 127.0.0.1. The worker and validator join in
-M2.
+As built (M2a): `postgres`, `azurite`, `api`, `worker`, `validator` and `web`. Published ports are bound to 127.0.0.1;
+the validator has no published port (reachable by the worker only, checked in CI).
 
 ### 8.2 M4–M7: Azure Container Apps (Terraform)
 
@@ -482,8 +489,8 @@ numbers and Berater/Mandant numbers (F46). DATEV APIs not before real demand.
 |---|---|---|---|
 | i18n in Next.js | next-intl · i18next · built-in routing only | **Decided:** next-intl without locale in the URL | [ADR-0010](decisions/0010-web-i18n-next-intl-without-url-locale.md) |
 | Typed API client | openapi-typescript + openapi-fetch · orval · hand-written | **Decided:** openapi-typescript + openapi-fetch, CI drift check | [ADR-0011](decisions/0011-typed-api-contract-openapi.md) |
-| XML parsing | own lxml mapping for UBL and CII · official KoSIT visualisation step-1 XSLT (UBL/CII → one semantic model) via Saxon | Spike both in M2; prefer the official transform if it runs cleanly from Python | M2 ADR |
-| Live updates in UI | polling · server-sent events · WebSockets | polling first, SSE later | M2 |
+| XML parsing | own lxml mapping for UBL and CII · official KoSIT visualisation step-1 XSLT (UBL/CII → one semantic model) via Saxon | **Decided:** official transform via saxonche (spike: 86/86 files, 0 mismatches) | [ADR-0014](decisions/0014-read-xml-with-official-kosit-transform.md) |
+| Live updates in UI | polling · server-sent events · WebSockets | **Built (M2a):** polling every 2 s while documents are processing; SSE later if needed | M2a |
 | Container registry | Azure Container Registry · GitHub Container Registry | ACR (Azure story, Managed Identity pull) — check cost | M4 ADR |
 | Terraform state | Azure Storage backend · Terraform Cloud | Azure Storage backend with state locking | M4 ADR |
 | Email ingestion (M6) | n8n IMAP/webhook workflow · own small ingestion service · inbound-email provider webhook | **Open.** n8n's Sustainable Use License allows use "for your own internal business purposes" and free non-commercial distribution. Using it for a customer-facing feature is unclear if Belegfluss ever charges. Option: n8n for internal workflows (exports, notifications), own code for ingestion | M6 ADR |
@@ -499,7 +506,7 @@ numbers and Berater/Mandant numbers (F46). DATEV APIs not before real demand.
 | Container Apps scale to zero (no usage charges at zero); event-driven jobs and `azure-queue` scaler | [scaling](https://learn.microsoft.com/en-us/azure/container-apps/scale-app), [jobs](https://learn.microsoft.com/en-us/azure/container-apps/jobs) | ✅ |
 | Container Apps free grant per subscription/month: 180,000 vCPU-s, 360,000 GiB-s, 2M requests | [pricing](https://azure.microsoft.com/en-us/pricing/details/container-apps/) | ✅ |
 | Azure OpenAI "Data Zone Standard" processes data only within the EU data zone | [deployment types](https://learn.microsoft.com/en-us/azure/foundry/foundry-models/concepts/deployment-types) | ✅ |
-| Which GPT models are available as Data Zone Standard EU and in which regions | region tables (link returned 404) | ❌ check in M2 |
+| Which GPT models are available as Data Zone Standard EU and in which regions | [region availability](https://learn.microsoft.com/en-us/azure/foundry/foundry-models/concepts/models-sold-directly-by-azure-region-availability) (updated 2026-10-19) | ✅ 2026-11-24: gpt-5-mini, gpt-4.1-mini, gpt-5-nano, gpt-5.4-mini in Germany West Central and Sweden Central (among others) |
 | Prompts/completions not used to train foundation models; abuse monitoring may store data (EEA reviewers for EEA deployments) | [data privacy](https://learn.microsoft.com/en-us/azure/foundry/responsible-ai/openai/data-privacy) | ✅ |
 | PostgreSQL Flexible Server smallest Burstable is B1ms; Burstable "not recommended for production" | [compute options](https://learn.microsoft.com/en-us/azure/postgresql/flexible-server/concepts-compute-storage) | ✅ (price ❌) |
 | Document Intelligence `prebuilt-invoice` exists and supports German | [invoice model](https://learn.microsoft.com/en-us/azure/ai-services/document-intelligence/prebuilt/invoice), [languages](https://learn.microsoft.com/en-us/azure/ai-services/document-intelligence/language-support/prebuilt) | ✅ (price ❌) |

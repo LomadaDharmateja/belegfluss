@@ -50,7 +50,7 @@ export interface paths {
         };
         /**
          * List Documents
-         * @description Documents of one organisation, newest first.
+         * @description Documents of one organisation, newest first, with what was read and how many findings.
          */
         get: operations["list_documents_orgs__org_id__documents_get"];
         put?: never;
@@ -72,7 +72,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get Document */
+        /**
+         * Get Document
+         * @description One document with the invoice read from it and all findings (errors first).
+         */
         get: operations["get_document_orgs__org_id__documents__document_id__get"];
         put?: never;
         post?: never;
@@ -86,6 +89,19 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** Address */
+        Address: {
+            /** City */
+            city?: string | null;
+            /** Country Code */
+            country_code?: string | null;
+            /** Line1 */
+            line1?: string | null;
+            /** Line2 */
+            line2?: string | null;
+            /** Post Code */
+            post_code?: string | null;
+        };
         /** Body_upload_document_orgs__org_id__documents_post */
         Body_upload_document_orgs__org_id__documents_post: {
             /**
@@ -94,6 +110,13 @@ export interface components {
              */
             file: string;
         };
+        /** DocumentDetailOut */
+        DocumentDetailOut: {
+            document: components["schemas"]["DocumentOut"];
+            /** Findings */
+            findings: components["schemas"]["FindingOut"][];
+            invoice: components["schemas"]["InvoiceOut"] | null;
+        };
         /** DocumentOut */
         DocumentOut: {
             /**
@@ -101,6 +124,16 @@ export interface components {
              * Format: date-time
              */
             created_at: string;
+            /** Failure Reason */
+            failure_reason?: string | null;
+            /**
+             * @default {
+             *       "error": 0,
+             *       "info": 0,
+             *       "warning": 0
+             *     }
+             */
+            finding_counts: components["schemas"]["FindingCounts"];
             /**
              * Id
              * Format: uuid
@@ -125,18 +158,67 @@ export interface components {
              */
             source: "upload";
             status: components["schemas"]["DocumentStatus"];
+            summary?: components["schemas"]["InvoiceSummary"] | null;
         };
         /**
          * DocumentStatus
          * @enum {string}
          */
-        DocumentStatus: "received";
+        DocumentStatus: "received" | "processing" | "ready" | "needs_review" | "failed";
         /** ErrorBody */
         ErrorBody: {
             /** Code */
             code: string;
             /** Message */
             message: string;
+        };
+        /** FindingCounts */
+        FindingCounts: {
+            /**
+             * Error
+             * @default 0
+             */
+            error: number;
+            /**
+             * Info
+             * @default 0
+             */
+            info: number;
+            /**
+             * Warning
+             * @default 0
+             */
+            warning: number;
+        };
+        /** FindingOut */
+        FindingOut: {
+            /** Business Terms */
+            business_terms: string[];
+            /** Code */
+            code: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Location */
+            location: string | null;
+            /** Message */
+            message: string | null;
+            /**
+             * Origin
+             * @enum {string}
+             */
+            origin: "kosit" | "belegfluss";
+            /** Params */
+            params: {
+                [key: string]: string;
+            };
+            /**
+             * Severity
+             * @enum {string}
+             */
+            severity: "error" | "warning" | "info";
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -150,6 +232,112 @@ export interface components {
              * @constant
              */
             status: "ok";
+        };
+        /** InvoiceModel */
+        InvoiceModel: {
+            buyer?: components["schemas"]["Party"];
+            /** Buyer Reference */
+            buyer_reference?: string | null;
+            /** Currency */
+            currency?: string | null;
+            /** Delivery Date */
+            delivery_date?: string | null;
+            /** Due Date */
+            due_date?: string | null;
+            /** Ibans */
+            ibans?: string[];
+            /** Issue Date */
+            issue_date?: string | null;
+            /** Lines */
+            lines?: components["schemas"]["Line"][];
+            /** Number */
+            number?: string | null;
+            /** Payment Terms */
+            payment_terms?: string | null;
+            /** Period End */
+            period_end?: string | null;
+            /** Period Start */
+            period_start?: string | null;
+            seller?: components["schemas"]["Party"];
+            /** Specification Id */
+            specification_id?: string | null;
+            /** Tax Point Date */
+            tax_point_date?: string | null;
+            totals?: components["schemas"]["Totals"];
+            /** Type Code */
+            type_code?: string | null;
+            /** Vat Breakdown */
+            vat_breakdown?: components["schemas"]["VatBreakdown"][];
+            /** Vat Currency */
+            vat_currency?: string | null;
+        };
+        /**
+         * InvoiceOut
+         * @description A read invoice and which code and validator produced the result.
+         */
+        InvoiceOut: {
+            model: components["schemas"]["InvoiceModel"];
+            /** Pipeline Version */
+            pipeline_version: string;
+            /**
+             * Source
+             * @enum {string}
+             */
+            source: "xml" | "zugferd";
+            /** Specification Id */
+            specification_id: string | null;
+            /** Syntax */
+            syntax: ("ubl-invoice" | "ubl-creditnote" | "cii") | null;
+            /** Validation Outcome */
+            validation_outcome: ("accepted" | "rejected" | "not_processable" | "no_scenario") | null;
+            /** Validator Config */
+            validator_config: string | null;
+            /** Validator Engine */
+            validator_engine: string | null;
+            /** Validator Scenario */
+            validator_scenario: string | null;
+        };
+        /**
+         * InvoiceSummary
+         * @description What the list shows about a read invoice.
+         */
+        InvoiceSummary: {
+            /** Currency */
+            currency: string | null;
+            /** Gross Total */
+            gross_total: string | null;
+            /** Issue Date */
+            issue_date: string | null;
+            /** Number */
+            number: string | null;
+            /** Seller Name */
+            seller_name: string | null;
+        };
+        /**
+         * Line
+         * @description BG-25.
+         */
+        Line: {
+            /** Id */
+            id?: string | null;
+            /** Name */
+            name?: string | null;
+            /** Net Amount */
+            net_amount?: string | null;
+            /** Period End */
+            period_end?: string | null;
+            /** Period Start */
+            period_start?: string | null;
+            /** Quantity */
+            quantity?: string | null;
+            /** Unit */
+            unit?: string | null;
+            /** Unit Price */
+            unit_price?: string | null;
+            /** Vat Category */
+            vat_category?: string | null;
+            /** Vat Rate */
+            vat_rate?: string | null;
         };
         /** MeOut */
         MeOut: {
@@ -172,11 +360,47 @@ export interface components {
             name: string;
             role: components["schemas"]["Role"];
         };
+        /** Party */
+        Party: {
+            address?: components["schemas"]["Address"];
+            /** Name */
+            name?: string | null;
+            /** Tax Number */
+            tax_number?: string | null;
+            /** Vat Id */
+            vat_id?: string | null;
+        };
         /**
          * Role
          * @enum {string}
          */
         Role: "owner" | "member" | "accountant";
+        /**
+         * Totals
+         * @description BG-22.
+         */
+        Totals: {
+            /** Allowances */
+            allowances?: string | null;
+            /** Charges */
+            charges?: string | null;
+            /** Due */
+            due?: string | null;
+            /** Gross */
+            gross?: string | null;
+            /** Line Net */
+            line_net?: string | null;
+            /** Net */
+            net?: string | null;
+            /** Paid */
+            paid?: string | null;
+            /** Rounding */
+            rounding?: string | null;
+            /** Vat */
+            vat?: string | null;
+            /** Vat In Accounting Currency */
+            vat_in_accounting_currency?: string | null;
+        };
         /** UploadResult */
         UploadResult: {
             document: components["schemas"]["DocumentOut"];
@@ -195,6 +419,24 @@ export interface components {
             msg: string;
             /** Error Type */
             type: string;
+        };
+        /**
+         * VatBreakdown
+         * @description BG-23: one entry per VAT category and rate.
+         */
+        VatBreakdown: {
+            /** Category */
+            category?: string | null;
+            /** Exemption Code */
+            exemption_code?: string | null;
+            /** Exemption Reason */
+            exemption_reason?: string | null;
+            /** Rate */
+            rate?: string | null;
+            /** Tax Amount */
+            tax_amount?: string | null;
+            /** Taxable Amount */
+            taxable_amount?: string | null;
         };
     };
     responses: never;
@@ -437,7 +679,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["DocumentOut"];
+                    "application/json": components["schemas"]["DocumentDetailOut"];
                 };
             };
             /** @description Unauthorized */

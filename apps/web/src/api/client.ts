@@ -3,6 +3,10 @@ import type { components, paths } from "./schema";
 
 // Types generated from the API's OpenAPI contract (ADR-0011). Regenerate with `pnpm gen:api`.
 export type DocumentOut = components["schemas"]["DocumentOut"];
+export type DocumentDetailOut = components["schemas"]["DocumentDetailOut"];
+export type InvoiceOut = components["schemas"]["InvoiceOut"];
+export type InvoiceModel = components["schemas"]["InvoiceModel"];
+export type FindingOut = components["schemas"]["FindingOut"];
 export type UploadResult = components["schemas"]["UploadResult"];
 export type ErrorBody = components["schemas"]["ErrorBody"];
 export type ApiClient = ReturnType<typeof createClient<paths>>;

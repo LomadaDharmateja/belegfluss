@@ -9,6 +9,7 @@ from belegfluss import __version__
 from belegfluss.auth import JwksKeySource, TokenVerifier
 from belegfluss.db import make_session_factory
 from belegfluss.errors import AppError, handle_app_error
+from belegfluss.queue import DocumentQueue
 from belegfluss.routes import documents, me
 from belegfluss.schemas import HealthOut
 from belegfluss.settings import Settings
@@ -24,7 +25,8 @@ def create_app(settings: Settings | None = None, verifier: TokenVerifier | None 
 
     app.state.settings = settings
     app.state.engine, app.state.session_factory = make_session_factory(settings.database_url)
-    app.state.blob_store = BlobStore(settings.blob_connection_string, settings.blob_container)
+    app.state.blob_store = BlobStore(settings.storage_connection_string, settings.blob_container)
+    app.state.queue = DocumentQueue(settings.storage_connection_string, settings.queue_name)
     app.state.verifier = verifier or TokenVerifier(
         JwksKeySource(settings.auth_jwks_url),
         issuer=settings.auth_issuer,

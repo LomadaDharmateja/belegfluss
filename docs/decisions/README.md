@@ -17,3 +17,5 @@ Format and rules: [ADR-0001](0001-record-architecture-decisions.md).
 | [0011](0011-typed-api-contract-openapi.md) | OpenAPI is the contract; web client types are generated, drift fails CI | Accepted |
 | [0012](0012-persistence-sync-sqlalchemy-and-real-db-tests.md) | Sync SQLAlchemy 2.1 + psycopg 3 + Alembic; tests against real PostgreSQL | Accepted |
 | [0013](0013-tenancy-org-scoped-routes.md) | Organisation-scoped routes with one membership check (RLS in M9) | Accepted |
+| [0014](0014-read-xml-with-official-kosit-transform.md) | Read e-invoice XML with the official KoSIT step-1 transform (Saxon), not own parsers | Accepted |
+| [0015](0015-store-results-as-summary-columns-plus-jsonb.md) | Store read invoices as summary columns + JSONB; findings in their own table | Accepted |
