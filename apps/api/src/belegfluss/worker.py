@@ -128,6 +128,8 @@ def build(settings: Settings) -> Worker:
 
 def main() -> None:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
+    # The Azure SDK logs every HTTP request with headers at INFO: noise, and storage paths.
+    logging.getLogger("azure").setLevel(logging.WARNING)
     worker = build(Settings())
     running = True
 

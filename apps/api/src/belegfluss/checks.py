@@ -135,7 +135,7 @@ def check_arithmetic(invoice: InvoiceModel) -> list[CheckFinding]:
 
 
 def _missing_details(invoice: InvoiceModel) -> dict[str, tuple[str, ...]]:
-    """Detail code -> business terms, for every § 14 Abs. 4 UStG detail that is missing."""
+    """Finding code -> business terms, for every § 14 Abs. 4 UStG detail that is missing."""
     seller, buyer = invoice.seller, invoice.buyer
     has_items = bool(invoice.lines) and all(
         line.name and line.quantity is not None for line in invoice.lines
@@ -150,37 +150,43 @@ def _missing_details(invoice: InvoiceModel) -> dict[str, tuple[str, ...]]:
         v.rate is not None or v.exemption_reason or v.exemption_code for v in invoice.vat_breakdown
     )
     checks = {
-        "SELLER-NAME": (bool(seller.name), ("BT-27",)),
-        "SELLER-ADDRESS": (
+        "BF-MISSING-SELLER-NAME": (bool(seller.name), ("BT-27",)),
+        "BF-MISSING-SELLER-ADDRESS": (
             bool(seller.address.line1 and seller.address.city and seller.address.post_code),
             ("BT-35", "BT-37", "BT-38"),
         ),
-        "BUYER-NAME": (bool(buyer.name), ("BT-44",)),
-        "BUYER-ADDRESS": (
+        "BF-MISSING-BUYER-NAME": (bool(buyer.name), ("BT-44",)),
+        "BF-MISSING-BUYER-ADDRESS": (
             bool(buyer.address.line1 and buyer.address.city and buyer.address.post_code),
             ("BT-50", "BT-52", "BT-53"),
         ),
-        "TAX-ID": (bool(seller.vat_id or seller.tax_number), ("BT-31", "BT-32")),
-        "ISSUE-DATE": (invoice.issue_date is not None, ("BT-2",)),
-        "NUMBER": (bool(invoice.number), ("BT-1",)),
-        "ITEMS": (has_items, ("BT-129", "BT-153")),
-        "DELIVERY-DATE": (has_delivery, ("BT-72", "BT-73", "BT-74")),
-        "VAT": (has_vat, ("BT-119", "BT-120")),
+        "BF-MISSING-TAX-ID": (bool(seller.vat_id or seller.tax_number), ("BT-31", "BT-32")),
+        "BF-MISSING-ISSUE-DATE": (invoice.issue_date is not None, ("BT-2",)),
+        "BF-MISSING-NUMBER": (bool(invoice.number), ("BT-1",)),
+        "BF-MISSING-ITEMS": (has_items, ("BT-129", "BT-153")),
+        "BF-MISSING-DELIVERY-DATE": (has_delivery, ("BT-72", "BT-73", "BT-74")),
+        "BF-MISSING-VAT": (has_vat, ("BT-119", "BT-120")),
     }
     return {detail: terms for detail, (present, terms) in checks.items() if not present}
 
 
 # § 33 UStDV: a small-amount invoice needs only these details.
-SMALL_AMOUNT_DETAILS = {"SELLER-NAME", "SELLER-ADDRESS", "ISSUE-DATE", "ITEMS", "VAT"}
+SMALL_AMOUNT_DETAILS = {
+    "BF-MISSING-SELLER-NAME",
+    "BF-MISSING-SELLER-ADDRESS",
+    "BF-MISSING-ISSUE-DATE",
+    "BF-MISSING-ITEMS",
+    "BF-MISSING-VAT",
+}
 
 
 def check_mandatory_details(invoice: InvoiceModel, context: Context) -> list[CheckFinding]:
     missing = _missing_details(invoice)
     if is_small_amount(invoice):
-        missing = {d: t for d, t in missing.items() if d in SMALL_AMOUNT_DETAILS}
+        missing = {c: t for c, t in missing.items() if c in SMALL_AMOUNT_DETAILS}
     return [
-        CheckFinding(f"BF-MISSING-{detail}", "warning", terms)
-        for detail, terms in missing.items()
+        CheckFinding(code, "warning", terms)
+        for code, terms in missing.items()
         if not context.validator_terms.intersection(terms)
     ]
 
@@ -214,14 +220,14 @@ def check_pdf_matches_xml(invoice: InvoiceModel, pdf_text: str) -> list[CheckFin
     if invoice.number and _normalise(invoice.number) not in text:
         findings.append(
             CheckFinding(
-                "BF-PDF-XML-MISMATCH-NUMBER", "warning", ("BT-1",), {"value": invoice.number}
+                "BF-PDF-XML-MISMATCH-NUMBER", "warning", ("BT-1",), {"number": invoice.number}
             )
         )
     gross = invoice.totals.gross
     if gross is not None and not any(s in text for s in amount_spellings(gross)):
         findings.append(
             CheckFinding(
-                "BF-PDF-XML-MISMATCH-TOTAL", "warning", ("BT-112",), {"value": f"{_money(gross)}"}
+                "BF-PDF-XML-MISMATCH-TOTAL", "warning", ("BT-112",), {"amount": f"{_money(gross)}"}
             )
         )
     return findings

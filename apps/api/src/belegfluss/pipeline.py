@@ -127,7 +127,7 @@ def _check(session: Session, document: Document, analysis: Analysis) -> None:
     reported = {
         term
         for finding in analysis.findings
-        if finding.origin == "kosit" and finding.severity in ("error", "warning")
+        if finding.origin == "kosit"
         for term in finding.business_terms
     }
     context = Context(

@@ -146,8 +146,8 @@ def test_pdf_matching_the_xml_has_no_findings(invoice: InvoiceModel) -> None:
 def test_pdf_with_other_number_and_total_is_flagged(invoice: InvoiceModel) -> None:
     findings = check_invoice(invoice, zugferd("Rechnung RE-2026-9999\nGesamtbetrag 474,40 EUR"))
     assert [(f.code, f.params) for f in findings] == [
-        ("BF-PDF-XML-MISMATCH-NUMBER", {"value": "RE-2026-1107"}),
-        ("BF-PDF-XML-MISMATCH-TOTAL", {"value": "447.40"}),
+        ("BF-PDF-XML-MISMATCH-NUMBER", {"number": "RE-2026-1107"}),
+        ("BF-PDF-XML-MISMATCH-TOTAL", {"amount": "447.40"}),
     ]
 
 
