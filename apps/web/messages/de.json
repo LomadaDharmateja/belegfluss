@@ -119,9 +119,10 @@
     "outcomeValues": {
       "accepted": "Der offizielle Validator hat diese Rechnung akzeptiert.",
       "rejected": "Der offizielle Validator hat diese Rechnung abgelehnt.",
-      "not_processable": "Der offizielle Validator konnte diese Datei nicht verarbeiten."
+      "not_processable": "Der offizielle Validator konnte diese Datei nicht verarbeiten.",
+      "no_scenario": "Der offizielle Validator hat für diese Art von Rechnung keine Regeln, deshalb wurde sie nicht geprüft."
     },
-    "checkedBy": "Geprüft mit {engine}, Konfiguration {config}.",
+    "checkedBy": "Validator: {engine}, Konfiguration {config}.",
     "findings": "Befunde",
     "noFindings": "Keine Befunde. Alles, was wir geprüft haben, sieht gut aus.",
     "disclaimer": "Diese Prüfungen sind Hinweise, keine rechtliche oder steuerliche Bewertung."
@@ -144,6 +145,7 @@
       "BF-PDF-ENCRYPTED": "Die PDF ist passwortgeschützt, deshalb kann ihr Inhalt nicht gelesen werden.",
       "BF-UNSTRUCTURED": "Dieses Dokument enthält keine maschinenlesbaren Rechnungsdaten (eine einfache PDF oder ein Foto). Das automatische Auslesen solcher Dokumente kommt bald.",
       "BF-VALIDATOR-NOT-PROCESSABLE": "Der offizielle Validator konnte diese Rechnung nicht verarbeiten, deshalb wurde sie nicht gegen die offiziellen Regeln geprüft.",
+      "BF-VALIDATOR-NO-SCENARIO": "Der offizielle Validator hat für diese Art von Rechnung keine Regeln (zum Beispiel ein ZUGFeRD-Profil oder ein anderer Standard), deshalb wurde sie nicht gegen die offiziellen Regeln geprüft. Belegfluss hat die Beträge selbst geprüft.",
       "BF-NOT-AN-E-INVOICE": "Laut Bundesfinanzministerium sind die ZUGFeRD-Profile MINIMUM und BASIC WL keine E-Rechnungen. Bitte den Lieferanten um eine Rechnung in einem vollständigen Profil.",
       "BF-SMALL-AMOUNT": "Kleinbetragsrechnung (Gesamtbetrag bis 250 €): Es sind weniger Angaben nötig (§ 33 UStDV), und sie muss keine E-Rechnung sein.",
       "BF-FOREIGN-CURRENCY": "Die Rechnung ist in {currency}, nicht in Euro.",

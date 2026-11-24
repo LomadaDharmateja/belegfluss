@@ -77,6 +77,8 @@ def _kosit_findings(result: ValidationResult) -> list[NewFinding]:
     ]
     if result.outcome is Outcome.NOT_PROCESSABLE:
         findings.append(NewFinding("belegfluss", "BF-VALIDATOR-NOT-PROCESSABLE", "warning"))
+    if result.outcome is Outcome.NO_SCENARIO:
+        findings.append(NewFinding("belegfluss", "BF-VALIDATOR-NO-SCENARIO", "warning"))
     return findings
 
 
@@ -132,7 +134,8 @@ def _check(session: Session, document: Document, analysis: Analysis) -> None:
     }
     context = Context(
         source=analysis.source,
-        validator_ran=validation is not None and validation.outcome is not Outcome.NOT_PROCESSABLE,
+        validator_ran=validation is not None
+        and validation.outcome in (Outcome.ACCEPTED, Outcome.REJECTED),
         validator_terms=frozenset(reported),
         pdf_text=analysis.pdf_text,
         duplicate_of=_find_duplicate(session, document, analysis.invoice),
@@ -146,7 +149,12 @@ def _check(session: Session, document: Document, analysis: Analysis) -> None:
 
 
 def _status(analysis: Analysis) -> DocumentStatus:
-    if analysis.invoice is None or any(f.severity == "error" for f in analysis.findings):
+    rejected = analysis.validation is not None and analysis.validation.outcome is Outcome.REJECTED
+    if (
+        analysis.invoice is None
+        or rejected
+        or any(f.severity == "error" for f in analysis.findings)
+    ):
         return DocumentStatus.NEEDS_REVIEW
     return DocumentStatus.READY
 

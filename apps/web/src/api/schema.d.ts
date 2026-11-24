@@ -289,7 +289,7 @@ export interface components {
             /** Syntax */
             syntax: ("ubl-invoice" | "ubl-creditnote" | "cii") | null;
             /** Validation Outcome */
-            validation_outcome: ("accepted" | "rejected" | "not_processable") | null;
+            validation_outcome: ("accepted" | "rejected" | "not_processable" | "no_scenario") | null;
             /** Validator Config */
             validator_config: string | null;
             /** Validator Engine */

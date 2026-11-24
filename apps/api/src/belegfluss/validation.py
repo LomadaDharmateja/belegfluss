@@ -1,6 +1,8 @@
 """Client for the official KoSIT validator daemon (ADR-0005).
 
 200 = acceptable, 406 = not acceptable, 422 = the validator couldn't process the document.
+A 406 whose report says <rep:noScenarioMatched> means the configuration has no rules for this kind
+of invoice (e.g. a ZUGFeRD MINIMUM profile): it was not checked, which is different from rejected.
 Anything else (or no connection) means the validator is unavailable: the worker retries later.
 """
 
@@ -18,6 +20,7 @@ class Outcome(StrEnum):
     ACCEPTED = "accepted"
     REJECTED = "rejected"
     NOT_PROCESSABLE = "not_processable"
+    NO_SCENARIO = "no_scenario"  # no official rules for this kind of invoice: not checked
 
 
 @dataclass(frozen=True)
@@ -40,7 +43,8 @@ class ValidatorUnavailableError(Exception):
     """Transient: retry later."""
 
 
-def parse_report(report: bytes) -> tuple[str, str | None, list[Message]]:
+def parse_report(report: bytes) -> tuple[str, str | None, list[Message], bool]:
+    """Engine name, matched scenario, messages, and whether no scenario matched."""
     root = etree.fromstring(report, etree.XMLParser(resolve_entities=False, no_network=True))
     engine = root.findtext("rep:engine/rep:name", default="KoSIT Validator", namespaces=REP).strip()
     scenario = root.findtext("rep:scenarioMatched/*/{*}name", namespaces=REP)
@@ -53,7 +57,8 @@ def parse_report(report: bytes) -> tuple[str, str | None, list[Message]]:
         )
         for element in root.iterfind(".//rep:message", REP)
     ]
-    return engine, scenario.strip() if scenario else None, messages
+    no_scenario = root.find("rep:noScenarioMatched", REP) is not None
+    return engine, scenario.strip() if scenario else None, messages, no_scenario
 
 
 class ValidatorClient:
@@ -73,11 +78,13 @@ class ValidatorClient:
         if outcome is None:
             raise ValidatorUnavailableError(f"HTTP {response.status_code}")
         try:
-            engine, scenario, messages = parse_report(response.content)
+            engine, scenario, messages, no_scenario = parse_report(response.content)
         except etree.XMLSyntaxError:
             if outcome is not Outcome.NOT_PROCESSABLE:
                 raise ValidatorUnavailableError("unreadable report") from None
-            engine, scenario, messages = "KoSIT Validator", None, []
+            engine, scenario, messages, no_scenario = "KoSIT Validator", None, [], False
+        if no_scenario and outcome is Outcome.REJECTED:
+            outcome = Outcome.NO_SCENARIO
         return ValidationResult(outcome, engine, scenario, messages)
 
     def close(self) -> None:

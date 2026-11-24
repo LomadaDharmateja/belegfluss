@@ -584,7 +584,8 @@
                 "enum": [
                   "accepted",
                   "rejected",
-                  "not_processable"
+                  "not_processable",
+                  "no_scenario"
                 ],
                 "type": "string"
               },

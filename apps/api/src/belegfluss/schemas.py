@@ -59,7 +59,7 @@ class InvoiceOut(BaseModel):
     source: Literal["xml", "zugferd"]
     syntax: Literal["ubl-invoice", "ubl-creditnote", "cii"] | None
     specification_id: str | None
-    validation_outcome: Literal["accepted", "rejected", "not_processable"] | None
+    validation_outcome: Literal["accepted", "rejected", "not_processable", "no_scenario"] | None
     validator_engine: str | None
     validator_config: str | None
     validator_scenario: str | None

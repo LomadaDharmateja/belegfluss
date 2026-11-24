@@ -119,9 +119,10 @@
     "outcomeValues": {
       "accepted": "The official validator accepted this invoice.",
       "rejected": "The official validator rejected this invoice.",
-      "not_processable": "The official validator could not process this file."
+      "not_processable": "The official validator could not process this file.",
+      "no_scenario": "The official validator has no rules for this kind of invoice, so it was not checked."
     },
-    "checkedBy": "Checked with {engine}, configuration {config}.",
+    "checkedBy": "Validator: {engine}, configuration {config}.",
     "findings": "Findings",
     "noFindings": "No findings. Everything we checked looks fine.",
     "disclaimer": "These checks are hints, not a legal or tax assessment."
@@ -144,6 +145,7 @@
       "BF-PDF-ENCRYPTED": "The PDF is password-protected, so its contents can't be read.",
       "BF-UNSTRUCTURED": "This document has no machine-readable invoice data (a plain PDF or a photo). Automatic reading of such documents is coming soon.",
       "BF-VALIDATOR-NOT-PROCESSABLE": "The official validator could not process this invoice, so it was not checked against the official rules.",
+      "BF-VALIDATOR-NO-SCENARIO": "The official validator has no rules for this kind of invoice (for example a ZUGFeRD profile or another standard), so it was not checked against the official rules. Belegfluss checked the amounts itself.",
       "BF-NOT-AN-E-INVOICE": "According to the Federal Ministry of Finance, the ZUGFeRD profiles MINIMUM and BASIC WL are not e-invoices. Ask the supplier for an invoice in a full profile.",
       "BF-SMALL-AMOUNT": "Small-amount invoice (total up to €250): fewer details are required (§ 33 UStDV), and it doesn't have to be an e-invoice.",
       "BF-FOREIGN-CURRENCY": "The invoice is in {currency}, not in euros.",

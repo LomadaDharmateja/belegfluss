@@ -67,3 +67,19 @@ def test_configured_version_matches_the_validator_image() -> None:
     config = re.search(r"ARG CONFIG_VERSION=(\S+)", dockerfile)
     assert config is not None
     assert Settings().validator_config.endswith(config.group(1))
+
+
+# Regression: a ZUGFeRD MINIMUM invoice matches no scenario of the XRechnung configuration. The
+# validator answers 406 with <rep:noScenarioMatched>; that means "not checked", not "rejected".
+def test_invoice_without_matching_scenario_is_not_checked(validator: ValidatorClient) -> None:
+    minimum = (
+        (FIXTURES / "invoice_cii.xml")
+        .read_bytes()
+        .replace(
+            b"<ram:ID>urn:cen.eu:en16931:2017</ram:ID>",
+            b"<ram:ID>urn:factur-x.eu:1p0:minimum</ram:ID>",
+        )
+    )
+    result = validator.validate(minimum)
+    assert result.outcome is Outcome.NO_SCENARIO
+    assert result.messages == []

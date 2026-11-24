@@ -161,8 +161,25 @@ def test_zugferd_minimum_is_not_an_e_invoice(
     document_id = upload(client, user, "minimum.pdf", pdf, "application/pdf")
     worker.run_once()
 
-    _document, _invoice, findings = state_of(worker, document_id)
+    _document, invoice, findings = state_of(worker, document_id)
     assert "BF-NOT-AN-E-INVOICE" in codes(findings)
+    # Regression: no official scenario for MINIMUM. Say "not checked", and run our own arithmetic.
+    assert invoice is not None and invoice.validation_outcome == "no_scenario"
+    assert "BF-VALIDATOR-NO-SCENARIO" in codes(findings)
+
+
+def test_wrong_total_without_official_scenario_is_caught_by_our_checks(
+    client: TestClient, user: SignedInUser, worker: Worker
+) -> None:
+    minimum = CII.replace(
+        b"<ram:ID>urn:cen.eu:en16931:2017</ram:ID>", b"<ram:ID>urn:factur-x.eu:1p0:minimum</ram:ID>"
+    ).replace(b"<ram:GrandTotalAmount>447.40<", b"<ram:GrandTotalAmount>500.00<")
+    document_id = upload(client, user, "minimum-falsch.xml", minimum, "application/xml")
+    worker.run_once()
+
+    document, _invoice, findings = state_of(worker, document_id)
+    assert "BF-TOTAL-GROSS" in codes(findings)
+    assert document.status == "needs_review"
 
 
 def test_same_invoice_in_other_bytes_is_a_semantic_duplicate(
