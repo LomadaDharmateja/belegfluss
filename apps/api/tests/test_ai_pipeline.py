@@ -210,7 +210,7 @@ def test_extraction_usage_is_recorded(
         extractor=type(
             "Metered",
             (),
-            {"extract": lambda self, p: Extraction(good_answer(), "gpt-5-mini", 2100, 900, 4.2)},
+            {"extract": lambda self, p: Extraction(good_answer(), "gpt-5.4-mini", 2100, 900, 4.2)},
         )(),
     )
     document_id = upload(client, user, "rechnung.pdf", invoice_pdf(), "application/pdf")
@@ -222,4 +222,4 @@ def test_extraction_usage_is_recorded(
         invoice.ai_input_tokens,
         invoice.ai_output_tokens,
         invoice.ai_seconds,
-    ) == ("gpt-5-mini", 2100, 900, 4.2)
+    ) == ("gpt-5.4-mini", 2100, 900, 4.2)

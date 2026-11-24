@@ -28,8 +28,8 @@ from tests.pdfs import text_pdf
 ENDPOINT = os.environ.get("BELEGFLUSS_OPENAI_ENDPOINT", "")
 pytestmark = pytest.mark.skipif(not ENDPOINT, reason="live AI test: set BELEGFLUSS_OPENAI_ENDPOINT")
 
-# gpt-5-mini, Data Zone Standard, Azure Retail Prices API 2026-11-24 (USD per token)
-PRICE_IN, PRICE_OUT = Decimal("0.275") / 1_000_000, Decimal("2.20") / 1_000_000
+# gpt-5.4-mini, Data Zone Standard, Azure Retail Prices API 2026-11-24 (USD per token)
+PRICE_IN, PRICE_OUT = Decimal("0.825") / 1_000_000, Decimal("4.95") / 1_000_000
 
 
 def photo_of(pdf: bytes) -> bytes:
@@ -59,7 +59,7 @@ def test_live_extraction_of_synthetic_documents() -> None:
         "photo of clean PDF": prepare_photo(photo_of(clean)),
     }
     extractor = AzureOpenAIExtractor(
-        ENDPOINT, os.environ.get("BELEGFLUSS_OPENAI_DEPLOYMENT", "gpt-5-mini")
+        ENDPOINT, os.environ.get("BELEGFLUSS_OPENAI_DEPLOYMENT", "gpt-5.4-mini")
     )
     total = Decimal(0)
     print(f"\n{'case':<24}{'in':>7}{'out':>7}{'sec':>7}{'USD':>9}  gross   findings")

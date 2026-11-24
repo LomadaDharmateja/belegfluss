@@ -310,3 +310,24 @@ A dated diary: what was done, why, what was learned, what broke. Newest entry at
 **Next**
 - Owner installs the Azure CLI and runs `az login`. Claude checks model offer and quota read-only, shows the script,
   and creates the resource only after the owner's yes. Then live runs, measured cost, docs, PR.
+
+## 2026-11-24 — M2b steps 3–4: Azure OpenAI created, model changed, first live run
+
+**What was done**
+- Owner installed the Azure CLI. `az login` first failed: the Default Directory (where the subscription lives) needs
+  multi-factor sign-in; `az login --tenant <id>` worked.
+- Read-only checks: provider `Microsoft.CognitiveServices` was not registered; quota for **gpt-5-mini Data Zone
+  Standard was 0** in Germany West Central and six other EU regions. gpt-5.4-mini (2026-03-17) had 200.
+- **Plan change (with the owner):** gpt-5.4-mini instead of gpt-5-mini. About 2.5× the token price, but EU Data Zone
+  quota now and a later retirement (2027-09-21 vs 2027-07-13). Rejected: waiting for a quota request; Global Standard
+  (processing outside the EU). Recorded in COSTS.md; ADR-0016 will record it.
+- After the owner's yes: provider registered, `scripts/azure/dev-openai.ps1` run. Read back: keys off, Data Zone
+  Standard, capacity 20, role only on this resource, nothing else in the group.
+- Live run on 4 synthetic documents: all fields right; misprinted VAT caught (`BF-VAT-AMOUNT`); the injected
+  instruction ignored; $0.0172 in total ([evidence](milestones/evidence/m2b-live-run-2026-11-24.md)).
+
+**Learned**
+- "Offered in a region" (region table, `model list`) and "usable" (quota) are different things. A new pay-as-you-go
+  subscription can have 0 quota for an older model. Check `az cognitiveservices usage list` before planning a model.
+- Before the AI worker ran, checked that no local document is in `received`/`processing`, so the sweeper can't send
+  the owner's real receipt.

@@ -34,6 +34,6 @@ class Settings(BaseSettings):
     # Keyless: the worker signs in with Microsoft Entra ID (az login locally, Managed Identity
     # in M4).
     openai_endpoint: str = ""  # https://<resource>.openai.azure.com
-    openai_deployment: str = "gpt-5-mini"
+    openai_deployment: str = "gpt-5.4-mini"
     ai_max_pages: int = 3
     ai_reasoning_effort: str = "low"

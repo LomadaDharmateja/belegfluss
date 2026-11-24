@@ -25,11 +25,11 @@ Source: [Install Azure CLI on Windows](https://learn.microsoft.com/en-us/cli/azu
 1. resource group `rg-belegfluss-ai-dev`
 2. Azure OpenAI account (S0) with a custom domain: required for Entra ID sign-in, and it **can't be changed later**
 3. **keys switched off** (`disableLocalAuth = true`)
-4. deployment `gpt-5-mini` version 2025-08-07, **Data Zone Standard** (processing stays in the EU data zone, pay per
-   token), capacity 20: a rate limit of 20,000 tokens per minute (1 unit = 1,000 TPM per the quota guide), not a fixed cost
+4. deployment `gpt-5.4-mini` version 2026-03-17, **Data Zone Standard** (processing stays in the EU data zone, pay per
+   token; the planned gpt-5-mini had 0 quota there, see ADR-0016), capacity 20: a rate limit of 20,000 tokens per minute (1 unit = 1,000 TPM per the quota guide), not a fixed cost
 5. role **Cognitive Services OpenAI User** for you, on this resource only
 
-Before your yes, Claude checks read-only that gpt-5-mini is offered as Data Zone Standard in Germany West Central and
+Before your yes, Claude checks read-only that gpt-5.4-mini is offered as Data Zone Standard in Germany West Central and
 that your subscription has quota for it. The script reads `disableLocalAuth` back and stops if keys are still on. It
 doesn't pass `--yes`: if Azure asks to accept terms, you decide and run that step yourself.
 
@@ -59,7 +59,7 @@ docker compose -f compose.yaml -f compose.ai.yaml up --build --detach   # no con
 ./scripts/run-ai-worker.ps1                                              # worker on your machine, uses az login
 ```
 
-Upload a plain PDF or a photo: the worker reads it with gpt-5-mini, checks every field and marks the document
+Upload a plain PDF or a photo: the worker reads it with gpt-5.4-mini, checks every field and marks the document
 "Please check". Without the override, everything runs as before and plain PDFs get "AI reading is not switched on".
 
 ## 4. Remove it again

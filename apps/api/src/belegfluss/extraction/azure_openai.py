@@ -1,4 +1,4 @@
-"""Azure OpenAI extractor (ADR-0016): gpt-5-mini, EU Data Zone, keyless, structured outputs.
+"""Azure OpenAI extractor (ADR-0016): gpt-5.4-mini, EU Data Zone, keyless, structured outputs.
 
 - Endpoint: the Azure v1 API (`https://<resource>.openai.azure.com/openai/v1/`) with the official
   `openai` SDK. Authentication by Microsoft Entra ID: no key exists (`disableLocalAuth`).

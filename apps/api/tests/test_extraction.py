@@ -214,7 +214,7 @@ class _Response:
     def __init__(self, parsed: Any) -> None:
         self.output_parsed = parsed
         self.usage = _Usage()
-        self.model = "gpt-5-mini-2025-08-07"
+        self.model = "gpt-5.4-mini-2026-03-17"
 
 
 PREPARED = Prepared(
@@ -225,10 +225,10 @@ PREPARED = Prepared(
 def test_request_is_untrusted_data_without_tools_and_not_stored() -> None:
     client = _Client(_Response(good_answer()))
     extraction = AzureOpenAIExtractor(
-        "https://x.openai.azure.com", "gpt-5-mini", client=client
+        "https://x.openai.azure.com", "gpt-5.4-mini", client=client
     ).extract(PREPARED)
     sent = client.responses.kwargs
-    assert sent["model"] == "gpt-5-mini"
+    assert sent["model"] == "gpt-5.4-mini"
     assert sent["store"] is False
     assert "tools" not in sent
     assert "untrusted" in sent["instructions"]

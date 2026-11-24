@@ -5,7 +5,7 @@
 #   1. resource group      rg-belegfluss-ai-dev (Germany West Central)
 #   2. Azure OpenAI        S0, custom domain = name (required for Entra ID sign-in; can't be changed later)
 #   3. keys switched off   disableLocalAuth = true -> only Microsoft Entra ID sign-in works
-#   4. deployment          gpt-5-mini 2025-08-07, Data Zone Standard (EU processing, pay per token),
+#   4. deployment          gpt-5.4-mini 2026-03-17, Data Zone Standard (EU processing, pay per token),
 #                          capacity 20 = rate limit of 20K tokens/minute (not a fixed cost)
 #   5. role                "Cognitive Services OpenAI User" for the signed-in user, on this resource only
 #
@@ -19,8 +19,8 @@ param(
     [Parameter(Mandatory = $true)][string]$Name,  # globally unique, e.g. belegfluss-dev-7k3q
     [string]$ResourceGroup = "rg-belegfluss-ai-dev",
     [string]$Location = "germanywestcentral",
-    [string]$Model = "gpt-5-mini",
-    [string]$ModelVersion = "2025-08-07",
+    [string]$Model = "gpt-5.4-mini",  # gpt-5-mini had 0 EU Data Zone quota (ADR-0016)
+    [string]$ModelVersion = "2026-03-17",
     [int]$Capacity = 20
 )
 
