@@ -31,7 +31,7 @@ services:
     build: { context: apps/api }
     environment:
       BELEGFLUSS_DATABASE_URL: postgresql+psycopg://belegfluss:${POSTGRES_PASSWORD:-belegfluss-dev}@postgres:5432/belegfluss
-      BELEGFLUSS_BLOB_CONNECTION_STRING: "DefaultEndpointsProtocol=http;AccountName=belegflussdev;AccountKey=ZGV2LWtleS1ub3Qtc2VjcmV0;BlobEndpoint=http://azurite:10000/belegflussdev;" # gitleaks:allow (local emulator only)
+      BELEGFLUSS_STORAGE_CONNECTION_STRING: "DefaultEndpointsProtocol=http;AccountName=belegflussdev;AccountKey=ZGV2LWtleS1ub3Qtc2VjcmV0;BlobEndpoint=http://azurite:10000/belegflussdev;QueueEndpoint=http://azurite:10001/belegflussdev;" # gitleaks:allow (local emulator only)
       BELEGFLUSS_AUTH_ISSUER: ${BELEGFLUSS_AUTH_ISSUER:-}
       BELEGFLUSS_AUTH_JWKS_URL: ${BELEGFLUSS_AUTH_JWKS_URL:-}
       BELEGFLUSS_AUTH_AUDIENCE: ${BELEGFLUSS_AUTH_AUDIENCE:-}

@@ -24,7 +24,7 @@ def create_app(settings: Settings | None = None, verifier: TokenVerifier | None 
 
     app.state.settings = settings
     app.state.engine, app.state.session_factory = make_session_factory(settings.database_url)
-    app.state.blob_store = BlobStore(settings.blob_connection_string, settings.blob_container)
+    app.state.blob_store = BlobStore(settings.storage_connection_string, settings.blob_container)
     app.state.verifier = verifier or TokenVerifier(
         JwksKeySource(settings.auth_jwks_url),
         issuer=settings.auth_issuer,
