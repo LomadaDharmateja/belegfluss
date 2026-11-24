@@ -146,6 +146,16 @@ A dated diary: what was done, why, what was learned, what broke. Newest entry at
   and the Entra admin center each remember their own directory. The guide didn't warn about it; it now does, with
   a check of the directory label before Step 4. The leftover apps and user flow in the Default Directory are to be
   deleted by the owner once sign-in works.
+- **The sign-in button did nothing** (first real test). The browser console showed MSAL's
+  `endpoints_resolution_error`. Cause, read in the msal-common 16.17 source (`Authority.validateIssuer`): the
+  tenant's discovery document names a tenant-ID-based issuer (`https://<tenant-id>.ciamlogin.com/<tenant-id>/v2.0`),
+  while the app signs in via `belegflussdev.ciamlogin.com`. MSAL accepts a different issuer host only if it is in
+  `knownAuthorities`. Fix: new variable `ENTRA_TENANT_ID`; both hosts are listed. Regression test first
+  (`config.test.ts`, failed before the fix), then web lint, types, 27 unit and 5 browser tests pass. Verified in
+  Chrome: the button now opens the Belegfluss Dev sign-in page (authorization code + PKCE, our API scope).
+- My own slip: the first attempt to log this ran in the same command as the commit, failed on the line endings, and
+  the commit went ahead without the log entry. Logged in a separate commit; checks and commits now run as separate
+  steps.
 
 **Next**
 - B2: sign in with a real account, check the token's `iss`/`aud`/`scp`/`oid` against the API's verifier.
