@@ -1,12 +1,14 @@
 """Response models (the API contract, exported to the web app as OpenAPI, see ADR-0011)."""
 
 import uuid
-from datetime import datetime
+from datetime import date, datetime
+from decimal import Decimal
 from typing import Literal
 
 from pydantic import BaseModel
 
 from belegfluss.models import DocumentStatus, Role
+from belegfluss.reading import InvoiceModel
 
 
 class OrganizationOut(BaseModel):
@@ -20,6 +22,22 @@ class MeOut(BaseModel):
     organizations: list[OrganizationOut]
 
 
+class InvoiceSummary(BaseModel):
+    """What the list shows about a read invoice."""
+
+    number: str | None
+    issue_date: date | None
+    seller_name: str | None
+    currency: str | None
+    gross_total: Decimal | None
+
+
+class FindingCounts(BaseModel):
+    error: int = 0
+    warning: int = 0
+    info: int = 0
+
+
 class DocumentOut(BaseModel):
     id: uuid.UUID
     org_id: uuid.UUID
@@ -29,7 +47,43 @@ class DocumentOut(BaseModel):
     sha256: str
     source: Literal["upload"]
     status: DocumentStatus
+    failure_reason: str | None = None
     created_at: datetime
+    summary: InvoiceSummary | None = None
+    finding_counts: FindingCounts = FindingCounts()
+
+
+class InvoiceOut(BaseModel):
+    """A read invoice and which code and validator produced the result."""
+
+    source: Literal["xml", "zugferd"]
+    syntax: Literal["ubl-invoice", "ubl-creditnote", "cii"] | None
+    specification_id: str | None
+    validation_outcome: Literal["accepted", "rejected", "not_processable"] | None
+    validator_engine: str | None
+    validator_config: str | None
+    validator_scenario: str | None
+    pipeline_version: str
+    model: InvoiceModel
+
+
+class FindingOut(BaseModel):
+    id: uuid.UUID
+    origin: Literal["kosit", "belegfluss"]
+    code: str
+    severity: Literal["error", "warning", "info"]
+    message: (
+        str | None
+    )  # official rule text (validator findings); our codes are translated in the web app
+    location: str | None
+    business_terms: list[str]
+    params: dict[str, str]
+
+
+class DocumentDetailOut(BaseModel):
+    document: DocumentOut
+    invoice: InvoiceOut | None
+    findings: list[FindingOut]
 
 
 class UploadResult(BaseModel):

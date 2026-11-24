@@ -1,29 +1,47 @@
+import logging
 import uuid
 from typing import Annotated
 
+from azure.core.exceptions import AzureError
 from fastapi import APIRouter, Depends, File, Request, Response, UploadFile, status
-from sqlalchemy import select
+from sqlalchemy import case, func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from belegfluss import audit
 from belegfluss.db import get_session
 from belegfluss.errors import AppError, error_responses
-from belegfluss.models import Document, Membership
-from belegfluss.schemas import DocumentOut, UploadResult
+from belegfluss.models import Document, Finding, Invoice, Membership
+from belegfluss.queue import DocumentQueue
+from belegfluss.schemas import (
+    DocumentDetailOut,
+    DocumentOut,
+    FindingCounts,
+    FindingOut,
+    InvoiceOut,
+    InvoiceSummary,
+    UploadResult,
+)
 from belegfluss.settings import Settings
 from belegfluss.storage import BlobStore
 from belegfluss.tenancy import require_membership
 from belegfluss.uploads import check_upload, safe_filename
 
 router = APIRouter(prefix="/orgs/{org_id}/documents", tags=["documents"])
+logger = logging.getLogger(__name__)
 
 # Multipart overhead allowed on top of the file size before the request is rejected early.
 _MULTIPART_OVERHEAD = 64 * 1024
 
 
-def _to_out(doc: Document) -> DocumentOut:
-    return DocumentOut.model_validate(doc, from_attributes=True)
+def _to_out(
+    doc: Document, invoice: Invoice | None = None, counts: FindingCounts | None = None
+) -> DocumentOut:
+    out = DocumentOut.model_validate(doc, from_attributes=True)
+    if invoice is not None:
+        out.summary = InvoiceSummary.model_validate(invoice, from_attributes=True)
+    out.finding_counts = counts or FindingCounts()
+    return out
 
 
 @router.get("", response_model=list[DocumentOut], responses=error_responses(401, 403, 404))
@@ -32,26 +50,55 @@ def list_documents(
     _membership: Annotated[Membership, Depends(require_membership)],
     session: Annotated[Session, Depends(get_session)],
 ) -> list[DocumentOut]:
-    """Documents of one organisation, newest first."""
+    """Documents of one organisation, newest first, with what was read and how many findings."""
     docs = session.scalars(
         select(Document).where(Document.org_id == org_id).order_by(Document.created_at.desc())
     ).all()
-    return [_to_out(doc) for doc in docs]
+    ids = [doc.id for doc in docs]
+    invoices = {
+        invoice.document_id: invoice
+        for invoice in session.scalars(select(Invoice).where(Invoice.document_id.in_(ids)))
+    }
+    counts: dict[uuid.UUID, FindingCounts] = {}
+    for document_id, severity, count in session.execute(
+        select(Finding.document_id, Finding.severity, func.count())
+        .where(Finding.document_id.in_(ids))
+        .group_by(Finding.document_id, Finding.severity)
+    ):
+        setattr(counts.setdefault(document_id, FindingCounts()), severity, count)
+    return [_to_out(doc, invoices.get(doc.id), counts.get(doc.id)) for doc in docs]
 
 
-@router.get("/{document_id}", response_model=DocumentOut, responses=error_responses(401, 403, 404))
+_SEVERITY_ORDER = case({"error": 0, "warning": 1}, value=Finding.severity, else_=2)
+
+
+@router.get(
+    "/{document_id}", response_model=DocumentDetailOut, responses=error_responses(401, 403, 404)
+)
 def get_document(
     org_id: uuid.UUID,
     document_id: uuid.UUID,
     _membership: Annotated[Membership, Depends(require_membership)],
     session: Annotated[Session, Depends(get_session)],
-) -> DocumentOut:
+) -> DocumentDetailOut:
+    """One document with the invoice read from it and all findings (errors first)."""
     doc = session.scalars(
         select(Document).where(Document.org_id == org_id, Document.id == document_id)
     ).one_or_none()
     if doc is None:
         raise AppError(404, "document.not_found", "Document not found.")
-    return _to_out(doc)
+    invoice = session.scalars(select(Invoice).where(Invoice.document_id == doc.id)).one_or_none()
+    findings = session.scalars(
+        select(Finding).where(Finding.document_id == doc.id).order_by(_SEVERITY_ORDER, Finding.code)
+    ).all()
+    counts = FindingCounts()
+    for finding in findings:
+        setattr(counts, finding.severity, getattr(counts, finding.severity) + 1)
+    return DocumentDetailOut(
+        document=_to_out(doc, invoice, counts),
+        invoice=InvoiceOut.model_validate(invoice, from_attributes=True) if invoice else None,
+        findings=[FindingOut.model_validate(f, from_attributes=True) for f in findings],
+    )
 
 
 @router.post(
@@ -116,4 +163,13 @@ def upload_document(
         target_id=doc.id,
     )
     session.commit()
+    _enqueue(request.app.state.queue, doc.id)
     return UploadResult(document=_to_out(doc), duplicate=False)
+
+
+def _enqueue(queue: DocumentQueue, document_id: uuid.UUID) -> None:
+    """Ask the worker to process the document. If this fails, the sweeper picks it up later."""
+    try:
+        queue.send(document_id)
+    except AzureError as exc:
+        logger.warning("document %s: enqueue failed (%s)", document_id, type(exc).__name__)

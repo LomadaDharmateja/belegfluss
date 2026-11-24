@@ -95,7 +95,14 @@ def migrated_db(postgres_url: str) -> str:
 
 @pytest.fixture(scope="session")
 def azurite_connection_string() -> Iterator[str]:
-    with AzuriteContainer() as azurite:
+    # Same image and flag as compose.yaml: the newest Azure SDKs send API versions that Azurite
+    # doesn't list yet.
+    azurite = AzuriteContainer(
+        "mcr.microsoft.com/azure-storage/azurite:3.38.0",
+        command="azurite --blobHost 0.0.0.0 --queueHost 0.0.0.0 --tableHost 0.0.0.0"
+        " --skipApiVersionCheck",
+    )
+    with azurite:
         yield azurite.get_connection_string()
 
 
@@ -133,6 +140,7 @@ def settings(migrated_db: str, azurite_connection_string: str) -> Settings:
         database_url=migrated_db,
         storage_connection_string=azurite_connection_string,
         blob_container=f"test-{uuid.uuid4().hex[:12]}",
+        queue_name=f"test-{uuid.uuid4().hex[:12]}",
         auth_issuer=ISSUER,
         auth_audience=AUDIENCE,
         auth_required_scope=SCOPE,
@@ -153,7 +161,10 @@ def client(settings: Settings, signing_key: Any) -> Iterator[TestClient]:
         yield test_client
     with app.state.engine.begin() as connection:
         connection.execute(
-            text("TRUNCATE audit_events, documents, memberships, users, organizations")
+            text(
+                "TRUNCATE findings, invoices, audit_events, documents, memberships, users,"
+                " organizations"
+            )
         )
     app.state.engine.dispose()
 

@@ -158,7 +158,9 @@ def test_list_is_newest_first_and_get_by_id_works(
     assert [d["id"] for d in listed] == list(reversed(ids))
     single = client.get(f"/orgs/{user.org_id}/documents/{ids[0]}", headers=user.headers)
     assert single.status_code == 200
-    assert single.json()["id"] == ids[0]
+    body = single.json()
+    assert body["document"]["id"] == ids[0]
+    assert (body["invoice"], body["findings"]) == (None, [])  # not processed yet
 
 
 def test_upload_is_audited_without_file_name(
