@@ -2,9 +2,10 @@
 
 **A bilingual (German / English) e-invoice inbox for freelancers and small businesses in Germany.**
 
-> **Status: M1, local foundation (done).** Sign-in with an email code, private organisations and
-> document upload run locally in German and English, with CI on every change. Reading and validating invoices comes
-> in M2. See [PLAN.md](PLAN.md) and [what M1 built](docs/milestones/M1.md).
+> **Status: M2a, reading & validating (in review).** XRechnung and ZUGFeRD invoices are read exactly, checked by
+> the official KoSIT validator and by plain business checks, and problems are explained in German or English. Runs
+> locally (Docker Compose), with CI on every change. Next: AI reading of plain PDFs and photos, review and export
+> (M2b). See [PLAN.md](PLAN.md), [M1](docs/milestones/M1.md) and [M2a](docs/milestones/M2a.md).
 
 ## The problem
 
@@ -32,12 +33,14 @@ an invoice is correct.
 
 Not in scope: sending invoices, payments, bookkeeping, tax advice.
 
-## Screenshots (M1, local)
+## Screenshots (M2a, local, synthetic test invoices)
 
 | | |
 |---|---|
-| ![Inbox with official XRechnung test invoices](docs/milestones/evidence/m1-02-inbox-upload-en.jpg) | ![The same inbox in German, with translated errors](docs/milestones/evidence/m1-05-inbox-errors-de.jpg) |
-| Inbox: official test invoice added, duplicate recognised | German: translated errors, German dates and numbers |
+| ![Inbox with read invoices and their status](docs/milestones/evidence/m2a-01-inbox-en.jpg) | ![A wrong total explained](docs/milestones/evidence/m2a-02-wrong-total-en.jpg) |
+| Inbox: supplier, number, date, amount and status, read from the e-invoices | A wrong total: the official rules, explained in plain language |
+| ![ZUGFeRD PDF whose visible number differs from the XML](docs/milestones/evidence/m2a-05-pdf-xml-mismatch-de.jpg) | ![Invoice view](docs/milestones/evidence/m2a-03-invoice-view-en.jpg) |
+| ZUGFeRD: the visible PDF shows a different invoice number than the XML (German) | The invoice as read from the XML |
 
 ## Design
 
@@ -74,11 +77,13 @@ CI runs all of this on every pull request, plus a Docker Compose smoke test and 
 ## Results
 
 No product results yet (extraction accuracy comes with M3, usage with M5). Every number published here will link to
-evidence. M1's test results and screenshots are in [docs/milestones/M1.md](docs/milestones/M1.md#test-results-evidence).
+evidence. Test results and screenshots per milestone: [M1](docs/milestones/M1.md#test-results-evidence),
+[M2a](docs/milestones/M2a.md#test-results-evidence).
 
 ## Project docs
 
-[PLAN.md](PLAN.md) · [Project log](docs/PROJECT_LOG.md) · [Milestones](docs/milestones/) · [Costs](docs/COSTS.md)
+[PLAN.md](PLAN.md) · [Project log](docs/PROJECT_LOG.md) · [Milestones](docs/milestones/) · [Costs](docs/COSTS.md) ·
+[Third-party components](docs/THIRD_PARTY.md)
 
 ## Licence
 

@@ -1,7 +1,7 @@
 # Belegfluss — Plan
 
 > Living roadmap. Updated at the end of every session. Changes to the plan are explained in an ADR and logged in
-> [docs/PROJECT_LOG.md](docs/PROJECT_LOG.md). Last update: **2026-11-24 (M1 done)**.
+> [docs/PROJECT_LOG.md](docs/PROJECT_LOG.md). Last update: **2026-11-24 (M2a in review)**.
 
 ## Status
 
@@ -9,7 +9,8 @@
 |---|---|---|---|
 | M0 | Research & design | Verified research, interview guide, architecture, ADRs 0001–0009, this plan | ✅ done (PR #1, approved 2026-11-23) |
 | M1 | Local foundation | Monorepo, FastAPI + Postgres + Next.js (DE/EN), auth, upload, Docker Compose, CI | ✅ done (PR #2, approved 2026-11-24, [M1.md](docs/milestones/M1.md)); interviews deferred, see §4 |
-| M2 | Reading & validating | XML parsing (UBL/CII/ZUGFeRD), official validator, LLM extraction, checks, review UI, basic export | ⏳ |
+| M2a | Reading & validating (deterministic) | XML/ZUGFeRD reading, official validator, worker, business checks, document page | 🟢 built and verified, in review (PR #7, [M2a.md](docs/milestones/M2a.md)) |
+| M2b | LLM extraction, review, export | Azure OpenAI (EU Data Zone) for plain PDFs/photos, review step, ZIP + CSV export | ⏳ (first paid service, estimate in [COSTS.md](docs/COSTS.md)) |
 | M3 | Evaluation & quality gates | Labelled set, field-level accuracy report, CI gate | ⏳ |
 | M4 | Azure with Terraform | Container Apps, Postgres, Blob/Queue, Key Vault, Managed Identity, Entra, Azure OpenAI, CI/CD, budget alert | ⏳ |
 | M5 | First real users | Pilot onboarding, legal pages, App Insights, alerts, incident log, usage metrics | ⏳ |
@@ -75,6 +76,12 @@ A milestone is done when **all** of these hold:
   - CI is green on the PR, and the secret scan is green.
 
 ### M2 — Reading & validating invoices
+
+**Split into two PRs (decided 2026-11-24):** M2a = tasks 1–7, 9 and the invoice view and findings list of task 10
+(no cloud service, €0). M2b = tasks 8, 10 (review, corrections, approve) and 11, with its own plan and cost
+estimate before it starts. Status: M2a built ([M2a.md](docs/milestones/M2a.md)); the FeRD Schematron spike (task 4)
+was not done and stays optional.
+
 - **Tasks:**
   1. `scripts/fetch-test-data` (pinned + SHA-256, [ADR-0008](docs/decisions/0008-test-data-sourcing-and-licensing.md)).
   2. Classifier: UBL / CII / PDF with embedded XML / unstructured.
@@ -280,6 +287,8 @@ Review outcome (2026-11-23): **P1 declined**, **P2 and P3 adopted**. Logged in
   - The interviews (or a short questionnaire to the same people) must happen **before M5**, because M5 onboards
     pilot users anyway. Until then, risks U1 and U2 stay open.
   - German UI tone was decided without interviews: informal "du" (owner, 2026-11-24).
+- **Split M2 into M2a and M2b (decided 2026-11-24, with the owner).** Two reviewable PRs, and the paid Azure OpenAI
+  part starts only after the deterministic part works. The order of milestones is unchanged.
 - **P3 — Make the "PDF vs. XML mismatch" check a headline feature. → Adopted.** It is legally grounded (F15), rare in free
   viewers, and easy to explain.
 

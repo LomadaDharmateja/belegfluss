@@ -408,7 +408,7 @@ Status: ✅ confirmed in an official source (or by running the tool) · ⚠️ c
 | F26 | XRechnung 3.0 in force ≥ 31 Jul 2027; bundle 3.0.2 Summer 2026 Bugfix (31 Aug 2026) | [versions page](https://xeinkauf.de/xrechnung/versionen-und-bundles/) | ✅ |
 | F27 | XRechnung 4.0 pre-release 15 Sep 2026, not productive, final spring 2027 | [version 4](https://xeinkauf.de/xrechnung/version-4) | ✅ |
 | F28 | ZUGFeRD 2.5.2 = Factur-X 1.09.2 (4 Aug 2026, effective 1 Sep 2026), CII D22B | [FeRD 2.5.2](https://www.ferd-net.de/publikationen-produkte/publikationen/detailseite/zugferd-252-english), [FNFE](https://fnfe-mpe.org/factur-x/) | ✅ |
-| F29 | KoSIT/FeRD mapping table Pflichtangaben → BT fields, recommended by BMF | BMF FAQ Q16; [KoSIT table](https://xeinkauf.de/aktuelles/xrechnung/pflichtangaben-nach-ustg-en16931/) | ✅ (table itself not yet read) |
+| F29 | KoSIT/FeRD mapping table Pflichtangaben → BT fields, recommended by BMF | BMF FAQ Q16; [KoSIT table](https://xeinkauf.de/aktuelles/xrechnung/pflichtangaben-nach-ustg-en16931/) | ✅ Table read 2026-11-24 ([HTML version](https://xeinkauf.de/xrechnung/ustg), July 2025). It calls itself an "Orientierungshilfe" (non-binding); used for the M2a checks |
 | F30 | KoSIT validator is Apache-2.0 | [LICENSE](https://github.com/itplr-kosit/validator/blob/main/LICENSE) | ✅ |
 | F31 | Latest validator v1.6.3 (2026-08-20) | [releases](https://github.com/itplr-kosit/validator/releases) | ✅ |
 | F32 | Java ≥ 11 | README | ✅ (ran on Java 21) |
