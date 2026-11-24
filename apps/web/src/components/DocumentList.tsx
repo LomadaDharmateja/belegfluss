@@ -1,5 +1,8 @@
+import Link from "next/link";
 import { useFormatter, useTranslations } from "next-intl";
 import type { DocumentOut } from "@/api/client";
+import { formatDate, formatMoney } from "./format";
+import { StatusBadge } from "./StatusBadge";
 
 type TypeKey = "pdf" | "xml" | "png" | "jpeg" | "other";
 
@@ -24,36 +27,51 @@ export function DocumentList({ documents }: { documents: DocumentOut[] }) {
       <thead className="border-b border-slate-200 text-slate-500">
         <tr>
           <th className="py-2 pr-4 font-medium">{t("name")}</th>
-          <th className="py-2 pr-4 font-medium">{t("type")}</th>
-          <th className="py-2 pr-4 text-right font-medium">{t("size")}</th>
-          <th className="py-2 pr-4 font-medium">{t("uploaded")}</th>
+          <th className="py-2 pr-4 font-medium">{t("supplier")}</th>
+          <th className="py-2 pr-4 font-medium">{t("number")}</th>
+          <th className="py-2 pr-4 font-medium">{t("issueDate")}</th>
+          <th className="py-2 pr-4 text-right font-medium">{t("amount")}</th>
           <th className="py-2 font-medium">{t("status")}</th>
         </tr>
       </thead>
       <tbody>
-        {documents.map((doc) => (
-          <tr key={doc.id} className="border-b border-slate-100">
-            <td className="max-w-xs truncate py-2 pr-4" title={doc.original_filename}>
-              {doc.original_filename}
-            </td>
-            <td className="py-2 pr-4">{t(`types.${TYPE_KEYS[doc.media_type] ?? "other"}`)}</td>
-            <td className="py-2 pr-4 text-right tabular-nums">
-              {format.number(doc.size_bytes / 1024, {
-                style: "unit",
-                unit: "kilobyte",
-                maximumFractionDigits: 1,
-              })}
-            </td>
-            <td className="py-2 pr-4">
-              {format.dateTime(new Date(doc.created_at), { dateStyle: "medium", timeStyle: "short" })}
-            </td>
-            <td className="py-2">
-              <span className="rounded-full bg-sky-50 px-2 py-0.5 text-xs text-sky-800">
-                {t(`statusValues.${doc.status}`)}
-              </span>
-            </td>
-          </tr>
-        ))}
+        {documents.map((doc) => {
+          const summary = doc.summary;
+          const counts = doc.finding_counts;
+          return (
+            <tr key={doc.id} className="border-b border-slate-100 align-top">
+              <td className="max-w-56 py-2 pr-4">
+                <Link
+                  href={`/documents/${doc.id}`}
+                  className="block truncate font-medium text-emerald-800 hover:underline"
+                  title={doc.original_filename}
+                >
+                  {doc.original_filename}
+                </Link>
+                <span className="text-xs text-slate-500">
+                  {t(`types.${TYPE_KEYS[doc.media_type] ?? "other"}`)}
+                </span>
+              </td>
+              <td className="max-w-48 truncate py-2 pr-4">{summary?.seller_name ?? "–"}</td>
+              <td className="py-2 pr-4">{summary?.number ?? "–"}</td>
+              <td className="whitespace-nowrap py-2 pr-4">{formatDate(format, summary?.issue_date)}</td>
+              <td className="whitespace-nowrap py-2 pr-4 text-right tabular-nums">
+                {formatMoney(format, summary?.gross_total, summary?.currency)}
+              </td>
+              <td className="py-2">
+                <StatusBadge status={doc.status} />
+                <div className="mt-1 space-x-2 text-xs">
+                  {counts.error > 0 && (
+                    <span className="text-red-700">{t("errorCount", { count: counts.error })}</span>
+                  )}
+                  {counts.warning > 0 && (
+                    <span className="text-amber-800">{t("warningCount", { count: counts.warning })}</span>
+                  )}
+                </div>
+              </td>
+            </tr>
+          );
+        })}
       </tbody>
     </table>
   );

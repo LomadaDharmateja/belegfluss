@@ -2,6 +2,11 @@
 # Optional settings come from .env (copy .env.example). Everything binds to 127.0.0.1 only.
 name: belegfluss
 
+# Settings shared by the API and the worker (same image).
+x-backend-env: &backend-env
+  BELEGFLUSS_DATABASE_URL: postgresql+psycopg://belegfluss:${POSTGRES_PASSWORD:-belegfluss-dev}@postgres:5432/belegfluss
+  BELEGFLUSS_STORAGE_CONNECTION_STRING: "DefaultEndpointsProtocol=http;AccountName=belegflussdev;AccountKey=ZGV2LWtleS1ub3Qtc2VjcmV0;BlobEndpoint=http://azurite:10000/belegflussdev;QueueEndpoint=http://azurite:10001/belegflussdev;" # gitleaks:allow (local emulator only)
+
 services:
   postgres:
     image: postgres:18-alpine
@@ -27,11 +32,15 @@ services:
     ports: ["127.0.0.1:10000:10000", "127.0.0.1:10001:10001"]
     volumes: ["azurite:/data"]
 
+  validator:
+    # Official KoSIT validator (ADR-0005). No `ports`: the daemon has no authentication, so it is
+    # reachable only inside this network, by the worker.
+    build: { context: services/validator }
+
   api:
     build: { context: apps/api }
     environment:
-      BELEGFLUSS_DATABASE_URL: postgresql+psycopg://belegfluss:${POSTGRES_PASSWORD:-belegfluss-dev}@postgres:5432/belegfluss
-      BELEGFLUSS_STORAGE_CONNECTION_STRING: "DefaultEndpointsProtocol=http;AccountName=belegflussdev;AccountKey=ZGV2LWtleS1ub3Qtc2VjcmV0;BlobEndpoint=http://azurite:10000/belegflussdev;QueueEndpoint=http://azurite:10001/belegflussdev;" # gitleaks:allow (local emulator only)
+      <<: *backend-env
       BELEGFLUSS_AUTH_ISSUER: ${BELEGFLUSS_AUTH_ISSUER:-}
       BELEGFLUSS_AUTH_JWKS_URL: ${BELEGFLUSS_AUTH_JWKS_URL:-}
       BELEGFLUSS_AUTH_AUDIENCE: ${BELEGFLUSS_AUTH_AUDIENCE:-}
@@ -40,6 +49,18 @@ services:
     depends_on:
       postgres: { condition: service_healthy }
       azurite: { condition: service_started }
+
+  worker:
+    # Same image as the API, other command (ADR-0004). Reads documents, validates and checks them.
+    build: { context: apps/api }
+    command: ["python", "-m", "belegfluss.worker"]
+    environment:
+      <<: *backend-env
+      BELEGFLUSS_VALIDATOR_URL: http://validator:8080
+    healthcheck: { disable: true } # the image's check targets the API's HTTP port
+    depends_on:
+      api: { condition: service_healthy } # the API applies the migrations
+      validator: { condition: service_healthy }
 
   web:
     build: { context: ., dockerfile: apps/web/Dockerfile }
