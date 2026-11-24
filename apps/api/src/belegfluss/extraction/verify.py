@@ -9,8 +9,9 @@ Everything here is a hint for the person who reviews the document.
 
 import re
 from datetime import date, timedelta
+from decimal import Decimal
 
-from belegfluss.checks import CheckFinding, amount_spellings, normalise_text
+from belegfluss.checks import CheckFinding, amounts_in_text, normalise_text
 from belegfluss.reading import InvoiceModel
 
 # DE: "DE" + 9 digits. Other EU countries: two letters + 2-12 letters/digits (shape only).
@@ -57,19 +58,23 @@ def check_presence(invoice: InvoiceModel, text: str) -> list[CheckFinding]:
     if not haystack:
         return []
     candidates: list[tuple[str, str, set[str]]] = []
+    missing: list[CheckFinding] = []
     if invoice.number:
         candidates.append(("number", "BT-1", {normalise_text(invoice.number)}))
     if invoice.seller.vat_id:
         candidates.append(("vat_id", "BT-31", {normalise_text(invoice.seller.vat_id)}))
     for iban in invoice.ibans:
         candidates.append(("iban", "BT-84", {normalise_text(iban)}))
-    if invoice.totals.gross is not None:
-        candidates.append(("gross", "BT-112", amount_spellings(invoice.totals.gross)))
+    gross = invoice.totals.gross
+    if gross is not None and gross.quantize(Decimal("0.01")) not in amounts_in_text(text):
+        missing.append(
+            CheckFinding("BF-AI-NOT-IN-DOCUMENT", "warning", ("BT-112",), {"field": "gross"})
+        )
     return [
         CheckFinding("BF-AI-NOT-IN-DOCUMENT", "warning", (term,), {"field": field})
         for field, term, spellings in candidates
         if not any(spelling in haystack for spelling in spellings)
-    ]
+    ] + missing
 
 
 def check_ai_invoice(invoice: InvoiceModel, text: str, today: date) -> list[CheckFinding]:

@@ -29,3 +29,11 @@ class Settings(BaseSettings):
     # is stored with every result. It must match services/validator/Dockerfile (checked by a test).
     validator_url: str = "http://localhost:8081"
     validator_config: str = "xrechnung-3.0.2-2026-08-31"
+
+    # AI reading of plain PDFs and photos (ADR-0016). Empty endpoint = off (Compose default, CI).
+    # Keyless: the worker signs in with Microsoft Entra ID (az login locally, Managed Identity
+    # in M4).
+    openai_endpoint: str = ""  # https://<resource>.openai.azure.com
+    openai_deployment: str = "gpt-5-mini"
+    ai_max_pages: int = 3
+    ai_reasoning_effort: str = "low"

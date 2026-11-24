@@ -195,7 +195,10 @@
       "BF-AI-NOT-IN-DOCUMENT": "{field, select, number {Die Rechnungsnummer} vat_id {Die USt-IdNr.} iban {Die IBAN} gross {Der Gesamtbetrag} issue_date {Das Rechnungsdatum} due_date {Das Fälligkeitsdatum} other {Ein Wert}} aus der KI-Auslesung steht nicht im Text des Dokuments. Vielleicht wurde sie falsch gelesen.",
       "BF-AI-INVALID-IBAN": "Die IBAN {value} hat falsche Prüfziffern. Sie wurde wahrscheinlich falsch gelesen.",
       "BF-AI-INVALID-VAT-ID": "Die USt-IdNr. {value} hat kein gültiges Format.",
-      "BF-AI-IMPLAUSIBLE-DATE": "{field, select, number {Die Rechnungsnummer} vat_id {Die USt-IdNr.} iban {Die IBAN} gross {Der Gesamtbetrag} issue_date {Das Rechnungsdatum} due_date {Das Fälligkeitsdatum} other {Ein Wert}} wirkt unplausibel (in der Zukunft, sehr alt oder vor dem Rechnungsdatum)."
+      "BF-AI-IMPLAUSIBLE-DATE": "{field, select, number {Die Rechnungsnummer} vat_id {Die USt-IdNr.} iban {Die IBAN} gross {Der Gesamtbetrag} issue_date {Das Rechnungsdatum} due_date {Das Fälligkeitsdatum} other {Ein Wert}} wirkt unplausibel (in der Zukunft, sehr alt oder vor dem Rechnungsdatum).",
+      "BF-IMAGE-UNREADABLE": "Das Bild kann nicht gelesen werden. Es ist vielleicht beschädigt oder zu groß.",
+      "BF-AI-NOT-AN-INVOICE": "Die KI hat in diesem Dokument keine Rechnung und keinen Beleg gefunden.",
+      "BF-AI-FAILED": "Die KI konnte dieses Dokument nicht lesen. Bitte prüfe es selbst oder lade eine bessere Kopie hoch."
     }
   },
   "review": {

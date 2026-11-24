@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from belegfluss.checks import Context, amount_spellings, check_invoice
+from belegfluss.checks import Context, amounts_in_text, check_invoice
 from belegfluss.reading import InvoiceModel, Source, Syntax, read_invoice
 from belegfluss.reading.model import Address, Line, VatBreakdown
 
@@ -155,8 +155,16 @@ def test_scanned_pdf_without_text_cannot_be_compared(invoice: InvoiceModel) -> N
     assert codes(invoice, zugferd("  \n ")) == ["BF-PDF-NO-TEXT"]
 
 
-def test_amount_spellings_cover_german_and_english() -> None:
-    assert amount_spellings(Decimal("1234.5")) == {"1234.50", "1234,50", "1.234,50", "1,234.50"}
+# Regression: amounts were matched as text fragments, so "0,00" was "found" inside "340,00".
+def test_amounts_are_read_from_text_as_whole_numbers() -> None:
+    text = "Netto 1.234,56 EUR, USt 1,234.56, Rabatt 340,00, Summe 1 999,00 und 12.50"
+    assert amounts_in_text(text) == {
+        Decimal("1234.56"),
+        Decimal("340.00"),
+        Decimal("1999.00"),
+        Decimal("12.50"),
+    }
+    assert Decimal("0.00") not in amounts_in_text("Reparatur 340,00")
 
 
 def test_duplicate_is_flagged(invoice: InvoiceModel) -> None:

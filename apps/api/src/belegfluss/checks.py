@@ -200,16 +200,19 @@ def normalise_text(text: str) -> str:
     return _SPACES.sub("", text).lower()
 
 
-def amount_spellings(value: Decimal) -> set[str]:
-    """How an amount may appear in a PDF: 1234.56, 1234,56, 1.234,56, 1,234.56."""
-    whole, cents = f"{abs(_money(value)):.2f}".split(".")
-    grouped = f"{int(whole):,}"
-    return {
-        f"{whole}.{cents}",
-        f"{whole},{cents}",
-        f"{grouped.replace(',', '.')},{cents}",
-        f"{grouped}.{cents}",
-    }
+# An amount with two decimals, optionally with thousands separators: 1234,56 / 1.234,56 /
+# 1,234.56 / 1 234,56. Not part of a longer number (so "0,00" is not found inside "340,00").
+_AMOUNT = re.compile(r"(?<![\d.,])(?:\d{1,3}(?:[.,\s]\d{3})+|\d+)[.,]\d{2}(?![\d])")
+
+
+def amounts_in_text(text: str) -> set[Decimal]:
+    """All amounts written in a text, as numbers (German and English notation)."""
+    found = set()
+    for match in _AMOUNT.finditer(text):
+        token = match.group(0)
+        whole = re.sub(r"\D", "", token[:-3])
+        found.add(Decimal(f"{whole}.{token[-2:]}"))
+    return found
 
 
 def check_pdf_matches_xml(invoice: InvoiceModel, pdf_text: str) -> list[CheckFinding]:
@@ -224,7 +227,7 @@ def check_pdf_matches_xml(invoice: InvoiceModel, pdf_text: str) -> list[CheckFin
             )
         )
     gross = invoice.totals.gross
-    if gross is not None and not any(s in text for s in amount_spellings(gross)):
+    if gross is not None and _money(gross) not in amounts_in_text(pdf_text):
         findings.append(
             CheckFinding(
                 "BF-PDF-XML-MISMATCH-TOTAL", "warning", ("BT-112",), {"amount": f"{_money(gross)}"}

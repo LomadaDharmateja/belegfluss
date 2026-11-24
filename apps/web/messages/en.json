@@ -195,7 +195,10 @@
       "BF-AI-NOT-IN-DOCUMENT": "{field, select, number {The invoice number} vat_id {The VAT ID} iban {The IBAN} gross {The total} issue_date {The invoice date} due_date {The due date} other {A value}} read by AI does not appear in the document's text. It may be misread.",
       "BF-AI-INVALID-IBAN": "The IBAN {value} has wrong check digits. It is probably misread.",
       "BF-AI-INVALID-VAT-ID": "The VAT ID {value} doesn't have a valid format.",
-      "BF-AI-IMPLAUSIBLE-DATE": "{field, select, number {The invoice number} vat_id {The VAT ID} iban {The IBAN} gross {The total} issue_date {The invoice date} due_date {The due date} other {A value}} looks implausible (in the future, very old, or before the invoice date)."
+      "BF-AI-IMPLAUSIBLE-DATE": "{field, select, number {The invoice number} vat_id {The VAT ID} iban {The IBAN} gross {The total} issue_date {The invoice date} due_date {The due date} other {A value}} looks implausible (in the future, very old, or before the invoice date).",
+      "BF-IMAGE-UNREADABLE": "The image can't be read. It may be damaged or too large.",
+      "BF-AI-NOT-AN-INVOICE": "The AI found no invoice or receipt in this document.",
+      "BF-AI-FAILED": "The AI could not read this document. Please check it yourself, or upload a clearer copy."
     }
   },
   "review": {
