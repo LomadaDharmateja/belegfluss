@@ -145,7 +145,7 @@
       "BF-NOT-AN-INVOICE": "Diese Datei ist XML, aber keine Rechnung in einem bekannten Format (XRechnung oder EN 16931, als UBL oder CII).",
       "BF-PDF-UNREADABLE": "Die PDF-Datei kann nicht gelesen werden. Sie ist vielleicht beschädigt.",
       "BF-PDF-ENCRYPTED": "Die PDF ist passwortgeschützt, deshalb kann ihr Inhalt nicht gelesen werden.",
-      "BF-UNSTRUCTURED": "Dieses Dokument enthält keine maschinenlesbaren Rechnungsdaten (eine einfache PDF oder ein Foto). Das automatische Auslesen solcher Dokumente kommt bald.",
+      "BF-UNSTRUCTURED": "Dieses Dokument enthält keine maschinenlesbaren Rechnungsdaten (eine einfache PDF oder ein Foto), und das Auslesen per KI ist hier nicht eingeschaltet. Du kannst es trotzdem freigeben, dann geht das Original an deine Steuerberatung.",
       "BF-VALIDATOR-NOT-PROCESSABLE": "Der offizielle Validator konnte diese Rechnung nicht verarbeiten, deshalb wurde sie nicht gegen die offiziellen Regeln geprüft.",
       "BF-VALIDATOR-NO-SCENARIO": "Der offizielle Validator hat für diese Art von Rechnung keine Regeln (zum Beispiel ein ZUGFeRD-Profil oder ein anderer Standard), deshalb wurde sie nicht gegen die offiziellen Regeln geprüft. Belegfluss hat die Beträge selbst geprüft.",
       "BF-NOT-AN-E-INVOICE": "Laut Bundesfinanzministerium sind die ZUGFeRD-Profile MINIMUM und BASIC WL keine E-Rechnungen. Bitte den Lieferanten um eine Rechnung in einem vollständigen Profil.",

@@ -145,7 +145,7 @@
       "BF-NOT-AN-INVOICE": "This file is XML, but not an invoice in a format Belegfluss knows (XRechnung or EN 16931, as UBL or CII).",
       "BF-PDF-UNREADABLE": "The PDF file can't be read. It may be damaged.",
       "BF-PDF-ENCRYPTED": "The PDF is password-protected, so its contents can't be read.",
-      "BF-UNSTRUCTURED": "This document has no machine-readable invoice data (a plain PDF or a photo). Automatic reading of such documents is coming soon.",
+      "BF-UNSTRUCTURED": "This document has no machine-readable invoice data (a plain PDF or a photo), and AI reading is not switched on here. You can still approve it, so the original goes to your accountant.",
       "BF-VALIDATOR-NOT-PROCESSABLE": "The official validator could not process this invoice, so it was not checked against the official rules.",
       "BF-VALIDATOR-NO-SCENARIO": "The official validator has no rules for this kind of invoice (for example a ZUGFeRD profile or another standard), so it was not checked against the official rules. Belegfluss checked the amounts itself.",
       "BF-NOT-AN-E-INVOICE": "According to the Federal Ministry of Finance, the ZUGFeRD profiles MINIMUM and BASIC WL are not e-invoices. Ask the supplier for an invoice in a full profile.",

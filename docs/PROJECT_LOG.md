@@ -280,3 +280,33 @@ A dated diary: what was done, why, what was learned, what broke. Newest entry at
 
 - Owner accepted ADR-0014 and ADR-0015 and approved PR #7 for merge.
 - Next: M2b plan (LLM extraction, review, export).
+
+## 2026-11-24 — M2b steps 1–2: review, approval, export, AI reading (no Azure yet)
+
+**What was done**
+- Plan approved with the owner: Claude runs documented `az` commands only after an explicit yes at that moment;
+  only synthetic documents go to Azure OpenAI; approving with open errors is allowed after a confirmation.
+- Step 1 (commit `9b4fc36`): status `approved`, `field_reviews` table and migration, corrections for AI-read invoices
+  (checks re-run, audit log with field names only), approve/reopen, export `ZIP` of byte-identical originals plus
+  `summary.csv` (UTF-8 BOM, `;`, comma decimals, CSV-injection guard). Web: review form, approval box, export box.
+- Step 2 (commit `11168bd`): `extraction` package. Page images and text layer (EXIF rotation, metadata dropped),
+  strict structured-output schema, Azure v1 client (keyless, no tools, `store=False`), fake for tests. Verification by
+  code: IBAN checksum, VAT ID shape, plausible dates, values present in the text layer. AI-read documents always need
+  review; tokens and time stored; transient AI errors retried.
+- Step 3 prepared, nothing created in Azure: `scripts/azure/dev-openai.ps1` (every command checked against Microsoft
+  Learn), `compose.ai.yaml`, `scripts/run-ai-worker.ps1`, `docs/setup/azure-openai-dev.md`, opt-in live test.
+- Tests: API 242 passed, web 45 passed.
+
+**What broke**
+- Amounts in the PDF text were matched as text fragments, so `0,00` was "found" inside `340,00`. Found by the
+  prompt-injection test. Now amounts are read from the text as whole numbers. Regression test; the ZUGFeRD
+  PDF-vs-XML check uses the same function.
+- The test first imported `httpx`; the openai SDK 3.x uses `httpx2`.
+
+**Learned**
+- A custom subdomain is required for Entra ID sign-in and can't be changed later. Microsoft's key-switch-off page shows
+  PowerShell/Bicep only, so the script uses the generic `az resource update --set` and reads the value back.
+
+**Next**
+- Owner installs the Azure CLI and runs `az login`. Claude checks model offer and quota read-only, shows the script,
+  and creates the resource only after the owner's yes. Then live runs, measured cost, docs, PR.

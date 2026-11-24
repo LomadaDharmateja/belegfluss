@@ -1,0 +1,11 @@
+# Opt-in override for live AI runs (docs/setup/azure-openai-dev.md, ADR-0016):
+#   docker compose -f compose.yaml -f compose.ai.yaml up --build --detach
+# The worker then runs on your machine, where it can use your `az login` (keyless). For that it
+# needs the validator, which is published here on 127.0.0.1 only. The default stack and CI keep it
+# unpublished.
+services:
+  validator:
+    ports: ["127.0.0.1:8081:8080"]
+
+  worker:
+    profiles: ["container-worker"] # not started: the worker runs on the host instead
