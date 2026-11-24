@@ -167,5 +167,28 @@ A dated diary: what was done, why, what was learned, what broke. Newest entry at
 - Storage: the blob at `orgs/{org}/originals/{sha256}` starts with `%PDF`, and its recomputed SHA-256 matches the
   database. The API log contains no file names.
 
+**B3: manual end-to-end run with screenshots** (owner signed in; the rest driven in the owner's Chrome)
+- Test data: official KoSIT test suite `xrechnung-3.0.2-testsuite-2026-08-31.zip` (5,586,900 bytes, SHA-256
+  `1e81ef75…e3d7`), unpacked into the git-ignored `testdata/external/`. Files used: `01.01a-INVOICE_ubl.xml` (UBL)
+  and `01.01a-INVOICE_uncefact.xml` (CII).
+- Results, each with the server response from the API log:
+  - UBL and CII test invoices added (201), shown as XML / "Received"
+  - same UBL file again → "was already in your inbox" (200, no new row)
+  - `notes.txt` → "This file type is not supported…" (415)
+  - 21 MiB file (generated in the page, because the browser tool only uploads files under 10 MB) → "The file is too
+    large." The browser stops it before upload; the server-side 413 is covered by API tests.
+  - Language switch to German: navigation, messages, dates (24.11.2026, 01:07), decimal comma (9,6 kB), status
+    "Eingegangen". Switched back to English afterwards.
+- Database: 3 documents, 3 `document.uploaded` audit events; no rows for duplicates or rejected files. API log: no
+  file names.
+- Storage holds one extra blob (`orgs/aa5915c9…/originals/aaaa…`, 13 bytes, 2026-11-23 07:10): a placeholder from
+  my Phase A storage check, not from the app. It belongs to no organisation in the database.
+- Screenshots: `docs/milestones/evidence/m1-01` … `m1-05`. No email or name is visible; file names are test files
+  and one PDF the owner confirmed as harmless.
+
+**What broke**
+- The "Uploading …" line stayed under the result and looked as if the upload were still running (only one request
+  reached the API). Fixed: the result replaces the line. Regression test first; 28 unit tests pass.
+
 **Next**
-- B3: manual end-to-end run in DE/EN with screenshots; then Phase C (M1 docs, claims audit, PR).
+- Phase C: M1 docs (three parts + claims audit), ARCHITECTURE/COSTS updates, ADRs 0010–0013 for review, PR ready.
