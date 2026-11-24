@@ -83,7 +83,9 @@ def syntax_of(root: etree._Element) -> Syntax | None:
 def embedded_invoice_xml(pdf: bytes) -> bytes | None:
     try:
         reader = PdfReader(io.BytesIO(pdf))
-        if reader.is_encrypted:
+        # Many PDFs are "encrypted" with an empty password: they open without asking and only
+        # restrict editing or printing. Only a PDF that needs a real password is unreadable.
+        if reader.is_encrypted and not reader.decrypt(""):
             raise ReadingError("BF-PDF-ENCRYPTED")
         attachments = reader.attachments
     except (PdfReadError, ValueError, KeyError) as exc:

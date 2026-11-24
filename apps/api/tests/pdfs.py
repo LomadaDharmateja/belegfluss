@@ -1,6 +1,9 @@
 """Small test PDFs: a hand-written text layer, and ZUGFeRD/Factur-X PDFs via factur-x."""
 
+import io
+
 import facturx
+from pypdf import PdfReader, PdfWriter
 
 
 def _escape(text: str) -> str:
@@ -42,3 +45,13 @@ def zugferd_pdf(xml: bytes, lines: list[str], level: str = "en16931") -> bytes:
         text_pdf(lines), xml, flavor="factur-x", level=level, check_xsd=False
     )
     return result
+
+
+def encrypted_pdf(pdf: bytes, user_password: str) -> bytes:
+    """Encrypt a PDF. With an empty user password it opens without asking (only permissions
+    are set), as many real-world invoices and receipts do."""
+    writer = PdfWriter(clone_from=PdfReader(io.BytesIO(pdf)))
+    writer.encrypt(user_password=user_password, owner_password="owner-secret", algorithm="AES-128")
+    out = io.BytesIO()
+    writer.write(out)
+    return out.getvalue()

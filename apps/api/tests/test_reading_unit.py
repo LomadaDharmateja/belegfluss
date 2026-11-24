@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 
 from belegfluss.reading import ReadingError, Source, Syntax, classify, read_invoice
-from tests.pdfs import text_pdf, zugferd_pdf
+from tests.pdfs import encrypted_pdf, text_pdf, zugferd_pdf
 
 FIXTURES = Path(__file__).parent / "fixtures"
 CII = (FIXTURES / "invoice_cii.xml").read_bytes()
@@ -116,3 +116,20 @@ def test_broken_pdf_is_rejected_with_a_code() -> None:
     with pytest.raises(ReadingError) as caught:
         classify(b"%PDF-1.7\nthis is not a real pdf", "application/pdf", max_pdf_pages=5)
     assert caught.value.code == "BF-PDF-UNREADABLE"
+
+
+# Regression: a real receipt was "encrypted" with an empty password (permissions only) and was
+# wrongly reported as unreadable (seen in the first M2a run on real data).
+def test_pdf_encrypted_with_empty_password_is_read() -> None:
+    visible = ["Rechnung RE-2026-1107", "Summe 447,40 EUR"]
+    pdf = encrypted_pdf(zugferd_pdf(CII, visible), user_password="")
+    classified = classify(pdf, "application/pdf", max_pdf_pages=5)
+    assert classified.source is Source.ZUGFERD
+    assert classified.pdf_text is not None and "RE-2026-1107" in classified.pdf_text
+
+
+def test_pdf_that_needs_a_password_is_reported() -> None:
+    pdf = encrypted_pdf(text_pdf(["Rechnung 1"]), user_password="secret")
+    with pytest.raises(ReadingError) as caught:
+        classify(pdf, "application/pdf", max_pdf_pages=5)
+    assert caught.value.code == "BF-PDF-ENCRYPTED"
