@@ -3,7 +3,7 @@ name: compose-smoke
 # The whole stack, built from the Dockerfiles, must start and answer.
 on:
   pull_request:
-    paths: ["apps/**", "compose.yaml", ".dockerignore", "pnpm-lock.yaml", ".github/workflows/compose-smoke.yml"]
+    paths: ["apps/**", "services/**", "compose.yaml", ".dockerignore", "pnpm-lock.yaml", ".github/workflows/compose-smoke.yml"]
   push:
     branches: [main]
 
@@ -17,7 +17,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Build and start (waits for health checks)
-        run: docker compose up --build --detach --wait --wait-timeout 180
+        run: docker compose up --build --detach --wait --wait-timeout 300
       - name: API answers
         run: |
           curl --fail --silent http://127.0.0.1:8000/health
@@ -27,7 +27,12 @@ jobs:
           curl --fail --silent -H "Accept-Language: de-DE" http://127.0.0.1:3000/ | grep -q 'lang="de"'
           curl --fail --silent -H "Accept-Language: en-GB" http://127.0.0.1:3000/ | grep -q 'lang="en"'
       - name: Migrations ran
-        run: docker compose exec -T postgres psql -U belegfluss -d belegfluss -tAc "select count(*) from documents"
+        run: docker compose exec -T postgres psql -U belegfluss -d belegfluss -tAc "select count(*) from invoices"
+      - name: Worker runs, validator is internal only
+        run: |
+          test "$(docker compose ps --format '{{.State}}' worker)" = "running"
+          docker compose exec -T worker python -c "import urllib.request; print(urllib.request.urlopen('http://validator:8080/server/health').read()[:60])"
+          ! curl --silent --max-time 3 http://127.0.0.1:8080/server/health
       - name: Logs on failure
         if: failure()
         run: docker compose logs --no-color
