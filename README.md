@@ -2,7 +2,9 @@
 
 **A bilingual (German / English) e-invoice inbox for freelancers and small businesses in Germany.**
 
-> **Status: M0 — research & design.** There is no application code yet. See [PLAN.md](PLAN.md) for the roadmap.
+> **Status: M1, local foundation (done).** Sign-in with an email code, private organisations and
+> document upload run locally in German and English, with CI on every change. Reading and validating invoices comes
+> in M2. See [PLAN.md](PLAN.md) and [what M1 built](docs/milestones/M1.md).
 
 ## The problem
 
@@ -30,6 +32,13 @@ an invoice is correct.
 
 Not in scope: sending invoices, payments, bookkeeping, tax advice.
 
+## Screenshots (M1, local)
+
+| | |
+|---|---|
+| ![Inbox with official XRechnung test invoices](docs/milestones/evidence/m1-02-inbox-upload-en.jpg) | ![The same inbox in German, with translated errors](docs/milestones/evidence/m1-05-inbox-errors-de.jpg) |
+| Inbox: official test invoice added, duplicate recognised | German: translated errors, German dates and numbers |
+
 ## Design
 
 - [Architecture](docs/ARCHITECTURE.md): components, data flow, where the LLM is and isn't used, Azure services,
@@ -42,13 +51,30 @@ Not in scope: sending invoices, payments, bookkeeping, tax advice.
 Planned stack: Next.js + TypeScript, FastAPI + PostgreSQL, KoSIT validator, Azure (Container Apps → AKS, Azure
 OpenAI in the EU data zone, Blob/Queue, Key Vault, Managed Identity, Entra External ID), Terraform, GitHub Actions.
 
-## How to run
+## How to run (local)
 
-Nothing to run yet. Local setup arrives with M1 (Docker Compose).
+Requirements: Docker. For development without Docker: [uv](https://docs.astral.sh/uv/) and Node 24 with
+Corepack (pnpm).
+
+```bash
+cp .env.example .env          # optional: sign-in values from docs/setup/entra-external-id.md
+docker compose up --build     # web http://localhost:3000 · API http://localhost:8000/docs
+```
+
+Without the sign-in values the app runs, but shows "sign-in not configured".
+
+| Part | Checks |
+|---|---|
+| API (`apps/api`) | `uv run ruff check . && uv run mypy src && uv run pytest` (tests start PostgreSQL 18 and Azurite containers) |
+| Web (`apps/web`) | `pnpm lint && pnpm build && pnpm typecheck && pnpm test && pnpm test:e2e` |
+| API contract | after an API change: `uv run python -m belegfluss.openapi_export ../web/src/api/openapi.json`, then `pnpm gen:api` |
+
+CI runs all of this on every pull request, plus a Docker Compose smoke test and a secret scan.
 
 ## Results
 
-None yet. Every number published here will link to evidence (test output, eval report or dashboard).
+No product results yet (extraction accuracy comes with M3, usage with M5). Every number published here will link to
+evidence. M1's test results and screenshots are in [docs/milestones/M1.md](docs/milestones/M1.md#test-results-evidence).
 
 ## Project docs
 

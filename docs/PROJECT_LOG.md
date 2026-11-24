@@ -65,3 +65,168 @@ A dated diary: what was done, why, what was learned, what broke. Newest entry at
 
 **Next**
 - Merge PR #1, then plan M1 (local foundation).
+
+---
+
+## 2026-11-23 — M1 planning and Phase A (local foundation, no Azure needed)
+
+**Decisions in planning (owner)**
+- Sign-in tenant through a normal Azure account (free sign-up, €0 in M1, budget alert right after creation),
+  not the 30-day trial.
+- Sign-in method: email one-time code (no passwords).
+
+**Done**
+- `docs/setup/entra-external-id.md`: step-by-step guide for the owner (Azure account → budget alert → external
+  tenant → API + SPA registrations → email-OTP user flow). No client secrets anywhere.
+- API (`apps/api`), Python 3.14 / FastAPI 0.165:
+  - token validation (signature, issuer, audience, expiry, scope; `tid`+`oid`), with no bypass in app code
+  - personal organisation on first sign-in; org-scoped routes, where non-members get 404
+  - upload with size limit, type detection from content, SHA-256, unchanged originals in Blob, per-org duplicate
+    detection, audit events without file names
+  - SQLAlchemy 2.1 + Alembic on PostgreSQL 18
+  - **63 tests** against real PostgreSQL and Azurite (testcontainers)
+- Web (`apps/web`), Next.js 16.4 / React 19.3:
+  - next-intl DE/EN without locale in the URL
+  - MSAL React sign-in with runtime configuration (one image for all environments)
+  - typed client generated from OpenAPI
+  - inbox with upload and list
+  - **25 Vitest + 5 Playwright tests**
+- Docker Compose stack (Postgres, Azurite, API, web). Verified: all healthy, migrations on start, DE/EN, blob
+  write/read.
+- CI workflows: API, web, compose smoke test, gitleaks (binary pinned by checksum), Dependabot; actions pinned by
+  commit SHA.
+- ADRs 0010–0013 proposed (i18n, API contract, persistence, tenancy).
+
+**Learned / changed from the plan**
+- **TypeScript 5.9 instead of the planned 6.0.3.** openapi-typescript declares a peer dependency on TypeScript 5,
+  and the official Next.js 16.4 scaffold uses `^5`. typescript-eslint doesn't support TypeScript 7 yet either.
+- **ESLint stays on 9** (deprecated warning): eslint-plugin-react, -import and -jsx-a11y don't support ESLint 10
+  yet.
+- pnpm 12 blocks install scripts by default. `@parcel/watcher` and `@swc/core` (pulled in by next-intl's unused
+  extraction tooling) ship prebuilt binaries, so their scripts are denied in `pnpm-workspace.yaml`.
+- Next.js 16 "Cache Components" is opt-in and left off. Next.js says it becomes the default in the next major
+  version, so that's a planned migration.
+- MSAL React 5 calls `initialize()` and `handleRedirectPromise()` itself (read in its source). Our provider only
+  creates the client after hydration, using `useSyncExternalStore`, which satisfies the React Compiler lint rules
+  without suppressions.
+- `UseDevelopmentStorage=true` points to `127.0.0.1` only (read in the Azure SDK source). Docker Compose uses a
+  dedicated Azurite dev account instead, with a fake key marked inline for gitleaks.
+- Starlette's test client now prefers `httpx2`; testcontainers moved modules to `testcontainers.community.*`. Both
+  were switched, so the test run is warning-free.
+
+**What broke**
+- A `sed` edit put a real line break into a Python string, and a chained command committed it although the export
+  had failed. Fixed in the next commit and verified (ruff, mypy, 63 tests). Lesson: use `set -e` when chaining
+  checks and commits.
+- First web test run: the placeholder check matched words inside ICU plural branches. The test regex was fixed.
+
+**Next**
+- CI results on draft PR #2 → Phase B once the owner has created the tenant → M1 docs and claims audit.
+
+## 2026-11-24 — M1 Phase B1: Azure subscription and sign-in tenant
+
+**Done**
+- Subscription question: Azure for Students vs pay-as-you-go. Chose **pay-as-you-go**. Student subscriptions only
+  allow a few regions by policy (Europe usually restricted), the offer is meant for education, Cost Management
+  lists it as unsupported, and it is disabled when the credit or the 12 months run out. Reasons and sources added
+  to `docs/setup/entra-external-id.md`.
+- Owner created the subscription (Azure Plan, active, €0), a **€10/month budget** (alerts: actual 50 %, actual
+  100 %, forecast 100 %, by email) and the external tenant **Belegfluss Dev** (`belegflussdev`).
+- Read-only check in the portal: tenant country **Germany**, data location **"EU Model Clause compliant
+  datacenters"**; the public discovery document reports `tenant_region_scope: EU`. Tenant resource in
+  `rg-belegfluss-identity`, location Europe.
+- Steps 4–6 redone in the external tenant (with the owner's approval, in the owner's browser): `belegfluss-api`
+  (scope `access_as_user`, Admins only; `requestedAccessTokenVersion` was already 2), `belegfluss-web` (SPA,
+  redirect `http://localhost:3000`, no secret, implicit grant off, admin consent granted), user flow
+  `SignUpSignIn` (email one-time passcode, Display Name only) with the web app added.
+- `.env` (git-ignored) filled with the public IDs; issuer and JWKS URL taken from the tenant's discovery document.
+
+**What broke**
+- Steps 4–6 were first done in the owner's **Default Directory** instead of the external tenant: the Azure portal
+  and the Entra admin center each remember their own directory. The guide didn't warn about it; it now does, with
+  a check of the directory label before Step 4. The leftover apps and user flow in the Default Directory are to be
+  deleted by the owner once sign-in works.
+- **The sign-in button did nothing** (first real test). The browser console showed MSAL's
+  `endpoints_resolution_error`. Cause, read in the msal-common 16.17 source (`Authority.validateIssuer`): the
+  tenant's discovery document names a tenant-ID-based issuer (`https://<tenant-id>.ciamlogin.com/<tenant-id>/v2.0`),
+  while the app signs in via `belegflussdev.ciamlogin.com`. MSAL accepts a different issuer host only if it is in
+  `knownAuthorities`. Fix: new variable `ENTRA_TENANT_ID`; both hosts are listed. Regression test first
+  (`config.test.ts`, failed before the fix), then web lint, types, 27 unit and 5 browser tests pass. Verified in
+  Chrome: the button now opens the Belegfluss Dev sign-in page (authorization code + PKCE, our API scope).
+- My own slip: the first attempt to log this ran in the same command as the commit, failed on the line endings, and
+  the commit went ahead without the log entry. Logged in a separate commit; checks and commits now run as separate
+  steps.
+
+**B2: first real sign-in (owner, email one-time code) and upload, verified**
+- API log: `GET /me` 200, `GET /orgs/{org}/documents` 200, `POST /orgs/{org}/documents` 201. The verifier only
+  accepts a token with a valid RS256 signature from the tenant's JWKS, the exact issuer, audience = API client ID,
+  scope `access_as_user`, and `exp`/`tid`/`oid` present, so the real token passed all of these checks.
+- Database: 1 user (only `idp_tenant_id` = our tenant ID and `idp_object_id`; no email or name), 1 organisation
+  "My business", 1 owner membership, 1 document (`application/pdf`, 4,911 bytes, `received`), audit events
+  `user.created`, `org.created`, `document.uploaded`.
+- Storage: the blob at `orgs/{org}/originals/{sha256}` starts with `%PDF`, and its recomputed SHA-256 matches the
+  database. The API log contains no file names.
+
+**B3: manual end-to-end run with screenshots** (owner signed in; the rest driven in the owner's Chrome)
+- Test data: official KoSIT test suite `xrechnung-3.0.2-testsuite-2026-08-31.zip` (5,586,900 bytes, SHA-256
+  `1e81ef75…e3d7`), unpacked into the git-ignored `testdata/external/`. Files used: `01.01a-INVOICE_ubl.xml` (UBL)
+  and `01.01a-INVOICE_uncefact.xml` (CII).
+- Results, each with the server response from the API log:
+  - UBL and CII test invoices added (201), shown as XML / "Received"
+  - same UBL file again → "was already in your inbox" (200, no new row)
+  - `notes.txt` → "This file type is not supported…" (415)
+  - 21 MiB file (generated in the page, because the browser tool only uploads files under 10 MB) → "The file is too
+    large." The browser stops it before upload; the server-side 413 is covered by API tests.
+  - Language switch to German: navigation, messages, dates (24.11.2026, 01:07), decimal comma (9,6 kB), status
+    "Eingegangen". Switched back to English afterwards.
+- Database: 3 documents, 3 `document.uploaded` audit events; no rows for duplicates or rejected files. API log: no
+  file names.
+- Storage holds one extra blob (`orgs/aa5915c9…/originals/aaaa…`, 13 bytes, 2026-11-23 07:10): a placeholder from
+  my Phase A storage check, not from the app. It belongs to no organisation in the database.
+- Screenshots: `docs/milestones/evidence/m1-01` … `m1-05`. No email or name is visible; file names are test files
+  and one PDF the owner confirmed as harmless.
+
+**What broke**
+- The "Uploading …" line stayed under the result and looked as if the upload were still running (only one request
+  reached the API). Fixed: the result replaces the line. Regression test first; 28 unit tests pass.
+
+**Next**
+- Phase C: M1 docs (three parts + claims audit), ARCHITECTURE/COSTS updates, ADRs 0010–0013 for review, PR ready.
+
+## 2026-11-24 — M1 Phase C: docs, claims audit, clean-up
+
+**Done**
+- Leftovers in the owner's Default Directory deleted (with the owner's approval): app registrations
+  `belegfluss-api` and `belegfluss-web`, user flow `B2X_1_SignUpSignIn`. `aad-extensions-app` (created by Azure)
+  kept.
+- [docs/milestones/M1.md](milestones/M1.md): three parts, test evidence with CI links, screenshots, changes from the
+  plan, what broke, claims audit (24 claims).
+- Fixed during the audit:
+  - ADR-0003: condition marked as met; implementation notes (`tid` + `oid`, issuer host)
+  - ARCHITECTURE: data model and tenancy rule updated to what M1 built; i18n/API-client choices marked as decided;
+    EU data location confirmed
+  - ADR-0011: package size stated as measured; ADR-0012: test duration as measured
+  - COSTS: M1 row (€0.00 measured) and the budget alert
+  - README: status, screenshots, pointer to M1 evidence
+- Clean-up: scanned for exported code that nothing imports. Only `defaultLocale` was exported without need; the
+  export was removed. No dead code found in the API.
+- Checks: API 63 tests (29.9 s), ruff, format, mypy strict; web lint, types, 28 unit tests. Link check: 46/46 public
+  links, 5/5 private repo links (via `gh api`), all relative links and anchors.
+
+**Open**
+- Diagrams: both changed diagrams render on GitHub (checked in the branch view; mermaid-cli not installed).
+- ADRs 0010–0013 wait for the owner's review. Interviews (M1 task 7) are still open.
+
+## 2026-11-24 — M1 review outcome
+
+**Decisions (owner)**
+- ADRs 0010–0013 accepted.
+- German UI keeps the informal "du" (recorded in ADR-0010).
+- PR #2 approved for merge.
+- **User interviews deferred.** The owner can't run them right now. M2's priorities follow the law and the official
+  formats, so they don't depend on the answers. Choices that did depend on interviews stay at their safe defaults
+  (ZIP + CSV export, no DATEV format yet). Interviews or a short questionnaire must happen before M5 (pilot
+  onboarding). Risks U1/U2 stay open until then. Recorded in PLAN §3 and §4 (P2).
+
+**Next**
+- M2 planning: explain the approach, options and costs (first paid service: Azure OpenAI) before building.

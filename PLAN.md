@@ -1,14 +1,14 @@
 # Belegfluss — Plan
 
 > Living roadmap. Updated at the end of every session. Changes to the plan are explained in an ADR and logged in
-> [docs/PROJECT_LOG.md](docs/PROJECT_LOG.md). Last update: **2026-11-23 (M0 approved)**.
+> [docs/PROJECT_LOG.md](docs/PROJECT_LOG.md). Last update: **2026-11-24 (M1 done)**.
 
 ## Status
 
 | # | Milestone | Key output | Status |
 |---|---|---|---|
 | M0 | Research & design | Verified research, interview guide, architecture, ADRs 0001–0009, this plan | ✅ done (PR #1, approved 2026-11-23) |
-| M1 | Local foundation | Monorepo, FastAPI + Postgres + Next.js (DE/EN), auth, upload, Docker Compose, CI | ⏳ next |
+| M1 | Local foundation | Monorepo, FastAPI + Postgres + Next.js (DE/EN), auth, upload, Docker Compose, CI | ✅ done (PR #2, approved 2026-11-24, [M1.md](docs/milestones/M1.md)); interviews deferred, see §4 |
 | M2 | Reading & validating | XML parsing (UBL/CII/ZUGFeRD), official validator, LLM extraction, checks, review UI, basic export | ⏳ |
 | M3 | Evaluation & quality gates | Labelled set, field-level accuracy report, CI gate | ⏳ |
 | M4 | Azure with Terraform | Container Apps, Postgres, Blob/Queue, Key Vault, Managed Identity, Entra, Azure OpenAI, CI/CD, budget alert | ⏳ |
@@ -66,6 +66,7 @@ A milestone is done when **all** of these hold:
   6. **CI (GitHub Actions):** lint + type check + tests for Python and TypeScript, build images, secret scan, path
      filters.
   7. **Interviews:** run at least 3 of the 5 interviews in parallel (they decide the M2 priorities).
+     → **Deferred** on 2026-11-24 (see §4, P2).
 - **Acceptance criteria:**
   - `docker compose up` → sign in → upload an official test XML and a PDF → both listed as `received`, in German and
     English.
@@ -239,8 +240,8 @@ Likelihood/impact: L = low, M = medium, H = high.
 
 | ID | Risk | L | I | Mitigation | When |
 |---|---|---|---|---|---|
-| **U1** | Not enough pilot users | M | H | Start recruiting during M1 via interviews; accountants as a channel (one accountant → many clients); free pilot | M1–M5 |
-| **U2** | Problem not painful enough: free ELSTER viewer, DATEV Unternehmen online, lexoffice/sevDesk already cover it (F17, F49) | M | H | Interviews with explicit kill/pivot criteria; position on the workflow (mixed inbox, checks, handoff) and the bilingual niche, not on "viewing XML" | M1 |
+| **U1** | Not enough pilot users | M | H | Interviews deferred (2026-11-24): recruit and interview pilot users before M5 onboarding; accountants as a channel (one accountant → many clients); free pilot | before M5 |
+| **U2** | Problem not painful enough: free ELSTER viewer, DATEV Unternehmen online, lexoffice/sevDesk already cover it (F17, F49) | M | H | Interviews with explicit kill/pivot criteria, **deferred to before M5** (risk stays open until then); position on the workflow (mixed inbox, checks, handoff) and the bilingual niche, not on "viewing XML" | before M5 |
 | U3 | Users won't upload financial documents to an unknown tool | M | H | EU hosting, transparent architecture, Impressum + privacy policy, start with people who know us, open-source repo (from M4) | M5 |
 | U4 | Few e-invoices before 2027/2028 | M | M | Value from day one through PDF extraction and checks. Volume grows sharply in 2027 (F9), so the timing works for us | M2 |
 | **T1** | LLM extraction accuracy too low on photos/scans | M | M | Verification-based confidence + human review; eval gate; start with PDFs; photos as beta | M2–M3 |
@@ -270,8 +271,15 @@ Review outcome (2026-11-23): **P1 declined**, **P2 and P3 adopted**. Logged in
   deterministic, tested on official data) makes the pilot possible about one milestone earlier. The LLM path is
   labelled "beta" until the M3 gate exists. *Cost:* Azure spending starts earlier (a few € per month in dev).
   *Risk:* LLM quality without a gate, mitigated by review-before-export.
-- **P2 — Run interviews during M1, not after. → Adopted.** They decide M2 priorities (e.g. DATEV export,
-  bilingual focus).
+- **P2 — Run interviews during M1, not after. → Adopted, then deferred on 2026-11-24.** The owner can't run
+  interviews right now. Impact:
+  - M2 keeps its planned priorities. They follow the law and the official formats (reading XML, the official
+    validator, VAT and duplicate checks), so they don't depend on interview answers.
+  - Choices that did depend on the interviews stay at their safe defaults: accountant export as ZIP + CSV
+    ([ADR-0009](docs/decisions/0009-accountant-export-zip-and-csv-first.md)), no DATEV format yet, both languages.
+  - The interviews (or a short questionnaire to the same people) must happen **before M5**, because M5 onboards
+    pilot users anyway. Until then, risks U1 and U2 stay open.
+  - German UI tone was decided without interviews: informal "du" (owner, 2026-11-24).
 - **P3 — Make the "PDF vs. XML mismatch" check a headline feature. → Adopted.** It is legally grounded (F15), rare in free
   viewers, and easy to explain.
 
