@@ -1,4 +1,6 @@
 # Optional local hooks: `uvx pre-commit install` once, then they run on every commit.
+# Vendored official files stay byte-for-byte as published (see their SOURCE.md).
+exclude: ^apps/api/src/belegfluss/reading/xslt/
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
