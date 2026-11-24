@@ -22,8 +22,16 @@ export function UploadDropzone({ maxBytes, upload, onUploaded }: Props) {
   const [lines, setLines] = useState<Line[]>([]);
   const [dragging, setDragging] = useState(false);
 
-  const say = (tone: Line["tone"], text: string) =>
-    setLines((current) => [{ id: nextLineId++, tone, text }, ...current].slice(0, 8));
+  /** Adds a status line at the top and returns its id. */
+  const say = (tone: Line["tone"], text: string) => {
+    const id = nextLineId++;
+    setLines((current) => [{ id, tone, text }, ...current].slice(0, 8));
+    return id;
+  };
+
+  /** Replaces a line in place, e.g. "Uploading …" with the result. */
+  const replace = (id: number, tone: Line["tone"], text: string) =>
+    setLines((current) => current.map((line) => (line.id === id ? { id, tone, text } : line)));
 
   async function handleFiles(files: FileList | null) {
     if (!files) return;
@@ -33,13 +41,13 @@ export function UploadDropzone({ maxBytes, upload, onUploaded }: Props) {
         say("error", t("upload.failed", { name, reason: t("errors.upload.too_large") }));
         continue;
       }
-      say("info", t("upload.uploading", { name }));
+      const lineId = say("info", t("upload.uploading", { name }));
       const outcome = await upload(file);
-      if (outcome.kind === "added") say("ok", t("upload.done", { name }));
-      else if (outcome.kind === "duplicate") say("ok", t("upload.duplicate", { name }));
+      if (outcome.kind === "added") replace(lineId, "ok", t("upload.done", { name }));
+      else if (outcome.kind === "duplicate") replace(lineId, "ok", t("upload.duplicate", { name }));
       else {
         const key = errorMessageKey(outcome.code, (k) => t.has(k as never));
-        say("error", t("upload.failed", { name, reason: t(key as never) }));
+        replace(lineId, "error", t("upload.failed", { name, reason: t(key as never) }));
       }
     }
     onUploaded();

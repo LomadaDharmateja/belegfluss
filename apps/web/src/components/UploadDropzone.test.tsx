@@ -39,6 +39,18 @@ describe("UploadDropzone", () => {
     expect(onUploaded).toHaveBeenCalledOnce();
   });
 
+  // Regression: the "Uploading …" line stayed under the result and looked as if the upload were
+  // still running (seen in the first manual run).
+  it("replaces the progress line with the result", async () => {
+    const upload = vi
+      .fn<(f: File) => Promise<UploadOutcome>>()
+      .mockResolvedValue({ kind: "added", document: anyDoc });
+    renderWithIntl(<UploadDropzone maxBytes={1000} upload={upload} onUploaded={vi.fn()} />, "en");
+    await choose([file("a.pdf", 10)]);
+    expect(await screen.findByText("a.pdf was added.")).toBeInTheDocument();
+    expect(screen.queryByText("Uploading a.pdf…")).not.toBeInTheDocument();
+  });
+
   it("shows the server's error code as a translated message", async () => {
     const upload = vi
       .fn<(f: File) => Promise<UploadOutcome>>()
