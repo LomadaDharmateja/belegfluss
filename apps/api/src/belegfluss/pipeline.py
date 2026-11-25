@@ -1,6 +1,6 @@
 """Process one document: classify -> read -> validate -> check -> save (ARCHITECTURE §4).
 
-Steps that take time (reading, the validator) run without an open transaction. Saving replaces
+Steps that take time (reading, AI, the validator) run without an open transaction. Saving replaces
 earlier results for the document, so processing it twice gives the same rows (ADR-0004).
 """
 
@@ -15,13 +15,22 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from belegfluss import audit
 from belegfluss.checks import Context, check_invoice
+from belegfluss.extraction import Extraction, ExtractionFailedError, Extractor
+from belegfluss.extraction.prepare import prepare
+from belegfluss.extraction.schema import to_invoice_model
+from belegfluss.extraction.verify import check_ai_invoice
 from belegfluss.models import Document, DocumentStatus, Finding, Invoice
 from belegfluss.reading import InvoiceModel, ReadingError, Source, Syntax, classify, read_invoice
 from belegfluss.storage import BlobStore
 from belegfluss.validation import Outcome, ValidationResult
 
-PIPELINE_VERSION = "m2a.1"
-DONE = {DocumentStatus.READY, DocumentStatus.NEEDS_REVIEW, DocumentStatus.FAILED}
+PIPELINE_VERSION = "m2b.1"
+DONE = {
+    DocumentStatus.READY,
+    DocumentStatus.NEEDS_REVIEW,
+    DocumentStatus.FAILED,
+    DocumentStatus.APPROVED,
+}
 _TERM = re.compile(r"\b(B[TG]-\d+)\b")
 
 
@@ -48,6 +57,7 @@ class Analysis:
     syntax: Syntax | None = None
     pdf_text: str | None = None
     validation: ValidationResult | None = None
+    ai: Extraction | None = None
 
 
 @dataclass(frozen=True)
@@ -57,6 +67,8 @@ class Services:
     validator: Validator
     validator_config: str
     max_pdf_pages: int
+    extractor: Extractor | None = None  # None: AI reading is off (Compose default, CI)
+    ai_max_pages: int = 3
 
 
 def _now() -> datetime:
@@ -90,8 +102,7 @@ def analyse(data: bytes, media_type: str, services: Services) -> Analysis:
         analysis.source, analysis.syntax = classified.source, classified.syntax
         analysis.pdf_text = classified.pdf_text
         if classified.xml is None or classified.syntax is None:
-            analysis.findings.append(NewFinding("belegfluss", "BF-UNSTRUCTURED", "info"))
-            return analysis
+            return _read_with_ai(data, media_type, services, analysis)
         analysis.invoice = read_invoice(classified.xml, classified.syntax)
     except ReadingError as error:
         analysis.findings.append(NewFinding("belegfluss", error.code, "error"))
@@ -101,7 +112,28 @@ def analyse(data: bytes, media_type: str, services: Services) -> Analysis:
     return analysis
 
 
-def _find_duplicate(session: Session, document: Document, invoice: InvoiceModel) -> str | None:
+def _read_with_ai(data: bytes, media_type: str, services: Services, analysis: Analysis) -> Analysis:
+    """Plain PDF or photo: AI reading if configured (ADR-0016), otherwise a hint that it's off."""
+    if services.extractor is None:
+        analysis.findings.append(NewFinding("belegfluss", "BF-UNSTRUCTURED", "info"))
+        return analysis
+    prepared = prepare(data, media_type, services.ai_max_pages)
+    analysis.pdf_text = prepared.text
+    try:
+        analysis.ai = services.extractor.extract(prepared)
+    except ExtractionFailedError as error:
+        analysis.findings.append(NewFinding("belegfluss", error.code, "warning"))
+        return analysis
+    if not analysis.ai.invoice.is_invoice:
+        analysis.findings.append(NewFinding("belegfluss", "BF-AI-NOT-AN-INVOICE", "info"))
+        return analysis
+    analysis.source = Source.AI
+    analysis.invoice = to_invoice_model(analysis.ai.invoice)
+    return analysis
+
+
+def find_duplicate(session: Session, document: Document, invoice: InvoiceModel) -> str | None:
+    """Another document of the organisation with the same invoice number from the same supplier."""
     if not invoice.number or not (invoice.seller.vat_id or invoice.seller.name):
         return None
     same_seller = []
@@ -138,13 +170,16 @@ def _check(session: Session, document: Document, analysis: Analysis) -> None:
         and validation.outcome in (Outcome.ACCEPTED, Outcome.REJECTED),
         validator_terms=frozenset(reported),
         pdf_text=analysis.pdf_text,
-        duplicate_of=_find_duplicate(session, document, analysis.invoice),
+        duplicate_of=find_duplicate(session, document, analysis.invoice),
     )
+    checks = check_invoice(analysis.invoice, context)
+    if analysis.source is Source.AI:
+        checks += check_ai_invoice(analysis.invoice, analysis.pdf_text or "", _now().date())
     analysis.findings += [
         NewFinding(
             "belegfluss", f.code, f.severity, business_terms=f.business_terms, params=f.params
         )
-        for f in check_invoice(analysis.invoice, context)
+        for f in checks
     ]
 
 
@@ -152,6 +187,7 @@ def _status(analysis: Analysis) -> DocumentStatus:
     rejected = analysis.validation is not None and analysis.validation.outcome is Outcome.REJECTED
     if (
         analysis.invoice is None
+        or analysis.source is Source.AI  # a person always confirms AI-read fields (ADR-0006)
         or rejected
         or any(f.severity == "error" for f in analysis.findings)
     ):
@@ -186,6 +222,10 @@ def _save(session: Session, document: Document, analysis: Analysis, services: Se
                 validator_engine=validation.engine if validation else None,
                 validator_config=services.validator_config if validation else None,
                 validator_scenario=validation.scenario if validation else None,
+                ai_model=analysis.ai.model if analysis.ai else None,
+                ai_input_tokens=analysis.ai.input_tokens if analysis.ai else None,
+                ai_output_tokens=analysis.ai.output_tokens if analysis.ai else None,
+                ai_seconds=analysis.ai.seconds if analysis.ai else None,
             )
         )
     session.add_all(

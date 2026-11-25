@@ -49,6 +49,7 @@ class DocumentOut(BaseModel):
     status: DocumentStatus
     failure_reason: str | None = None
     created_at: datetime
+    approved_at: datetime | None = None
     summary: InvoiceSummary | None = None
     finding_counts: FindingCounts = FindingCounts()
 
@@ -56,7 +57,7 @@ class DocumentOut(BaseModel):
 class InvoiceOut(BaseModel):
     """A read invoice and which code and validator produced the result."""
 
-    source: Literal["xml", "zugferd"]
+    source: Literal["xml", "zugferd", "ai"]
     syntax: Literal["ubl-invoice", "ubl-creditnote", "cii"] | None
     specification_id: str | None
     validation_outcome: Literal["accepted", "rejected", "not_processable", "no_scenario"] | None
@@ -64,6 +65,9 @@ class InvoiceOut(BaseModel):
     validator_config: str | None
     validator_scenario: str | None
     pipeline_version: str
+    ai_model: str | None = None
+    ai_input_tokens: int | None = None
+    ai_output_tokens: int | None = None
     model: InvoiceModel
 
 
@@ -80,10 +84,24 @@ class FindingOut(BaseModel):
     params: dict[str, str]
 
 
+class FieldReviewOut(BaseModel):
+    """One correction a person made to an AI-read field."""
+
+    field: str
+    before: str | None
+    after: str | None
+    at: datetime
+
+
 class DocumentDetailOut(BaseModel):
     document: DocumentOut
     invoice: InvoiceOut | None
     findings: list[FindingOut]
+    reviews: list[FieldReviewOut] = []
+
+
+class ApproveIn(BaseModel):
+    acknowledge_errors: bool = False  # required when error findings are still open
 
 
 class UploadResult(BaseModel):

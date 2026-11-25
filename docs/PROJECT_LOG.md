@@ -280,3 +280,96 @@ A dated diary: what was done, why, what was learned, what broke. Newest entry at
 
 - Owner accepted ADR-0014 and ADR-0015 and approved PR #7 for merge.
 - Next: M2b plan (LLM extraction, review, export).
+
+## 2026-11-24 — M2b steps 1–2: review, approval, export, AI reading (no Azure yet)
+
+**What was done**
+- Plan approved with the owner: Claude runs documented `az` commands only after an explicit yes at that moment;
+  only synthetic documents go to Azure OpenAI; approving with open errors is allowed after a confirmation.
+- Step 1 (commit `9b4fc36`): status `approved`, `field_reviews` table and migration, corrections for AI-read invoices
+  (checks re-run, audit log with field names only), approve/reopen, export `ZIP` of byte-identical originals plus
+  `summary.csv` (UTF-8 BOM, `;`, comma decimals, CSV-injection guard). Web: review form, approval box, export box.
+- Step 2 (commit `11168bd`): `extraction` package. Page images and text layer (EXIF rotation, metadata dropped),
+  strict structured-output schema, Azure v1 client (keyless, no tools, `store=False`), fake for tests. Verification by
+  code: IBAN checksum, VAT ID shape, plausible dates, values present in the text layer. AI-read documents always need
+  review; tokens and time stored; transient AI errors retried.
+- Step 3 prepared, nothing created in Azure: `scripts/azure/dev-openai.ps1` (every command checked against Microsoft
+  Learn), `compose.ai.yaml`, `scripts/run-ai-worker.ps1`, `docs/setup/azure-openai-dev.md`, opt-in live test.
+- Tests: API 242 passed, web 45 passed.
+
+**What broke**
+- Amounts in the PDF text were matched as text fragments, so `0,00` was "found" inside `340,00`. Found by the
+  prompt-injection test. Now amounts are read from the text as whole numbers. Regression test; the ZUGFeRD
+  PDF-vs-XML check uses the same function.
+- The test first imported `httpx`; the openai SDK 3.x uses `httpx2`.
+
+**Learned**
+- A custom subdomain is required for Entra ID sign-in and can't be changed later. Microsoft's key-switch-off page shows
+  PowerShell/Bicep only, so the script uses the generic `az resource update --set` and reads the value back.
+
+**Next**
+- Owner installs the Azure CLI and runs `az login`. Claude checks model offer and quota read-only, shows the script,
+  and creates the resource only after the owner's yes. Then live runs, measured cost, docs, PR.
+
+## 2026-11-24 — M2b steps 3–4: Azure OpenAI created, model changed, first live run
+
+**What was done**
+- Owner installed the Azure CLI. `az login` first failed: the Default Directory (where the subscription lives) needs
+  multi-factor sign-in; `az login --tenant <id>` worked.
+- Read-only checks: provider `Microsoft.CognitiveServices` was not registered; quota for **gpt-5-mini Data Zone
+  Standard was 0** in Germany West Central and six other EU regions. gpt-5.4-mini (2026-03-17) had 200.
+- **Plan change (with the owner):** gpt-5.4-mini instead of gpt-5-mini. About 2.5× the token price, but EU Data Zone
+  quota now and a later retirement (2027-09-21 vs 2027-07-13). Rejected: waiting for a quota request; Global Standard
+  (processing outside the EU). Recorded in COSTS.md; ADR-0016 will record it.
+- After the owner's yes: provider registered, `scripts/azure/dev-openai.ps1` run. Read back: keys off, Data Zone
+  Standard, capacity 20, role only on this resource, nothing else in the group.
+- Live run on 4 synthetic documents: all fields right; misprinted VAT caught (`BF-VAT-AMOUNT`); the injected
+  instruction ignored; $0.0172 in total ([evidence](milestones/evidence/m2b-live-run-2026-11-24.md)).
+
+**Learned**
+- "Offered in a region" (region table, `model list`) and "usable" (quota) are different things. A new pay-as-you-go
+  subscription can have 0 quota for an older model. Check `az cognitiveservices usage list` before planning a model.
+- Before the AI worker ran, checked that no local document is in `received`/`processing`, so the sweeper can't send
+  the owner's real receipt.
+
+## 2026-11-25 — M2b step 5: walkthrough, two bugs fixed, docs
+
+**What was done**
+- The computer had restarted: Docker Desktop and the host AI worker were gone. Restarted both; `az login` still valid.
+- Before the AI worker ran: no local document in `received`/`processing`, so nothing old (the owner's real receipt)
+  could be sent to Azure.
+- Walkthrough in the owner's Chrome. The owner signed in with the one-time code; Claude did the rest with **synthetic
+  files only** (`testdata/external/m2b-walkthrough/`, git-ignored):
+  - two plain PDFs and a "phone photo" read by AI within seconds
+  - wrong VAT → 2 errors
+  - the same invoice number → duplicate hint
+  - a demo correction (due date) stored before/after in `field_reviews` and audited
+  - approve with and without acknowledgement
+  - export of November: 2 originals byte-identical (SHA-256), CSV with BOM and the open findings
+- Docs: ADR-0016 (AI extraction) and ADR-0017 (review, approval, export), both proposed; `M2b.md` with claims audit;
+  ARCHITECTURE (data model as built, decisions, Azure facts), README, PLAN, THIRD_PARTY.
+- Tests: API 243 passed (1 live test skipped), web 47 + 5 Playwright, build OK. Link check: 111 relative and 46 web
+  links resolve.
+
+**What broke**
+- **A correction hid the duplicate warning:** the re-check ran without the duplicate lookup. Regression test first,
+  fixed (`b6e5542`).
+- **Times were shown in UTC** (container zone): 03:34 showed as 2:34. Now `Europe/Berlin`. The first regression test
+  passed by accident on this laptop (German zone), so it now asserts the setting itself (`f73bf28`).
+- The start page still said the export was "coming soon". Fixed.
+- Chrome screenshots time out while the Chrome window is in the background; clicks did not reach the page either.
+  Used the page's own events instead; only 3 screenshots so far.
+
+- PR #9 opened. The secret scan failed on a false positive (`../../etc/passwd` in a test matched the generic-key
+  rule). Added `--verbose` to see where (values stay redacted), changed the test to `etc/hosts`, and listed the one
+  historical fingerprint in `.gitleaksignore`. All CI checks green afterwards.
+
+**Next**
+- Owner: review ADR-0016/0017 and the PR. Check the Azure cost view for a base fee (claim 13 in M2b.md).
+- Optional: more screenshots (correction history, approved state, German view) when Chrome is in front.
+
+## 2026-11-25 — M2b review outcome
+
+- Owner accepted ADR-0016 and ADR-0017 and approved PR #9 for merge. M2 is done.
+- Next: M3 plan (labelled evaluation set, field-level accuracy, Document Intelligence baseline, CI gate). Open:
+  Azure cost view (base fee, M2b claim 13), Dependabot PRs #3–#6, unit codes shown as words.

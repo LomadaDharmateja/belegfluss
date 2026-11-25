@@ -20,6 +20,7 @@ from sqlalchemy import and_, or_, select
 from sqlalchemy.exc import OperationalError
 
 from belegfluss.db import make_session_factory
+from belegfluss.extraction import Extractor, ExtractorUnavailableError
 from belegfluss.models import Document, DocumentStatus
 from belegfluss.pipeline import Services, mark_failed, process_document
 from belegfluss.queue import DocumentQueue, Job
@@ -35,7 +36,7 @@ STUCK_IN_RECEIVED = timedelta(minutes=2)
 STUCK_IN_PROCESSING = timedelta(minutes=15)
 SWEEP_EVERY_SECONDS = 60
 IDLE_SLEEP_SECONDS = 2.0
-TRANSIENT = (ValidatorUnavailableError, AzureError, OperationalError)
+TRANSIENT = (ValidatorUnavailableError, ExtractorUnavailableError, AzureError, OperationalError)
 
 
 class Worker:
@@ -112,6 +113,16 @@ class Worker:
         return len(ids)
 
 
+def build_extractor(settings: Settings) -> Extractor | None:
+    if not settings.openai_endpoint:
+        return None
+    from belegfluss.extraction.azure_openai import AzureOpenAIExtractor  # needs Azure sign-in
+
+    return AzureOpenAIExtractor(
+        settings.openai_endpoint, settings.openai_deployment, settings.ai_reasoning_effort
+    )
+
+
 def build(settings: Settings) -> Worker:
     _engine, session_factory = make_session_factory(settings.database_url)
     services = Services(
@@ -120,6 +131,8 @@ def build(settings: Settings) -> Worker:
         validator=ValidatorClient(settings.validator_url),
         validator_config=settings.validator_config,
         max_pdf_pages=settings.max_pdf_pages,
+        extractor=build_extractor(settings),
+        ai_max_pages=settings.ai_max_pages,
     )
     queue = DocumentQueue(settings.storage_connection_string, settings.queue_name)
     queue.ensure_exists()

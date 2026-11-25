@@ -25,8 +25,11 @@ this repository), **run** as a container, or **downloaded** for tests. Ordinary 
 | [saxonche](https://pypi.org/project/saxonche/) (SaxonC-HE 13.1) | Running the KoSIT XSLT | MPL-2.0 ([Saxonica](https://www.saxonica.com/html/saxon-c/index.html)); used unmodified |
 | [lxml](https://pypi.org/project/lxml/) | Parsing untrusted XML safely | BSD-3-Clause |
 | [pypdf](https://pypi.org/project/pypdf/) | Extracting the XML embedded in ZUGFeRD PDFs | BSD-3-Clause |
-| [pypdfium2](https://pypi.org/project/pypdfium2/) (PDFium) | Reading the text layer of PDFs | Apache-2.0 / BSD-3-Clause (PDFium: BSD-3-Clause) |
+| [pypdfium2](https://pypi.org/project/pypdfium2/) (PDFium) | Reading the text layer of PDFs; rendering pages for AI reading | Apache-2.0 / BSD-3-Clause (PDFium: BSD-3-Clause) |
 | [azure-storage-queue](https://pypi.org/project/azure-storage-queue/), [azure-storage-blob](https://pypi.org/project/azure-storage-blob/) | Queue and originals | MIT |
+| [openai](https://pypi.org/project/openai/) | Calling Azure OpenAI (v1 API, structured outputs) | Apache-2.0 |
+| [azure-identity](https://pypi.org/project/azure-identity/) | Keyless sign-in to Azure OpenAI (Azure CLI locally, Managed Identity in M4) | MIT |
+| [Pillow](https://pypi.org/project/pillow/) | Turning photos upright, shrinking them and dropping their metadata | MIT-CMU |
 
 Development only: [factur-x](https://pypi.org/project/factur-x/) (BSD) generates our own ZUGFeRD/Factur-X test PDFs.
 

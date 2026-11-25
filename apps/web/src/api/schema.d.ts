@@ -74,9 +74,90 @@ export interface paths {
         };
         /**
          * Get Document
-         * @description One document with the invoice read from it and all findings (errors first).
+         * @description One document with the invoice read from it, all findings (errors first) and corrections.
          */
         get: operations["get_document_orgs__org_id__documents__document_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/orgs/{org_id}/documents/{document_id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Approve Document
+         * @description Approve for the accountant. With open errors, `acknowledge_errors` must be true.
+         */
+        post: operations["approve_document_orgs__org_id__documents__document_id__approve_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/orgs/{org_id}/documents/{document_id}/invoice": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Correct Invoice
+         * @description Correct fields of an AI-read invoice. Only the fields sent change (ADR-0017).
+         */
+        patch: operations["correct_invoice_orgs__org_id__documents__document_id__invoice_patch"];
+        trace?: never;
+    };
+    "/orgs/{org_id}/documents/{document_id}/reopen": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Reopen Document
+         * @description Undo an approval, e.g. to correct a field.
+         */
+        post: operations["reopen_document_orgs__org_id__documents__document_id__reopen_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/orgs/{org_id}/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Export For Accountant
+         * @description Approved documents (by invoice date, or upload date if nothing was read) as a ZIP for the
+         *     accountant: originals unchanged plus summary.csv (ADR-0009).
+         */
+        get: operations["export_for_accountant_orgs__org_id__export_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -102,6 +183,14 @@ export interface components {
             /** Post Code */
             post_code?: string | null;
         };
+        /** ApproveIn */
+        ApproveIn: {
+            /**
+             * Acknowledge Errors
+             * @default false
+             */
+            acknowledge_errors: boolean;
+        };
         /** Body_upload_document_orgs__org_id__documents_post */
         Body_upload_document_orgs__org_id__documents_post: {
             /**
@@ -116,9 +205,16 @@ export interface components {
             /** Findings */
             findings: components["schemas"]["FindingOut"][];
             invoice: components["schemas"]["InvoiceOut"] | null;
+            /**
+             * Reviews
+             * @default []
+             */
+            reviews: components["schemas"]["FieldReviewOut"][];
         };
         /** DocumentOut */
         DocumentOut: {
+            /** Approved At */
+            approved_at?: string | null;
             /**
              * Created At
              * Format: date-time
@@ -164,13 +260,30 @@ export interface components {
          * DocumentStatus
          * @enum {string}
          */
-        DocumentStatus: "received" | "processing" | "ready" | "needs_review" | "failed";
+        DocumentStatus: "received" | "processing" | "ready" | "needs_review" | "failed" | "approved";
         /** ErrorBody */
         ErrorBody: {
             /** Code */
             code: string;
             /** Message */
             message: string;
+        };
+        /**
+         * FieldReviewOut
+         * @description One correction a person made to an AI-read field.
+         */
+        FieldReviewOut: {
+            /** After */
+            after: string | null;
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            /** Before */
+            before: string | null;
+            /** Field */
+            field: string;
         };
         /** FindingCounts */
         FindingCounts: {
@@ -233,6 +346,34 @@ export interface components {
              */
             status: "ok";
         };
+        /**
+         * InvoiceCorrection
+         * @description Fields a person may correct. Only the fields sent are changed; null clears a value.
+         */
+        InvoiceCorrection: {
+            /** Currency */
+            currency?: string | null;
+            /** Due */
+            due?: number | string | null;
+            /** Due Date */
+            due_date?: string | null;
+            /** Gross */
+            gross?: number | string | null;
+            /** Iban */
+            iban?: string | null;
+            /** Issue Date */
+            issue_date?: string | null;
+            /** Net */
+            net?: number | string | null;
+            /** Number */
+            number?: string | null;
+            /** Seller Name */
+            seller_name?: string | null;
+            /** Seller Vat Id */
+            seller_vat_id?: string | null;
+            /** Vat */
+            vat?: number | string | null;
+        };
         /** InvoiceModel */
         InvoiceModel: {
             buyer?: components["schemas"]["Party"];
@@ -276,6 +417,12 @@ export interface components {
          * @description A read invoice and which code and validator produced the result.
          */
         InvoiceOut: {
+            /** Ai Input Tokens */
+            ai_input_tokens?: number | null;
+            /** Ai Model */
+            ai_model?: string | null;
+            /** Ai Output Tokens */
+            ai_output_tokens?: number | null;
             model: components["schemas"]["InvoiceModel"];
             /** Pipeline Version */
             pipeline_version: string;
@@ -283,7 +430,7 @@ export interface components {
              * Source
              * @enum {string}
              */
-            source: "xml" | "zugferd";
+            source: "xml" | "zugferd" | "ai";
             /** Specification Id */
             specification_id: string | null;
             /** Syntax */
@@ -702,6 +849,280 @@ export interface operations {
             };
             /** @description Not Found */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    approve_document_orgs__org_id__documents__document_id__approve_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                org_id: string;
+                document_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ApproveIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocumentDetailOut"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    correct_invoice_orgs__org_id__documents__document_id__invoice_patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                org_id: string;
+                document_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InvoiceCorrection"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocumentDetailOut"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    reopen_document_orgs__org_id__documents__document_id__reopen_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                org_id: string;
+                document_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocumentDetailOut"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    export_for_accountant_orgs__org_id__export_get: {
+        parameters: {
+            query?: {
+                from?: string | null;
+                to?: string | null;
+                lang?: "de" | "en";
+            };
+            header?: never;
+            path: {
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description ZIP with originals + summary.csv */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/zip": unknown;
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Content Too Large */
+            413: {
                 headers: {
                     [name: string]: unknown;
                 };

@@ -10,7 +10,7 @@ from belegfluss.auth import JwksKeySource, TokenVerifier
 from belegfluss.db import make_session_factory
 from belegfluss.errors import AppError, handle_app_error
 from belegfluss.queue import DocumentQueue
-from belegfluss.routes import documents, me
+from belegfluss.routes import documents, export, me
 from belegfluss.schemas import HealthOut
 from belegfluss.settings import Settings
 from belegfluss.storage import BlobStore
@@ -37,7 +37,7 @@ def create_app(settings: Settings | None = None, verifier: TokenVerifier | None 
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origins,
-        allow_methods=["GET", "POST"],
+        allow_methods=["GET", "POST", "PATCH"],
         allow_headers=["Authorization", "Content-Type"],
     )
     app.add_exception_handler(AppError, handle_app_error)
@@ -48,4 +48,5 @@ def create_app(settings: Settings | None = None, verifier: TokenVerifier | None 
 
     app.include_router(me.router)
     app.include_router(documents.router)
+    app.include_router(export.router)
     return app

@@ -46,6 +46,11 @@ describe("translations", () => {
       "auth.not_configured",
       "org.not_found",
       "document.not_found",
+      "document.approved",
+      "document.not_ready",
+      "document.has_errors",
+      "invoice.not_editable",
+      "export.too_large",
     ];
     for (const code of serverCodes) {
       expect(enKeys[`errors.${code}`], code).toBeTruthy();

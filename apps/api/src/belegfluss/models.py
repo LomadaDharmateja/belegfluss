@@ -10,7 +10,9 @@ from sqlalchemy import (
     BigInteger,
     Date,
     DateTime,
+    Float,
     ForeignKey,
+    Integer,
     Numeric,
     String,
     Text,
@@ -37,6 +39,7 @@ class DocumentStatus(StrEnum):
     READY = "ready"  # read and checked, no errors
     NEEDS_REVIEW = "needs_review"  # errors found, or nothing could be read automatically
     FAILED = "failed"  # processing gave up after retries; `failure_reason` says why
+    APPROVED = "approved"  # a person approved it; only approved documents are exported
 
 
 class Organization(Base):
@@ -92,6 +95,10 @@ class Document(Base):
         DateTime(timezone=True), server_default=func.now()
     )
     failure_reason: Mapped[str | None] = mapped_column(String(64))  # stable code, not free text
+    approved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    approved_by: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL")
+    )
     uploaded_by: Mapped[uuid.UUID | None] = mapped_column(
         ForeignKey("users.id", ondelete="SET NULL")
     )
@@ -130,7 +137,7 @@ class Invoice(Base):
     org_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("organizations.id", ondelete="CASCADE"), index=True
     )
-    source: Mapped[str] = mapped_column(String(20))  # xml | zugferd
+    source: Mapped[str] = mapped_column(String(20))  # xml | zugferd | ai
     syntax: Mapped[str | None] = mapped_column(String(20))  # ubl-invoice | ubl-creditnote | cii
     specification_id: Mapped[str | None] = mapped_column(String(300))  # BT-24
     number: Mapped[str | None] = mapped_column(String(200))  # BT-1
@@ -148,6 +155,11 @@ class Invoice(Base):
     validator_engine: Mapped[str | None] = mapped_column(String(100))
     validator_config: Mapped[str | None] = mapped_column(String(100))
     validator_scenario: Mapped[str | None] = mapped_column(String(200))
+    # AI reading (source = ai): which model, and what it cost in tokens and time (ADR-0016).
+    ai_model: Mapped[str | None] = mapped_column(String(100))
+    ai_input_tokens: Mapped[int | None] = mapped_column(Integer)
+    ai_output_tokens: Mapped[int | None] = mapped_column(Integer)
+    ai_seconds: Mapped[float | None] = mapped_column(Float)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
@@ -170,3 +182,27 @@ class Finding(Base):
     location: Mapped[str | None] = mapped_column(Text)  # XPath in the source XML
     business_terms: Mapped[list[str]] = mapped_column(ARRAY(String(12)), default=list)
     params: Mapped[dict[str, str]] = mapped_column(JSONB, default=dict)  # values for the message
+
+
+class FieldReview(Base):
+    """One correction of an AI-read field by a person (ADR-0017).
+
+    The values live here, never in the audit log.
+    """
+
+    __tablename__ = "field_reviews"
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    document_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("documents.id", ondelete="CASCADE"), index=True
+    )
+    org_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("organizations.id", ondelete="CASCADE"), index=True
+    )
+    field: Mapped[str] = mapped_column(String(40))
+    before: Mapped[str | None] = mapped_column(Text)
+    after: Mapped[str | None] = mapped_column(Text)
+    reviewed_by: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL")
+    )
+    at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

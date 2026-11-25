@@ -19,3 +19,5 @@ Format and rules: [ADR-0001](0001-record-architecture-decisions.md).
 | [0013](0013-tenancy-org-scoped-routes.md) | Organisation-scoped routes with one membership check (RLS in M9) | Accepted |
 | [0014](0014-read-xml-with-official-kosit-transform.md) | Read e-invoice XML with the official KoSIT step-1 transform (Saxon), not own parsers | Accepted |
 | [0015](0015-store-results-as-summary-columns-plus-jsonb.md) | Store read invoices as summary columns + JSONB; findings in their own table | Accepted |
+| [0016](0016-ai-extraction-azure-openai-verified-by-code.md) | Plain PDFs and photos read by Azure OpenAI gpt-5.4-mini (EU Data Zone, keyless), verified by code, always reviewed | Accepted |
+| [0017](0017-review-approval-and-export.md) | Correct only AI-read fields; approve with an explicit override for errors; export only approved documents | Accepted |

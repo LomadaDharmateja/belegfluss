@@ -15,7 +15,7 @@
     "subtitle": "XRechnung, ZUGFeRD, PDFs und Fotos: gesammelt, geprüft und bereit für deine Steuerberatung. Auf Deutsch und Englisch.",
     "pointCollect": "E-Rechnungen, PDFs und Belegfotos in einem Posteingang sammeln",
     "pointCheck": "Probleme in einfacher Sprache erklärt",
-    "pointHandoff": "Alles in einem Schritt an die Steuerberatung übergeben (bald verfügbar)",
+    "pointHandoff": "Alles in einem Schritt an die Steuerberatung übergeben",
     "signIn": "Mit E-Mail anmelden",
     "signInHint": "Du bekommst einen Einmalcode per E-Mail. Kein Passwort nötig.",
     "notConfigured": "Die Anmeldung ist in dieser Umgebung noch nicht eingerichtet."
@@ -47,7 +47,8 @@
       "processing": "Wird geprüft",
       "ready": "Geprüft",
       "needs_review": "Bitte prüfen",
-      "failed": "Fehlgeschlagen"
+      "failed": "Fehlgeschlagen",
+      "approved": "Freigegeben"
     },
     "types": {
       "pdf": "PDF",
@@ -75,7 +76,8 @@
     "notRead": "Aus diesem Dokument konnten keine Rechnungsdaten automatisch gelesen werden.",
     "sourceValues": {
       "xml": "E-Rechnung (XML)",
-      "zugferd": "ZUGFeRD / Factur-X (PDF mit XML)"
+      "zugferd": "ZUGFeRD / Factur-X (PDF mit XML)",
+      "ai": "Per KI gelesen (einfache PDF oder Foto)"
     },
     "syntaxValues": {
       "ubl-invoice": "UBL-Rechnung",
@@ -143,7 +145,7 @@
       "BF-NOT-AN-INVOICE": "Diese Datei ist XML, aber keine Rechnung in einem bekannten Format (XRechnung oder EN 16931, als UBL oder CII).",
       "BF-PDF-UNREADABLE": "Die PDF-Datei kann nicht gelesen werden. Sie ist vielleicht beschädigt.",
       "BF-PDF-ENCRYPTED": "Die PDF ist passwortgeschützt, deshalb kann ihr Inhalt nicht gelesen werden.",
-      "BF-UNSTRUCTURED": "Dieses Dokument enthält keine maschinenlesbaren Rechnungsdaten (eine einfache PDF oder ein Foto). Das automatische Auslesen solcher Dokumente kommt bald.",
+      "BF-UNSTRUCTURED": "Dieses Dokument enthält keine maschinenlesbaren Rechnungsdaten (eine einfache PDF oder ein Foto), und das Auslesen per KI ist hier nicht eingeschaltet. Du kannst es trotzdem freigeben, dann geht das Original an deine Steuerberatung.",
       "BF-VALIDATOR-NOT-PROCESSABLE": "Der offizielle Validator konnte diese Rechnung nicht verarbeiten, deshalb wurde sie nicht gegen die offiziellen Regeln geprüft.",
       "BF-VALIDATOR-NO-SCENARIO": "Der offizielle Validator hat für diese Art von Rechnung keine Regeln (zum Beispiel ein ZUGFeRD-Profil oder ein anderer Standard), deshalb wurde sie nicht gegen die offiziellen Regeln geprüft. Belegfluss hat die Beträge selbst geprüft.",
       "BF-NOT-AN-E-INVOICE": "Laut Bundesfinanzministerium sind die ZUGFeRD-Profile MINIMUM und BASIC WL keine E-Rechnungen. Bitte den Lieferanten um eine Rechnung in einem vollständigen Profil.",
@@ -188,8 +190,55 @@
       "BR-DE-16": "Die USt-IdNr. oder Steuernummer des Lieferanten (BT-31/BT-32) fehlt.",
       "BR-DE-17": "Der Rechnungsart-Code (BT-3) gehört nicht zu den Codes, die XRechnung zulässt.",
       "BR-DE-21": "Die Standardkennung (BT-24) ist nicht die XRechnung-Kennung. Die Rechnung folgt vielleicht einem anderen Standard.",
-      "BR-DE-TMP-32": "Das Lieferdatum (BT-72) oder ein Leistungszeitraum (BG-14 oder BG-26 in jeder Position) sollte angegeben sein."
+      "BR-DE-TMP-32": "Das Lieferdatum (BT-72) oder ein Leistungszeitraum (BG-14 oder BG-26 in jeder Position) sollte angegeben sein.",
+      "BF-AI-READ": "Dieses Dokument wurde per KI gelesen. Bitte vergleiche die Felder mit dem Dokument, bevor du es freigibst.",
+      "BF-AI-NOT-IN-DOCUMENT": "{field, select, number {Die Rechnungsnummer} vat_id {Die USt-IdNr.} iban {Die IBAN} gross {Der Gesamtbetrag} issue_date {Das Rechnungsdatum} due_date {Das Fälligkeitsdatum} other {Ein Wert}} aus der KI-Auslesung steht nicht im Text des Dokuments. Vielleicht wurde sie falsch gelesen.",
+      "BF-AI-INVALID-IBAN": "Die IBAN {value} hat falsche Prüfziffern. Sie wurde wahrscheinlich falsch gelesen.",
+      "BF-AI-INVALID-VAT-ID": "Die USt-IdNr. {value} hat kein gültiges Format.",
+      "BF-AI-IMPLAUSIBLE-DATE": "{field, select, number {Die Rechnungsnummer} vat_id {Die USt-IdNr.} iban {Die IBAN} gross {Der Gesamtbetrag} issue_date {Das Rechnungsdatum} due_date {Das Fälligkeitsdatum} other {Ein Wert}} wirkt unplausibel (in der Zukunft, sehr alt oder vor dem Rechnungsdatum).",
+      "BF-IMAGE-UNREADABLE": "Das Bild kann nicht gelesen werden. Es ist vielleicht beschädigt oder zu groß.",
+      "BF-AI-NOT-AN-INVOICE": "Die KI hat in diesem Dokument keine Rechnung und keinen Beleg gefunden.",
+      "BF-AI-FAILED": "Die KI konnte dieses Dokument nicht lesen. Bitte prüfe es selbst oder lade eine bessere Kopie hoch."
     }
+  },
+  "review": {
+    "title": "Prüfen und korrigieren",
+    "hint": "Per KI gelesen. Vergleiche jedes Feld mit dem Dokument und korrigiere es bei Bedarf.",
+    "save": "Korrekturen speichern",
+    "saved": "Korrekturen gespeichert.",
+    "nothingChanged": "Es wurde nichts geändert.",
+    "fields": {
+      "number": "Rechnungsnummer",
+      "issue_date": "Rechnungsdatum",
+      "due_date": "Fällig am",
+      "currency": "Währung",
+      "seller_name": "Lieferant",
+      "seller_vat_id": "USt-IdNr. Lieferant",
+      "iban": "IBAN",
+      "net": "Gesamt ohne USt",
+      "vat": "Umsatzsteuer",
+      "gross": "Gesamt mit USt",
+      "due": "Zu zahlen"
+    },
+    "history": "Korrekturen",
+    "historyLine": "{field}: {before} → {after}",
+    "empty": "leer"
+  },
+  "approval": {
+    "title": "Freigabe",
+    "hint": "Freigegebene Dokumente kommen in den Export für deine Steuerberatung.",
+    "approve": "Freigeben",
+    "acknowledge": "Ich habe die Fehler gesehen und möchte trotzdem freigeben.",
+    "approvedOn": "Freigegeben am {date}.",
+    "reopen": "Erneut öffnen"
+  },
+  "export": {
+    "title": "Export für deine Steuerberatung",
+    "hint": "Alle freigegebenen Dokumente im Zeitraum (nach Rechnungsdatum): Originale unverändert plus eine Übersichtstabelle.",
+    "from": "Von",
+    "to": "Bis",
+    "download": "ZIP herunterladen",
+    "working": "Export wird erstellt …"
   },
   "settings": {
     "title": "Einstellungen",
@@ -219,7 +268,16 @@
       "not_found": "Diese Organisation wurde nicht gefunden."
     },
     "document": {
-      "not_found": "Dieses Dokument wurde nicht gefunden."
+      "not_found": "Dieses Dokument wurde nicht gefunden.",
+      "approved": "Dieses Dokument ist freigegeben. Öffne es erneut, um etwas zu ändern.",
+      "not_ready": "Dieses Dokument wurde noch nicht geprüft.",
+      "has_errors": "Bitte bestätige, dass du die Fehler gesehen hast."
+    },
+    "invoice": {
+      "not_editable": "Nur per KI gelesene Rechnungen können korrigiert werden. Bei E-Rechnungen ist das XML maßgeblich."
+    },
+    "export": {
+      "too_large": "Zu viele Dokumente. Bitte wähle einen kürzeren Zeitraum."
     }
   }
 }

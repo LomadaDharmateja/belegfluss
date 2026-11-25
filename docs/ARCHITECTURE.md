@@ -129,6 +129,9 @@ Key rules:
 - **Re-processing is safe**: the worker is idempotent per document and version (parser/validator/model version are
   stored with each result).
 - **Nothing is exported unless a human approved it.**
+- **An AI-read document always needs a person's check** (as built in M2b,
+  [ADR-0016](decisions/0016-ai-extraction-azure-openai-verified-by-code.md)). Approving with open errors needs an
+  explicit, audited acknowledgement ([ADR-0017](decisions/0017-review-approval-and-export.md)).
 
 ### 4.1 Upload → result (sequence)
 
@@ -193,10 +196,10 @@ Messages that fail repeatedly go to a **poison queue** and the document is marke
 
 ## 6. Data model (sketch)
 
-As built (M1, M2a): ORGANIZATION, USER, MEMBERSHIP, DOCUMENT, INVOICE, FINDING and AUDIT_EVENT with the fields shown
-here. Invoice lines and the VAT breakdown are part of the INVOICE's JSONB model, not tables
-([ADR-0015](decisions/0015-store-results-as-summary-columns-plus-jsonb.md)). FIELD_REVIEW and EXPORT are the design
-for M2b.
+As built (M1, M2a, M2b): ORGANIZATION, USER, MEMBERSHIP, DOCUMENT, INVOICE, FINDING, FIELD_REVIEW and AUDIT_EVENT
+with the fields shown here. Invoice lines and the VAT breakdown are part of the INVOICE's JSONB model, not tables
+([ADR-0015](decisions/0015-store-results-as-summary-columns-plus-jsonb.md)). Exports are built on request and not
+stored; an `export.created` audit event records them ([ADR-0017](decisions/0017-review-approval-and-export.md)).
 
 ```mermaid
 erDiagram
@@ -205,9 +208,7 @@ erDiagram
     ORGANIZATION ||--o{ DOCUMENT : owns
     DOCUMENT ||--o| INVOICE : "is read as"
     DOCUMENT ||--o{ FINDING : has
-    INVOICE ||--o{ FIELD_REVIEW : "corrected by"
-    ORGANIZATION ||--o{ EXPORT : creates
-    EXPORT }o--o{ INVOICE : includes
+    DOCUMENT ||--o{ FIELD_REVIEW : "corrected by"
     ORGANIZATION ||--o{ AUDIT_EVENT : logs
 
     ORGANIZATION {
@@ -234,13 +235,14 @@ erDiagram
         string original_filename
         string blob_name "orgs/org/originals/sha256"
         string source "upload (M1), email (M6)"
-        string status "received (M1), later processing, ready, needs_review, approved, failed"
+        string status "received, processing, ready, needs_review, approved, failed"
         uuid uploaded_by
+        datetime approved_at "and approved_by (M2b)"
     }
     INVOICE {
         uuid id
         uuid document_id "unique"
-        string source "xml or zugferd (llm from M2b)"
+        string source "xml, zugferd or ai"
         string syntax "ubl-invoice, ubl-creditnote, cii"
         string specification_id "BT-24 profile"
         string number "BT-1"
@@ -252,6 +254,7 @@ erDiagram
         string validation_outcome "accepted, rejected, no_scenario, not_processable"
         string validator_engine "and configuration"
         string pipeline_version
+        string ai_model "and input/output tokens, seconds (ai only)"
     }
     FINDING {
         uuid id
@@ -262,6 +265,16 @@ erDiagram
         string message "official rule text (kosit)"
         string business_terms "e.g. BT-112"
         jsonb params "values for the message"
+    }
+    FIELD_REVIEW {
+        uuid id
+        uuid document_id
+        uuid org_id
+        string field "e.g. due_date"
+        string before
+        string after
+        uuid reviewed_by
+        datetime at
     }
     AUDIT_EVENT {
         uuid id
@@ -364,6 +377,11 @@ needs no internet login.
 
 As built (M2a): `postgres`, `azurite`, `api`, `worker`, `validator` and `web`. Published ports are bound to 127.0.0.1;
 the validator has no published port (reachable by the worker only, checked in CI).
+
+As built (M2b), for live AI runs only: `compose.ai.yaml` stops the Compose worker and publishes the validator on
+127.0.0.1:8081. The worker then runs on the host (`scripts/run-ai-worker.ps1`), signs in to Azure OpenAI with the
+developer's `az login` (keyless) and calls the dev deployment (gpt-5.4-mini, Data Zone Standard EU, Germany West
+Central, keys switched off). The default stack and CI make no AI calls ([setup](setup/azure-openai-dev.md)).
 
 ### 8.2 M4–M7: Azure Container Apps (Terraform)
 
@@ -496,6 +514,21 @@ numbers and Berater/Mandant numbers (F46). DATEV APIs not before real demand.
 | Email ingestion (M6) | n8n IMAP/webhook workflow · own small ingestion service · inbound-email provider webhook | **Open.** n8n's Sustainable Use License allows use "for your own internal business purposes" and free non-commercial distribution. Using it for a customer-facing feature is unclear if Belegfluss ever charges. Option: n8n for internal workflows (exports, notifications), own code for ingestion | M6 ADR |
 | Fine-tuned model (M7) | small open vision-language model + LoRA; served with vLLM | choose model by licence + size against the M3 eval set | M7 ADR |
 
+### 10.10 AI extraction → [ADR-0016](decisions/0016-ai-extraction-azure-openai-verified-by-code.md) (M2b)
+
+| Option | For | Against |
+|---|---|---|
+| ✅ Azure OpenAI gpt-5.4-mini, Data Zone Standard EU, page images + text layer, structured outputs, keyless, verified by code | Reads photos and scans; values checked by arithmetic, formats and presence in the text layer; no key to leak | Costs per token (measured $0.0043 per document); model retires 2027-09-21 |
+| gpt-5-mini (the plan) | About 2.5× cheaper per token | **0 EU Data Zone quota** in this subscription (checked 2026-11-24) |
+| Document Intelligence `prebuilt-invoice` | Purpose-built | Fixed field set, $10 per 1,000 pages: **M3 baseline** |
+| Global Standard deployment | Quota available, cheaper | May process outside the EU |
+
+### 10.11 Review, approval and export → [ADR-0017](decisions/0017-review-approval-and-export.md) (M2b)
+
+✅ Corrections only for AI-read invoices (the XML is legally leading), each stored as before/after in `field_reviews`.
+Approval with open errors needs an explicit, audited acknowledgement. The export contains approved documents only,
+originals byte-identical, plus a German-Excel CSV; it is built on request and not stored.
+
 ## 11. Azure facts checked in M0
 
 | Fact | Source | Status |
@@ -507,6 +540,8 @@ numbers and Berater/Mandant numbers (F46). DATEV APIs not before real demand.
 | Container Apps free grant per subscription/month: 180,000 vCPU-s, 360,000 GiB-s, 2M requests | [pricing](https://azure.microsoft.com/en-us/pricing/details/container-apps/) | ✅ |
 | Azure OpenAI "Data Zone Standard" processes data only within the EU data zone | [deployment types](https://learn.microsoft.com/en-us/azure/foundry/foundry-models/concepts/deployment-types) | ✅ |
 | Which GPT models are available as Data Zone Standard EU and in which regions | [region availability](https://learn.microsoft.com/en-us/azure/foundry/foundry-models/concepts/models-sold-directly-by-azure-region-availability) (updated 2026-10-19) | ✅ 2026-11-24: gpt-5-mini, gpt-4.1-mini, gpt-5-nano, gpt-5.4-mini in Germany West Central and Sweden Central (among others) |
+| **Offered ≠ usable:** quota is per subscription and region. This subscription (pay-as-you-go) had 0 Data Zone Standard quota for gpt-5-mini in 7 EU regions, but 200 for gpt-5.4-mini in Germany West Central | `az cognitiveservices usage list` (2026-11-24) | ✅ checked in M2b |
+| Entra ID sign-in to Azure OpenAI needs a custom subdomain, which can't be changed later; key access can be switched off (`disableLocalAuth`) | [custom subdomains](https://learn.microsoft.com/en-us/azure/ai-services/cognitive-services-custom-subdomains), [disable local auth](https://learn.microsoft.com/en-us/azure/ai-services/disable-local-auth) | ✅ checked in M2b (read back on the dev resource) |
 | Prompts/completions not used to train foundation models; abuse monitoring may store data (EEA reviewers for EEA deployments) | [data privacy](https://learn.microsoft.com/en-us/azure/foundry/responsible-ai/openai/data-privacy) | ✅ |
 | PostgreSQL Flexible Server smallest Burstable is B1ms; Burstable "not recommended for production" | [compute options](https://learn.microsoft.com/en-us/azure/postgresql/flexible-server/concepts-compute-storage) | ✅ (price ❌) |
 | Document Intelligence `prebuilt-invoice` exists and supports German | [invoice model](https://learn.microsoft.com/en-us/azure/ai-services/document-intelligence/prebuilt/invoice), [languages](https://learn.microsoft.com/en-us/azure/ai-services/document-intelligence/language-support/prebuilt) | ✅ (price ❌) |

@@ -18,7 +18,24 @@ at 100 % of forecast cost. Checked in the portal on 2026-11-24. Azure for Studen
 regions, and Cost Management lists it as unsupported (reasons in
 [docs/setup/entra-external-id.md](setup/entra-external-id.md)).
 
+## M2b measured (2026-11-24)
+
+- **Created:** resource group `rg-belegfluss-ai-dev` with one Azure OpenAI account (S0) and one gpt-5.4-mini Data Zone
+  Standard deployment (capacity 20), Germany West Central. Pay per token; no base fee expected. **To check:** the
+  Azure cost view after 1–2 days (it lags), to confirm that no fixed charge appears.
+- **First live run:** 4 synthetic documents, 7,937 input + 2,158 output tokens → **$0.0172 in total, about $0.0043 per
+  document** (calculated from reported tokens and the list price;
+  [evidence](milestones/evidence/m2b-live-run-2026-11-24.md)). That is about 4× below the worst-case assumption.
+- **New estimate for M2b:** ~150 live runs × $0.0043 ≈ **$0.65 (about €0.60)**; the €10 budget alert stays on.
+
 ## Estimate for M2b (shared 2026-11-24, before anything is created)
+
+> **Changed 2026-11-24, before creation:** the subscription has **0** Data Zone Standard quota for gpt-5-mini in
+> Germany West Central and six other EU regions (`az cognitiveservices usage list`), but 200 for **gpt-5.4-mini
+> (2026-03-17)**. With the owner's agreement the deployment uses gpt-5.4-mini: $0.825 input / $4.95 output per 1M
+> tokens (Data Zone, Retail Prices API 2026-11-24). Same assumption as below → about **$0.019 per document**. Live
+> runs are capped at about 150 in M2b → **about €2.50 worst case**; the first 4 measured calls replace the
+> assumption. The original estimate stays below for the record.
 
 - **Resource:** Azure OpenAI with a pay-per-token **Data Zone Standard (EU)** deployment of **gpt-5-mini
   (2025-08-07)** in Germany West Central. Available there per the

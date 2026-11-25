@@ -162,8 +162,8 @@ def client(settings: Settings, signing_key: Any) -> Iterator[TestClient]:
     with app.state.engine.begin() as connection:
         connection.execute(
             text(
-                "TRUNCATE findings, invoices, audit_events, documents, memberships, users,"
-                " organizations"
+                "TRUNCATE field_reviews, findings, invoices, audit_events, documents, memberships,"
+                " users, organizations"
             )
         )
     app.state.engine.dispose()

@@ -4,6 +4,10 @@ export type Locale = (typeof locales)[number];
 const defaultLocale: Locale = "de";
 export const LOCALE_COOKIE = "locale";
 
+/** Times are shown in German time for every user (the product is for businesses in Germany).
+ * Set explicitly: otherwise the server's zone is used, which is UTC in the container. */
+export const TIME_ZONE = "Europe/Berlin";
+
 export function isLocale(value: unknown): value is Locale {
   return typeof value === "string" && (locales as readonly string[]).includes(value);
 }

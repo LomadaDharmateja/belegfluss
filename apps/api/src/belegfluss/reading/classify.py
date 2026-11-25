@@ -30,7 +30,8 @@ class Syntax(StrEnum):
 class Source(StrEnum):
     XML = "xml"  # an XML e-invoice file
     ZUGFERD = "zugferd"  # PDF with the invoice XML embedded
-    UNSTRUCTURED = "unstructured"  # PDF or image without structured data (read by an LLM from M2b)
+    UNSTRUCTURED = "unstructured"  # PDF or image without structured data
+    AI = "ai"  # an unstructured document read by AI (M2b)
 
 
 class ReadingError(Exception):

@@ -1,10 +1,11 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
-import { uploadDocument, type ApiClient, type DocumentOut } from "@/api/client";
+import { downloadExport, uploadDocument, type ApiClient, type DocumentOut } from "@/api/client";
 import { useApiClient } from "@/auth/useApiClient";
 import { DocumentList } from "./DocumentList";
+import { ExportBox } from "./ExportBox";
 import { UploadDropzone } from "./UploadDropzone";
 
 // Same limit as the API default (BELEGFLUSS_MAX_UPLOAD_BYTES); the API enforces it in any case.
@@ -38,6 +39,7 @@ async function fetchInbox(api: ApiClient): Promise<State> {
 export function Inbox() {
   const api = useApiClient();
   const t = useTranslations();
+  const locale = useLocale() === "en" ? "en" : "de";
   const [state, setState] = useState<State>({ status: "loading" });
   const [version, setVersion] = useState(0); // bumped after uploads to reload the list
 
@@ -85,6 +87,12 @@ export function Inbox() {
             />
           </div>
           <DocumentList documents={state.documents} />
+          <ExportBox
+            onExport={async (period) => {
+              const result = await downloadExport(api, state.orgId, period, locale);
+              return result.ok ? { zip: result.zip } : { code: result.code };
+            }}
+          />
         </>
       )}
     </section>

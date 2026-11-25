@@ -15,7 +15,7 @@
     "subtitle": "XRechnung, ZUGFeRD, PDFs and photos: collected, checked and ready for your accountant. In German and English.",
     "pointCollect": "Collect e-invoices, PDFs and receipt photos in one inbox",
     "pointCheck": "Problems explained in plain language",
-    "pointHandoff": "Hand everything to your accountant in one step (coming soon)",
+    "pointHandoff": "Hand everything to your accountant in one step",
     "signIn": "Sign in with your email",
     "signInHint": "You receive a one-time code by email. No password needed.",
     "notConfigured": "Sign-in is not configured in this environment yet."
@@ -47,7 +47,8 @@
       "processing": "Being checked",
       "ready": "Checked",
       "needs_review": "Please check",
-      "failed": "Failed"
+      "failed": "Failed",
+      "approved": "Approved"
     },
     "types": {
       "pdf": "PDF",
@@ -75,7 +76,8 @@
     "notRead": "No invoice data could be read automatically from this document.",
     "sourceValues": {
       "xml": "E-invoice (XML)",
-      "zugferd": "ZUGFeRD / Factur-X (PDF with XML)"
+      "zugferd": "ZUGFeRD / Factur-X (PDF with XML)",
+      "ai": "Read by AI (plain PDF or photo)"
     },
     "syntaxValues": {
       "ubl-invoice": "UBL invoice",
@@ -143,7 +145,7 @@
       "BF-NOT-AN-INVOICE": "This file is XML, but not an invoice in a format Belegfluss knows (XRechnung or EN 16931, as UBL or CII).",
       "BF-PDF-UNREADABLE": "The PDF file can't be read. It may be damaged.",
       "BF-PDF-ENCRYPTED": "The PDF is password-protected, so its contents can't be read.",
-      "BF-UNSTRUCTURED": "This document has no machine-readable invoice data (a plain PDF or a photo). Automatic reading of such documents is coming soon.",
+      "BF-UNSTRUCTURED": "This document has no machine-readable invoice data (a plain PDF or a photo), and AI reading is not switched on here. You can still approve it, so the original goes to your accountant.",
       "BF-VALIDATOR-NOT-PROCESSABLE": "The official validator could not process this invoice, so it was not checked against the official rules.",
       "BF-VALIDATOR-NO-SCENARIO": "The official validator has no rules for this kind of invoice (for example a ZUGFeRD profile or another standard), so it was not checked against the official rules. Belegfluss checked the amounts itself.",
       "BF-NOT-AN-E-INVOICE": "According to the Federal Ministry of Finance, the ZUGFeRD profiles MINIMUM and BASIC WL are not e-invoices. Ask the supplier for an invoice in a full profile.",
@@ -188,8 +190,55 @@
       "BR-DE-16": "The supplier's VAT ID or tax number (BT-31/BT-32) is missing.",
       "BR-DE-17": "The invoice type code (BT-3) is not one of the codes XRechnung allows.",
       "BR-DE-21": "The standard identifier (BT-24) is not the XRechnung identifier. The invoice may follow another standard.",
-      "BR-DE-TMP-32": "The delivery date (BT-72) or a service period (BG-14 or BG-26 on every item) should be stated."
+      "BR-DE-TMP-32": "The delivery date (BT-72) or a service period (BG-14 or BG-26 on every item) should be stated.",
+      "BF-AI-READ": "This document was read by AI. Please compare the fields with the document before you approve it.",
+      "BF-AI-NOT-IN-DOCUMENT": "{field, select, number {The invoice number} vat_id {The VAT ID} iban {The IBAN} gross {The total} issue_date {The invoice date} due_date {The due date} other {A value}} read by AI does not appear in the document's text. It may be misread.",
+      "BF-AI-INVALID-IBAN": "The IBAN {value} has wrong check digits. It is probably misread.",
+      "BF-AI-INVALID-VAT-ID": "The VAT ID {value} doesn't have a valid format.",
+      "BF-AI-IMPLAUSIBLE-DATE": "{field, select, number {The invoice number} vat_id {The VAT ID} iban {The IBAN} gross {The total} issue_date {The invoice date} due_date {The due date} other {A value}} looks implausible (in the future, very old, or before the invoice date).",
+      "BF-IMAGE-UNREADABLE": "The image can't be read. It may be damaged or too large.",
+      "BF-AI-NOT-AN-INVOICE": "The AI found no invoice or receipt in this document.",
+      "BF-AI-FAILED": "The AI could not read this document. Please check it yourself, or upload a clearer copy."
     }
+  },
+  "review": {
+    "title": "Check and correct",
+    "hint": "Read by AI. Compare each field with the document and correct it if needed.",
+    "save": "Save corrections",
+    "saved": "Corrections saved.",
+    "nothingChanged": "Nothing was changed.",
+    "fields": {
+      "number": "Invoice number",
+      "issue_date": "Invoice date",
+      "due_date": "Due date",
+      "currency": "Currency",
+      "seller_name": "Supplier",
+      "seller_vat_id": "Supplier VAT ID",
+      "iban": "IBAN",
+      "net": "Total without VAT",
+      "vat": "VAT",
+      "gross": "Total with VAT",
+      "due": "Amount due"
+    },
+    "history": "Corrections",
+    "historyLine": "{field}: {before} → {after}",
+    "empty": "empty"
+  },
+  "approval": {
+    "title": "Approval",
+    "hint": "Approved documents go into the export for your accountant.",
+    "approve": "Approve",
+    "acknowledge": "I have seen the errors and want to approve anyway.",
+    "approvedOn": "Approved on {date}.",
+    "reopen": "Reopen"
+  },
+  "export": {
+    "title": "Export for your accountant",
+    "hint": "All approved documents in the period (by invoice date): originals unchanged plus a summary table.",
+    "from": "From",
+    "to": "To",
+    "download": "Download ZIP",
+    "working": "Preparing the export…"
   },
   "settings": {
     "title": "Settings",
@@ -219,7 +268,16 @@
       "not_found": "This organisation was not found."
     },
     "document": {
-      "not_found": "This document was not found."
+      "not_found": "This document was not found.",
+      "approved": "This document is approved. Reopen it to make changes.",
+      "not_ready": "This document hasn't been checked yet.",
+      "has_errors": "Please confirm that you have seen the errors."
+    },
+    "invoice": {
+      "not_editable": "Only invoices read by AI can be corrected. For e-invoices the XML is leading."
+    },
+    "export": {
+      "too_large": "Too many documents. Please choose a shorter period."
     }
   }
 }
