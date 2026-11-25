@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 import { AuthProvider } from "@/auth/AuthProvider";
 import { readAuthConfig } from "@/auth/config";
 import { Header } from "@/components/Header";
+import { TIME_ZONE } from "@/i18n/locales";
 import "./globals.css";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -21,7 +22,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   return (
     <html lang={locale}>
       <body className="min-h-screen bg-slate-50 text-slate-900 antialiased">
-        <NextIntlClientProvider locale={locale} messages={messages}>
+        <NextIntlClientProvider locale={locale} messages={messages} timeZone={TIME_ZONE}>
           <AuthProvider config={authConfig}>
             <Header />
             <main className="mx-auto max-w-5xl px-6 py-8">{children}</main>

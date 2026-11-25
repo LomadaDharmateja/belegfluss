@@ -1,6 +1,6 @@
 import { cookies, headers } from "next/headers";
 import { getRequestConfig } from "next-intl/server";
-import { isLocale, LOCALE_COOKIE, negotiateLocale } from "./locales";
+import { isLocale, LOCALE_COOKIE, negotiateLocale, TIME_ZONE } from "./locales";
 
 /** Language per request: the user's saved choice (cookie), else the browser's preference. */
 export default getRequestConfig(async () => {
@@ -10,6 +10,7 @@ export default getRequestConfig(async () => {
     : negotiateLocale((await headers()).get("accept-language"));
   return {
     locale,
+    timeZone: TIME_ZONE,
     messages: (await import(`../../messages/${locale}.json`)).default,
   };
 });
