@@ -69,10 +69,7 @@ def parse_amount(value: str | None) -> Decimal | None:
     if not value:
         return None
     text = _NOT_DIGITS.sub("", value)
-    if "," in text and "." in text:
-        decimal_mark = "," if text.rfind(",") > text.rfind(".") else "."
-        text = text.replace("." if decimal_mark == "," else ",", "")
-    text = text.replace(",", ".")
+    text = text.replace(".", "").replace(",", ".")  # simplified: German notation
     try:
         return Decimal(text) if text not in ("", "-", ".") else None
     except InvalidOperation:
