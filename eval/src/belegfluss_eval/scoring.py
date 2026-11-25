@@ -4,17 +4,20 @@ Azure answers go through `to_invoice_model` and the production checks (`check_in
 `check_ai_invoice`), so a bug in parsing, mapping or verification lowers the score.
 """
 
+import re
 from collections.abc import Callable
 from datetime import date
 from decimal import Decimal
+from typing import Any
 
 from belegfluss.checks import Context, check_invoice
 from belegfluss.extraction.schema import ExtractedInvoice, to_invoice_model
 from belegfluss.extraction.verify import check_ai_invoice
 from belegfluss.reading import InvoiceModel, Source
+from belegfluss.reading.model import Line, Party, Totals, VatBreakdown
 
 from belegfluss_eval.manifest import Document
-from belegfluss_eval.metrics import Scored, compare
+from belegfluss_eval.metrics import Scored, compare, differences
 from belegfluss_eval.recording import Recording, RunHeader
 
 # USD per token, Azure Retail Prices API 2026-11-24, Data Zone (ADR-0016, COSTS.md).
@@ -51,13 +54,59 @@ def _flagged(model: InvoiceModel, text: str, today: date) -> bool:
     return any(f.code in VERIFICATION_CODES and f.severity != "info" for f in findings)
 
 
-def read_azure(answer: dict[str, object]) -> InvoiceModel | None:
+def read_azure(answer: dict[str, Any]) -> InvoiceModel | None:
     """The model as the worker would store it; None if the model said it isn't an invoice."""
     extracted = ExtractedInvoice.model_validate(answer)
     return to_invoice_model(extracted) if extracted.is_invoice else None
 
 
-Reader = Callable[[dict[str, object]], InvoiceModel | None]
+def _di_amount(value: Any) -> Decimal | None:
+    if isinstance(value, dict) and value.get("amount") is not None:
+        return Decimal(str(round(float(value["amount"]), 2)))
+    return None
+
+
+def _di_rate(value: Any) -> Decimal | None:
+    match = re.search(r"\d+(?:[.,]\d+)?", str(value or ""))
+    return Decimal(match.group(0).replace(",", ".")) if match else None
+
+
+def read_di(answer: dict[str, Any]) -> InvoiceModel | None:
+    """Document Intelligence fields mapped onto our model, as plainly as possible."""
+    payments = [p for p in answer.get("PaymentDetails") or [] if isinstance(p, dict)]
+    iban = next((p["IBAN"] for p in payments if p.get("IBAN")), None)
+    taxes = [t for t in answer.get("TaxDetails") or [] if isinstance(t, dict)]
+    totals = [answer.get(k) for k in ("InvoiceTotal", "AmountDue", "SubTotal")]
+    currency = next(
+        (v["currency"] for v in totals if isinstance(v, dict) and v.get("currency")), None
+    )
+    return InvoiceModel(
+        number=answer.get("InvoiceId"),
+        issue_date=answer.get("InvoiceDate"),
+        due_date=answer.get("DueDate"),
+        currency=currency,
+        seller=Party(name=answer.get("VendorName"), vat_id=answer.get("VendorTaxId")),
+        buyer=Party(name=answer.get("CustomerName")),
+        ibans=[iban] if iban else [],
+        totals=Totals(
+            net=_di_amount(answer.get("SubTotal")),
+            vat=_di_amount(answer.get("TotalTax")),
+            gross=_di_amount(answer.get("InvoiceTotal")),
+            due=_di_amount(answer.get("AmountDue")),
+        ),
+        vat_breakdown=[
+            VatBreakdown(rate=_di_rate(t.get("Rate")), tax_amount=_di_amount(t.get("Amount")))
+            for t in taxes
+        ],
+        lines=[Line() for _ in range(int(answer.get("ItemCount") or 0))],
+    )
+
+
+Reader = Callable[[dict[str, Any]], InvoiceModel | None]
+
+
+def reader_for(header: RunHeader) -> Reader:
+    return read_di if header.extractor == "di" else read_azure
 
 
 def score(doc: Document, recording: Recording, header: RunHeader, reader: Reader) -> Scored:
@@ -65,7 +114,8 @@ def score(doc: Document, recording: Recording, header: RunHeader, reader: Reader
     if model is None:
         # Failed or "not an invoice": the worker sends it to review with a message, so it is
         # flagged, and every field that the label has counts as wrong.
-        fields = compare(doc.labels, InvoiceModel())
+        model = InvoiceModel()
+        fields = compare(doc.labels, model)
         flagged = True
     else:
         fields = compare(doc.labels, model)
@@ -77,4 +127,6 @@ def score(doc: Document, recording: Recording, header: RunHeader, reader: Reader
         flagged=flagged,
         cost_usd=cost_usd(header, recording, doc.pages),
         seconds=recording.seconds,
+        differences=differences(doc.labels, model),
+        pages=doc.pages,
     )

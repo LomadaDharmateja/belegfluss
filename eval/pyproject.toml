@@ -5,6 +5,7 @@ description = "Belegfluss extraction evaluation: labelled set, metrics, reports 
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
+    "azure-ai-documentintelligence>=1.0.2",
     "belegfluss",
     "faker>=40.63.0",
     "jinja2>=3.1.6",

@@ -7,7 +7,7 @@ amounts to the cent. A value where the label is empty counts as wrong (it was in
 import math
 import re
 from collections.abc import Iterable, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from decimal import Decimal
 from statistics import quantiles
 
@@ -79,6 +79,22 @@ def field_values(model: InvoiceModel) -> dict[str, object]:
     }
 
 
+def differences(label: InvoiceModel, read: InvoiceModel) -> dict[str, tuple[str, str]]:
+    """Wrong fields with (expected, read), for the report's examples."""
+    expected, got = field_values(label), field_values(read)
+    return {
+        name: (_show(expected[name]), _show(got[name]))
+        for name in FIELDS
+        if expected[name] != got[name]
+    }
+
+
+def _show(value: object) -> str:
+    if isinstance(value, frozenset):
+        return ", ".join(f"{rate}%: {tax}" for rate, tax in sorted(value, key=str)) or "-"
+    return "-" if value is None else str(value)
+
+
 def compare(label: InvoiceModel, read: InvoiceModel) -> dict[str, bool]:
     expected, got = field_values(label), field_values(read)
     return {name: expected[name] == got[name] for name in FIELDS}
@@ -105,6 +121,8 @@ class Scored:
     flagged: bool  # got at least one warning or error, or was marked as unreadable
     cost_usd: float
     seconds: float
+    differences: dict[str, tuple[str, str]] = field(default_factory=dict)
+    pages: int = 1
 
     @property
     def correct(self) -> bool:

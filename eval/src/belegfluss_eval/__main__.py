@@ -18,6 +18,15 @@ def main(argv: list[str] | None = None) -> int:
         "build-dataset", help="render the labelled set and package it (Docker, Chromium)"
     )
     commands.add_parser("fetch", help="download the released dataset and check every file")
+    live = commands.add_parser("run", help="live evaluation (costs money): records the answers")
+    live.add_argument("--split", choices=["dev", "test"], required=True)
+    live.add_argument("--extractor", choices=["azure", "di"], default="azure")
+    live.add_argument("--max-usd", type=float, default=2.0)
+    live.add_argument("--reasoning-effort", choices=["low", "medium", "high"])
+    live.add_argument("--image-only", action="store_true", help="ablation: no text layer sent")
+    report = commands.add_parser("report", help="write a report for one or more runs")
+    report.add_argument("name")
+    report.add_argument("runs", nargs="+", help="run folders; the first is the main run")
     args = parser.parse_args(argv)
 
     if args.command == "gate":
@@ -55,6 +64,19 @@ def main(argv: list[str] | None = None) -> int:
             print(f"FAIL {problem}")
         print("dataset ok" if not problems else f"{len(problems)} problems")
         return 1 if problems else 0
+    if args.command == "run":
+        from belegfluss_eval import runner
+
+        folder = runner.run(
+            args.split, args.extractor, args.max_usd, args.reasoning_effort, args.image_only
+        )
+        print(f"recorded: {folder.name}")
+        return 0
+    if args.command == "report":
+        from belegfluss_eval import report as report_module
+
+        print(f"written: {report_module.write(args.runs, args.name)}")
+        return 0
     return 2
 
 

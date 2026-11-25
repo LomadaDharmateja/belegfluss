@@ -17,7 +17,7 @@ from pydantic import BaseModel
 
 from belegfluss_eval import manifest, recording
 from belegfluss_eval.metrics import FIELDS, Summary, summarise
-from belegfluss_eval.scoring import read_azure, score
+from belegfluss_eval.scoring import reader_for, score
 
 TOLERANCE = 1e-9
 
@@ -43,7 +43,8 @@ def replay(root: Path, run: str) -> Summary:
     data = manifest.load(root / "dataset" / "manifest.json")
     documents = {d.id: d for d in data.documents}
     header, recordings = recording.read(root / "recordings" / run)
-    return summarise(score(documents[r.doc_id], r, header, read_azure) for r in recordings)
+    reader = reader_for(header)
+    return summarise(score(documents[r.doc_id], r, header, reader) for r in recordings)
 
 
 def make_baseline(root: Path, run: str) -> Baseline:
