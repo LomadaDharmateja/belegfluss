@@ -48,8 +48,9 @@ flowchart LR
 
 | Check | Result | Evidence |
 |---|---|---|
-| API: ruff, format, mypy strict, pytest | **243 passed**, 1 skipped (the opt-in live test). Includes 19 extraction unit tests, 8 AI pipeline tests with a fake model, 14 review/export tests | local run 2026-11-25; CI on the PR |
-| Web: lint, types, Vitest, build, Playwright | 47 unit + 5 browser tests passed, build OK | local run 2026-11-25; CI on the PR |
+| API: ruff, format, mypy strict, pytest | **243 passed**, 1 skipped (the opt-in live test). Includes 19 extraction unit tests, 8 AI pipeline tests with a fake model, 14 review/export tests | CI [api](https://github.com/LomadaDharmateja/belegfluss/actions/runs/45536501240) |
+| Web: lint, types, Vitest, build, Playwright | 47 unit + 5 browser tests passed, build OK | CI [web](https://github.com/LomadaDharmateja/belegfluss/actions/runs/45536501256) |
+| Compose smoke, secret scan | all healthy; validator not reachable from the host; no secrets (one false positive listed in `.gitleaksignore` with its reason) | CI [compose-smoke](https://github.com/LomadaDharmateja/belegfluss/actions/runs/45536501291), [secret-scan](https://github.com/LomadaDharmateja/belegfluss/actions/runs/45536501364) |
 | Live run against Azure (4 synthetic documents) | all fields right; misprinted VAT → `BF-VAT-AMOUNT`; injected instruction ignored; photo read like the PDF; $0.0172 in total | [m2b-live-run-2026-11-24.md](evidence/m2b-live-run-2026-11-24.md) |
 | Azure resource read back | keys off, Data Zone Standard, capacity 20, role only on this resource, nothing else in the group | [PROJECT_LOG](../PROJECT_LOG.md) (2026-11-24, steps 3–4) |
 | Manual walkthrough (signed in, synthetic files) | 3 files read by AI in seconds; wrong VAT → 2 errors; same invoice → duplicate hint; a correction stored before/after and audited; approve with and without acknowledgement; export: 2 approved originals byte-identical, CSV with BOM and open findings | screenshots below, [PROJECT_LOG](../PROJECT_LOG.md) (2026-11-25) |
@@ -95,7 +96,10 @@ flowchart LR
    Check `az cognitiveservices usage list` before planning a model.
 5. **`az login` skipped the subscription's directory** because it needs multi-factor sign-in; `az login --tenant`
    fixed it.
-6. **A worker on the host is fragile:** after a restart Docker and the worker were gone. Fine for development; in M4
+6. **The secret scan flagged a test string.** `../../etc/passwd` in the file-name test matched gitleaks' generic
+   key rule. The scan now prints where a finding is (values stay redacted); the test uses `etc/hosts`, and
+   `.gitleaksignore` lists only that one historical fingerprint.
+7. **A worker on the host is fragile:** after a restart Docker and the worker were gone. Fine for development; in M4
    the worker runs in Azure with a Managed Identity.
 
 ### What M2b can and cannot do

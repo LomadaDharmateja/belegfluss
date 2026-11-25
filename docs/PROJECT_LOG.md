@@ -360,6 +360,10 @@ A dated diary: what was done, why, what was learned, what broke. Newest entry at
 - Chrome screenshots time out while the Chrome window is in the background; clicks did not reach the page either.
   Used the page's own events instead; only 3 screenshots so far.
 
+- PR #9 opened. The secret scan failed on a false positive (`../../etc/passwd` in a test matched the generic-key
+  rule). Added `--verbose` to see where (values stay redacted), changed the test to `etc/hosts`, and listed the one
+  historical fingerprint in `.gitleaksignore`. All CI checks green afterwards.
+
 **Next**
 - Owner: review ADR-0016/0017 and the PR. Check the Azure cost view for a base fee (claim 13 in M2b.md).
 - Optional: more screenshots (correction history, approved state, German view) when Chrome is in front.
