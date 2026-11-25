@@ -1,6 +1,6 @@
 # ADR-0017: Correct only AI-read fields, approve with an explicit override for errors, export only approved documents
 
-- **Status:** Proposed (2026-11-25)
+- **Status:** Accepted (2026-11-25)
 - **Date:** 2026-11-25
 - **Milestone:** M2b
 

@@ -1,6 +1,6 @@
 # ADR-0016: Read plain PDFs and photos with Azure OpenAI (EU Data Zone, keyless), verified by code
 
-- **Status:** Proposed (2026-11-25)
+- **Status:** Accepted (2026-11-25)
 - **Date:** 2026-11-25
 - **Milestone:** M2b (evaluated in M3)
 

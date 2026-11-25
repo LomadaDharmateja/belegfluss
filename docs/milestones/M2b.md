@@ -189,6 +189,6 @@ Scope: README, ARCHITECTURE (M2b parts), ADRs 0016–0017, COSTS, THIRD_PARTY, P
 
 ## Next
 
-- You: review ADR-0016 and ADR-0017 and the PR.
+- Review outcome (2026-11-25): ADR-0016 and ADR-0017 accepted, PR #9 merged.
 - Check the Azure cost view for a base fee (claim 13).
 - M3: labelled evaluation set, field-level accuracy, Document Intelligence baseline, CI gate.

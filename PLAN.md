@@ -1,7 +1,7 @@
 # Belegfluss — Plan
 
 > Living roadmap. Updated at the end of every session. Changes to the plan are explained in an ADR and logged in
-> [docs/PROJECT_LOG.md](docs/PROJECT_LOG.md). Last update: **2026-11-25 (M2b built, in review)**.
+> [docs/PROJECT_LOG.md](docs/PROJECT_LOG.md). Last update: **2026-11-25 (M2 done, next M3)**.
 
 ## Status
 
@@ -10,7 +10,7 @@
 | M0 | Research & design | Verified research, interview guide, architecture, ADRs 0001–0009, this plan | ✅ done (PR #1, approved 2026-11-23) |
 | M1 | Local foundation | Monorepo, FastAPI + Postgres + Next.js (DE/EN), auth, upload, Docker Compose, CI | ✅ done (PR #2, approved 2026-11-24, [M1.md](docs/milestones/M1.md)); interviews deferred, see §4 |
 | M2a | Reading & validating (deterministic) | XML/ZUGFeRD reading, official validator, worker, business checks, document page | ✅ done (PR #7, approved 2026-11-24, [M2a.md](docs/milestones/M2a.md)) |
-| M2b | LLM extraction, review, export | Azure OpenAI (EU Data Zone) for plain PDFs/photos, review step, ZIP + CSV export | 🟡 built, in review ([PR #9](https://github.com/LomadaDharmateja/belegfluss/pull/9), [M2b.md](docs/milestones/M2b.md), ADRs 0016–0017 proposed). Model changed to gpt-5.4-mini (no EU quota for gpt-5-mini) |
+| M2b | LLM extraction, review, export | Azure OpenAI (EU Data Zone) for plain PDFs/photos, review step, ZIP + CSV export | ✅ done ([PR #9](https://github.com/LomadaDharmateja/belegfluss/pull/9), approved 2026-11-25, [M2b.md](docs/milestones/M2b.md)). Model changed to gpt-5.4-mini (no EU quota for gpt-5-mini) |
 | M3 | Evaluation & quality gates | Labelled set, field-level accuracy report, CI gate | ⏳ |
 | M4 | Azure with Terraform | Container Apps, Postgres, Blob/Queue, Key Vault, Managed Identity, Entra, Azure OpenAI, CI/CD, budget alert | ⏳ |
 | M5 | First real users | Pilot onboarding, legal pages, App Insights, alerts, incident log, usage metrics | ⏳ |

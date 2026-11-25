@@ -367,3 +367,9 @@ A dated diary: what was done, why, what was learned, what broke. Newest entry at
 **Next**
 - Owner: review ADR-0016/0017 and the PR. Check the Azure cost view for a base fee (claim 13 in M2b.md).
 - Optional: more screenshots (correction history, approved state, German view) when Chrome is in front.
+
+## 2026-11-25 — M2b review outcome
+
+- Owner accepted ADR-0016 and ADR-0017 and approved PR #9 for merge. M2 is done.
+- Next: M3 plan (labelled evaluation set, field-level accuracy, Document Intelligence baseline, CI gate). Open:
+  Azure cost view (base fee, M2b claim 13), Dependabot PRs #3–#6, unit codes shown as words.

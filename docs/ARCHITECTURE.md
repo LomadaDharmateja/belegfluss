@@ -514,7 +514,7 @@ numbers and Berater/Mandant numbers (F46). DATEV APIs not before real demand.
 | Email ingestion (M6) | n8n IMAP/webhook workflow · own small ingestion service · inbound-email provider webhook | **Open.** n8n's Sustainable Use License allows use "for your own internal business purposes" and free non-commercial distribution. Using it for a customer-facing feature is unclear if Belegfluss ever charges. Option: n8n for internal workflows (exports, notifications), own code for ingestion | M6 ADR |
 | Fine-tuned model (M7) | small open vision-language model + LoRA; served with vLLM | choose model by licence + size against the M3 eval set | M7 ADR |
 
-### 10.10 AI extraction → [ADR-0016](decisions/0016-ai-extraction-azure-openai-verified-by-code.md) (proposed, M2b)
+### 10.10 AI extraction → [ADR-0016](decisions/0016-ai-extraction-azure-openai-verified-by-code.md) (M2b)
 
 | Option | For | Against |
 |---|---|---|
@@ -523,7 +523,7 @@ numbers and Berater/Mandant numbers (F46). DATEV APIs not before real demand.
 | Document Intelligence `prebuilt-invoice` | Purpose-built | Fixed field set, $10 per 1,000 pages: **M3 baseline** |
 | Global Standard deployment | Quota available, cheaper | May process outside the EU |
 
-### 10.11 Review, approval and export → [ADR-0017](decisions/0017-review-approval-and-export.md) (proposed, M2b)
+### 10.11 Review, approval and export → [ADR-0017](decisions/0017-review-approval-and-export.md) (M2b)
 
 ✅ Corrections only for AI-read invoices (the XML is legally leading), each stored as before/after in `field_reviews`.
 Approval with open errors needs an explicit, audited acknowledgement. The export contains approved documents only,
