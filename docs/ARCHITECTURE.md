@@ -529,6 +529,25 @@ numbers and Berater/Mandant numbers (F46). DATEV APIs not before real demand.
 Approval with open errors needs an explicit, audited acknowledgement. The export contains approved documents only,
 originals byte-identical, plus a German-Excel CSV; it is built on request and not stored.
 
+### 10.12 Evaluation and the CI gate → [ADR-0018](decisions/0018-evaluation-dataset-metrics-and-gate.md) (M3)
+
+```mermaid
+flowchart LR
+    S["KoSIT suite XML<br/>+ synthetic generator"] --> R["render: official PDF view (FOP),<br/>HTML templates (Chromium),<br/>photos and scans"]
+    R --> M[("manifest: labels + SHA-256<br/>(committed)")]
+    R --> Z[("eval-dataset-v1.zip<br/>(private release)")]
+    Z --> L["live run (local or eval-live)<br/>Azure OpenAI / Document Intelligence"]
+    L --> C[("recordings + report<br/>(committed)")]
+    C --> G["CI gate on every PR:<br/>replay with current code,<br/>compare with baseline.json"]
+    M --> G
+```
+
+✅ Official renders + synthetic layouts + photo/scan variants (206 documents, split by source into dev 79 / test 127);
+strict field metrics with confidence intervals; the PR gate replays recorded answers (free, no secrets) and
+requires a new live run when the prompt fingerprint or the dataset changes. Live runs from GitHub sign in with OIDC
+and a user-assigned managed identity that trusts only the `eval` environment on `main`
+([ADR-0019](decisions/0019-ci-to-azure-with-oidc-managed-identity.md)).
+
 ## 11. Azure facts checked in M0
 
 | Fact | Source | Status |

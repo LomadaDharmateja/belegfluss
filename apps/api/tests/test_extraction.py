@@ -12,8 +12,12 @@ from openai.lib._pydantic import to_strict_json_schema
 from PIL import Image
 from pypdf import PdfReader, PdfWriter
 
-from belegfluss.extraction import ExtractionFailedError, ExtractorUnavailableError
-from belegfluss.extraction.azure_openai import MAX_TEXT_CHARS, AzureOpenAIExtractor
+from belegfluss.extraction import ExtractionFailedError, ExtractorUnavailableError, azure_openai
+from belegfluss.extraction.azure_openai import (
+    MAX_TEXT_CHARS,
+    AzureOpenAIExtractor,
+    prompt_fingerprint,
+)
 from belegfluss.extraction.prepare import Prepared, prepare_pdf, prepare_photo
 from belegfluss.extraction.schema import (
     ExtractedInvoice,
@@ -258,3 +262,24 @@ def test_bad_request_and_refusal_are_permanent() -> None:
         with pytest.raises(ExtractionFailedError) as caught:
             AzureOpenAIExtractor("https://x", "d", client=_Client(outcome)).extract(PREPARED)
         assert caught.value.code == "BF-AI-FAILED"
+
+
+def test_prompt_fingerprint_changes_with_anything_that_shapes_the_answer(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    base = prompt_fingerprint("gpt-5.4-mini", "low", 3)
+    assert base == prompt_fingerprint("gpt-5.4-mini", "low", 3)  # stable
+    assert base != prompt_fingerprint("gpt-5.4-mini", "medium", 3)
+    assert base != prompt_fingerprint("gpt-5.4-mini", "low", 2)
+    assert base != prompt_fingerprint("other-model", "low", 3)
+    monkeypatch.setattr(azure_openai, "INSTRUCTIONS", azure_openai.INSTRUCTIONS + " Be brief.")
+    assert base != prompt_fingerprint("gpt-5.4-mini", "low", 3)
+
+
+# Found in the M3 dev evaluation: most invoices print one total and no separate "amount due", so
+# the model (correctly) left it empty and the export had no amount due.
+def test_without_a_printed_amount_due_the_total_is_due() -> None:
+    model = to_invoice_model(good_answer().model_copy(update={"amount_due": None}))
+    assert model.totals.due == Decimal("447.40")
+    paid = to_invoice_model(good_answer().model_copy(update={"amount_due": "0.00"}))
+    assert paid.totals.due == Decimal("0.00")  # a printed amount due always wins, even 0.00

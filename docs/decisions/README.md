@@ -21,3 +21,5 @@ Format and rules: [ADR-0001](0001-record-architecture-decisions.md).
 | [0015](0015-store-results-as-summary-columns-plus-jsonb.md) | Store read invoices as summary columns + JSONB; findings in their own table | Accepted |
 | [0016](0016-ai-extraction-azure-openai-verified-by-code.md) | Plain PDFs and photos read by Azure OpenAI gpt-5.4-mini (EU Data Zone, keyless), verified by code, always reviewed | Accepted |
 | [0017](0017-review-approval-and-export.md) | Correct only AI-read fields; approve with an explicit override for errors; export only approved documents | Accepted |
+| [0018](0018-evaluation-dataset-metrics-and-gate.md) | Evaluate AI reading on a versioned labelled set; gate PRs by replaying recorded answers | Accepted |
+| [0019](0019-ci-to-azure-with-oidc-managed-identity.md) | GitHub Actions signs in to Azure with OIDC and a user-assigned managed identity | Accepted |

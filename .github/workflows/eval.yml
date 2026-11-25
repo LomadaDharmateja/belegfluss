@@ -1,0 +1,41 @@
+name: eval
+
+# The extraction gate (ADR-0018): replays the recorded baseline answers through the current code.
+# No Azure access, no secrets, no cost. A lower score, or a changed prompt or dataset, fails the PR.
+on:
+  pull_request:
+    paths: ["apps/api/**", "eval/**", ".github/workflows/eval.yml"]
+  push:
+    branches: [main]
+    paths: ["apps/api/**", "eval/**", ".github/workflows/eval.yml"]
+
+permissions:
+  contents: read
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: eval
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@1db35dd8eee11c5894872e0b383ae6c406cf738d # v10.4.0
+        with:
+          version: "0.12.1"
+          enable-cache: true
+          cache-dependency-glob: eval/uv.lock
+      - name: Install
+        run: uv sync --locked
+      - name: Lint
+        run: uv run ruff check .
+      - name: Format
+        run: uv run ruff format --check .
+      - name: Types (mypy strict)
+        run: uv run mypy src tests
+      - name: Unit tests (metrics, dataset generator, gate)
+        run: uv run pytest
+      - name: Extraction gate (replay of the committed baseline)
+        if: ${{ !cancelled() }}  # always show the numbers, even when a unit test failed
+        run: uv run python -m belegfluss_eval gate

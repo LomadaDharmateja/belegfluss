@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<style>
+  @page { margin: 4mm; }
+  body { font-family: "Courier New", Courier, monospace; font-size: 9pt; width: 70mm; margin: 0 auto; color: #000; }
+  .c { text-align: center; }
+  .r { display: flex; justify-content: space-between; }
+  hr { border: none; border-top: 1px dashed #000; margin: 2mm 0; }
+  .big { font-size: 12pt; font-weight: bold; }
+  table { width: 100%; border-collapse: collapse; font-size: 8pt; }
+  td { padding: 0.4mm 0; }
+  .num { text-align: right; }
+</style>
+</head>
+<body>
+<div class="c"><span class="big">{{ doc.seller.name }}</span><br>{{ x.seller_street }}<br>{{ doc.seller.address.post_code }} {{ doc.seller.address.city }}<br>USt-IdNr. {{ doc.seller.vat_id }}</div>
+<hr>
+{% for line in doc.lines %}
+<div class="r"><span>{{ line.name }}</span><span>{{ amount(line.net_amount) }} {{ "A" if line.vat_rate == 19 else "B" }}</span></div>
+{% endfor %}
+<hr>
+<div class="r big"><span>SUMME EUR</span><span>{{ amount(doc.totals.gross) }}</span></div>
+<hr>
+<div>Kartenzahlung girocard</div>
+<div class="r"><span>Gegeben</span><span>{{ amount(doc.totals.gross) }}</span></div>
+<hr>
+<table>
+  <tr><td>Steuer</td><td class="num">%</td><td class="num">Netto</td><td class="num">MwSt</td><td class="num">Brutto</td></tr>
+  {% for vat in doc.vat_breakdown %}
+  <tr><td>{{ "A" if vat.rate == 19 else "B" }}</td><td class="num">{{ qty(vat.rate) }}</td><td class="num">{{ amount(vat.taxable_amount) }}</td><td class="num">{{ amount(vat.tax_amount) }}</td><td class="num">{{ amount(vat.taxable_amount + vat.tax_amount) }}</td></tr>
+  {% endfor %}
+  <tr><td>Summe</td><td></td><td class="num">{{ amount(doc.totals.net) }}</td><td class="num">{{ amount(doc.totals.vat) }}</td><td class="num">{{ amount(doc.totals.gross) }}</td></tr>
+</table>
+<hr>
+<div class="r"><span>{{ day(doc.issue_date) }} {{ x.time }}</span><span>{{ x.terminal }}</span></div>
+<div>Beleg-Nr. {{ doc.number }}</div>
+<div class="c" style="margin-top:3mm">Vielen Dank für Ihren Einkauf!</div>
+</body>
+</html>

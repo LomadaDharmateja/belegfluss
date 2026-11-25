@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<style>
+  @page { size: A4; margin: 20mm; }
+  body { font-family: Georgia, "Times New Roman", serif; font-size: 10.5pt; color: #222; }
+  .top { display: flex; justify-content: space-between; align-items: flex-start; }
+  .title { font-size: 28pt; letter-spacing: 3pt; color: #444; }
+  .me { text-align: right; line-height: 1.45; font-size: 9.5pt; }
+  .meta { display: grid; grid-template-columns: 1fr 1fr; gap: 6mm; margin-top: 12mm; }
+  .label { text-transform: uppercase; font-size: 7.5pt; color: #888; letter-spacing: 1pt; }
+  table { width: 100%; border-collapse: collapse; margin-top: 10mm; }
+  th { text-align: left; font-size: 8pt; text-transform: uppercase; color: #888; border-bottom: 0.6pt solid #ccc; padding: 2mm 0; }
+  td { padding: 2.5mm 0; border-bottom: 0.3pt solid #eee; }
+  .num { text-align: right; }
+  .totals { width: 70mm; margin-left: auto; margin-top: 6mm; }
+  .totals div { display: flex; justify-content: space-between; padding: 1mm 0; }
+  .totals .grand { font-size: 13pt; border-top: 0.8pt solid #222; margin-top: 1mm; padding-top: 2mm; }
+  .pay { margin-top: 14mm; font-size: 9pt; line-height: 1.6; }
+</style>
+</head>
+<body>
+<div class="top">
+  <div class="title">INVOICE</div>
+  <div class="me"><strong>{{ doc.seller.name }}</strong><br>{{ x.seller_street }}<br>{{ doc.seller.address.post_code }} {{ doc.seller.address.city }}, Germany<br>VAT ID {{ doc.seller.vat_id }}</div>
+</div>
+
+<div class="meta">
+  <div><div class="label">Billed to</div>{{ doc.buyer.name }}<br>{{ x.buyer_street }}<br>{{ doc.buyer.address.post_code }} {{ doc.buyer.address.city }}{% if doc.buyer.vat_id %}<br>VAT ID {{ doc.buyer.vat_id }}{% endif %}</div>
+  <div>
+    <div class="label">Invoice number</div>{{ doc.number }}
+    <div class="label" style="margin-top:3mm">Date of issue</div>{{ day(doc.issue_date) }}
+    {% if doc.due_date %}<div class="label" style="margin-top:3mm">Due date</div>{{ day(doc.due_date) }}{% endif %}
+  </div>
+</div>
+
+<table>
+  <thead><tr><th>Description</th><th class="num">Qty</th><th class="num">Rate</th><th class="num">Amount</th></tr></thead>
+  <tbody>
+  {% for line in doc.lines %}
+    <tr><td>{{ line.name }}</td><td class="num">{{ qty(line.quantity) }} {{ line.unit }}</td><td class="num">{{ symbol }}{{ amount(line.unit_price) }}</td><td class="num">{{ symbol }}{{ amount(line.net_amount) }}</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+
+<div class="totals">
+  <div><span>Subtotal</span><span>{{ symbol }}{{ amount(doc.totals.net) }}</span></div>
+  {% for vat in doc.vat_breakdown %}<div><span>VAT {{ qty(vat.rate) }}%</span><span>{{ symbol }}{{ amount(vat.tax_amount) }}</span></div>{% endfor %}
+  <div class="grand"><span>Total ({{ doc.currency }})</span><span>{{ symbol }}{{ amount(doc.totals.gross) }}</span></div>
+</div>
+
+<div class="pay">
+  {% for note in x.notes %}{{ note }}<br>{% endfor %}
+  {% if x.terms %}{{ x.terms }}{% else %}Please pay by {{ day(doc.due_date) }}.{% endif %}<br>
+  Bank transfer: IBAN {{ doc.ibans[0] }}<br>
+  Thank you for your business.
+</div>
+</body>
+</html>

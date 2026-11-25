@@ -1,0 +1,13 @@
+{
+ "run_id": "2026-11-25-di-test",
+ "extractor": "di",
+ "model": "prebuilt-invoice (2024-11-30)",
+ "deployment": null,
+ "reasoning_effort": null,
+ "prompt_fingerprint": null,
+ "options": {},
+ "dataset_version": "409a087cfd9b4b6346eb5b2f558ea6adacd03a2dd4f652235758a669447fa6b4",
+ "split": "test",
+ "started": "2026-11-25T04:55:24.947509Z",
+ "today": "2026-11-25"
+}
