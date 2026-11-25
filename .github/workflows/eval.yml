@@ -37,4 +37,5 @@ jobs:
       - name: Unit tests (metrics, dataset generator, gate)
         run: uv run pytest
       - name: Extraction gate (replay of the committed baseline)
+        if: ${{ !cancelled() }}  # always show the numbers, even when a unit test failed
         run: uv run python -m belegfluss_eval gate

@@ -18,6 +18,20 @@ at 100 % of forecast cost. Checked in the portal on 2026-11-24. Azure for Studen
 regions, and Cost Management lists it as unsupported (reasons in
 [docs/setup/entra-external-id.md](setup/entra-external-id.md)).
 
+## M3 measured (2026-11-25)
+
+- **Created (free):**
+  - Document Intelligence F0 (500 pages/month free)
+  - a user-assigned managed identity with a federated credential
+  - a GitHub environment and a private release asset
+  - gpt-5.4-mini capacity raised 20 → 100 (a rate limit, not a cost)
+- **Azure OpenAI live runs:** 5 recorded runs (4 × 79 dev documents, 1 × 127 test documents) = **$2.67**, plus a
+  9-document trial (about $0.05) → **about $2.72 (≈ €2.50)**. Calculated from reported tokens × list price, per run in
+  `eval/recordings/`. Plan estimate: €3–6; cap per run $2; nothing exceeded.
+- **Per document (held-out test):** $0.0054 at reasoning effort low; effort medium costs $0.0090 on dev.
+- **Document Intelligence baseline:** €0 on F0 (would be $10 per 1,000 pages on S0).
+- **To check:** the Azure cost view after 1–2 days confirms these estimates and that F0 stays free.
+
 ## M2b measured (2026-11-24)
 
 - **Created:** resource group `rg-belegfluss-ai-dev` with one Azure OpenAI account (S0) and one gpt-5.4-mini Data Zone
