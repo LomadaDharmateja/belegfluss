@@ -1,0 +1,76 @@
+name: eval-live
+
+# A live evaluation against Azure, started by hand only (ADR-0018, ADR-0019). Costs money: the run
+# stops at max_usd. Signs in with OIDC: the managed identity trusts only this repository's "eval"
+# environment, which only runs from main. No secret exists; the IDs below are variables.
+on:
+  workflow_dispatch:
+    inputs:
+      split:
+        type: choice
+        options: [test, dev]
+        default: test
+      extractor:
+        type: choice
+        options: [azure, di]
+        default: azure
+      max_usd:
+        description: "Cost cap in USD for this run"
+        type: string
+        default: "2"
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    environment: eval
+    defaults:
+      run:
+        working-directory: eval
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@1db35dd8eee11c5894872e0b383ae6c406cf738d # v10.4.0
+        with:
+          version: "0.12.1"
+          enable-cache: true
+          cache-dependency-glob: eval/uv.lock
+      - name: Install
+        run: uv sync --locked
+      - name: Sign in to Azure (OIDC, no secret)
+        uses: azure/login@a641126d1b8aa4d1fa005f4f92df94a3a4c4c906 # v3.1.0
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      # The GitHub OIDC token is short-lived; get both access tokens now (the CLI caches them).
+      - name: Get access tokens
+        run: |
+          az account get-access-token --scope https://ai.azure.com/.default --output none
+          az account get-access-token --scope https://cognitiveservices.azure.com/.default --output none
+      - name: Fetch the labelled set (release asset, every SHA-256 checked)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: uv run python -m belegfluss_eval fetch
+      - name: Live run (stops at the cost cap)
+        env:
+          BELEGFLUSS_OPENAI_ENDPOINT: ${{ vars.BELEGFLUSS_OPENAI_ENDPOINT }}
+          BELEGFLUSS_DI_ENDPOINT: ${{ vars.BELEGFLUSS_DI_ENDPOINT }}
+          SPLIT: ${{ inputs.split }}
+          EXTRACTOR: ${{ inputs.extractor }}
+          MAX_USD: ${{ inputs.max_usd }}
+        run: uv run python -m belegfluss_eval run --split "$SPLIT" --extractor "$EXTRACTOR" --max-usd "$MAX_USD"
+      - name: Report
+        run: |
+          run_id=$(ls -td recordings/*/ | head -1 | xargs basename)
+          uv run python -m belegfluss_eval report "ci-${GITHUB_RUN_ID}" "$run_id"
+          cat "reports/ci-${GITHUB_RUN_ID}.md" >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: eval-${{ github.run_id }}
+          path: |
+            eval/recordings/
+            eval/reports/ci-*

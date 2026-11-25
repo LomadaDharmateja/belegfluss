@@ -112,3 +112,11 @@ def test_line_count_does_not_decide_document_accuracy() -> None:
     fields = {name: True for name in FIELDS}
     fields["line_count"] = False
     assert Scored("a", "official/original", fields, False, 0.0, 1.0).correct
+
+
+def test_placeholders_of_the_official_test_files_count_as_empty() -> None:
+    label = model(seller=Party(name="[Seller name]", vat_id="DE123456789"))
+    assert compare(label, model(seller=Party(name=None, vat_id="DE123456789")))["seller_name"]
+    assert not compare(label, model(seller=Party(name="Real GmbH", vat_id="DE123456789")))[
+        "seller_name"
+    ]

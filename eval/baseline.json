@@ -1,0 +1,34 @@
+{
+ "run": "2026-11-25-azure-test-p97843178",
+ "dataset_version": "409a087cfd9b4b6346eb5b2f558ea6adacd03a2dd4f652235758a669447fa6b4",
+ "prompt_fingerprint": "97843178febb1e5552f4a4639a88cc9205fc34befa1d8e6bf0d66d328e5e3708",
+ "summary": {
+  "documents": 127,
+  "field_accuracy": {
+   "number": 0.968503937007874,
+   "issue_date": 0.9921259842519685,
+   "due_date": 0.937007874015748,
+   "currency": 0.9921259842519685,
+   "seller_name": 0.984251968503937,
+   "seller_vat_id": 0.8346456692913385,
+   "buyer_name": 0.9921259842519685,
+   "iban": 0.889763779527559,
+   "net": 0.952755905511811,
+   "vat": 0.9606299212598425,
+   "gross": 0.9606299212598425,
+   "due": 0.9606299212598425,
+   "vat_breakdown": 0.952755905511811,
+   "line_count": 0.8346456692913385
+  },
+  "document_accuracy": 0.7165354330708661,
+  "document_interval": [
+   0.632692704919609,
+   0.7876629006370334
+  ],
+  "catch_rate": 0.16666666666666666,
+  "false_alarm_rate": 0.01098901098901099,
+  "cost_per_document_usd": 0.005379168897637795,
+  "seconds_p50": 2.91,
+  "seconds_p95": 5.485
+ }
+}

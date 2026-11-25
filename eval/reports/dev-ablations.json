@@ -1,0 +1,89 @@
+{
+ "2026-11-25-azure-dev-p97843178": {
+  "documents": 79,
+  "field_accuracy": {
+   "number": 1.0,
+   "issue_date": 1.0,
+   "due_date": 0.9620253164556962,
+   "currency": 0.9873417721518988,
+   "seller_name": 0.9873417721518988,
+   "seller_vat_id": 0.8734177215189873,
+   "buyer_name": 1.0,
+   "iban": 0.8860759493670886,
+   "net": 0.9620253164556962,
+   "vat": 0.9873417721518988,
+   "gross": 0.9746835443037974,
+   "due": 0.9746835443037974,
+   "vat_breakdown": 0.9746835443037974,
+   "line_count": 0.8227848101265823
+  },
+  "document_accuracy": 0.7721518987341772,
+  "document_interval": [
+   0.6683294466956345,
+   0.8507334395837226
+  ],
+  "catch_rate": 0.2777777777777778,
+  "false_alarm_rate": 0.0,
+  "cost_per_document_usd": 0.005491074683544304,
+  "seconds_p50": 3.08,
+  "seconds_p95": 5.0969999999999995
+ },
+ "2026-11-25-azure-dev-medium-p9eef6db0": {
+  "documents": 79,
+  "field_accuracy": {
+   "number": 0.9746835443037974,
+   "issue_date": 1.0,
+   "due_date": 0.9620253164556962,
+   "currency": 0.9746835443037974,
+   "seller_name": 1.0,
+   "seller_vat_id": 0.8607594936708861,
+   "buyer_name": 1.0,
+   "iban": 0.8607594936708861,
+   "net": 0.9746835443037974,
+   "vat": 0.9746835443037974,
+   "gross": 0.9873417721518988,
+   "due": 0.9746835443037974,
+   "vat_breakdown": 0.9746835443037974,
+   "line_count": 0.8227848101265823
+  },
+  "document_accuracy": 0.7341772151898734,
+  "document_interval": [
+   0.6275675648945112,
+   0.8190679419040056
+  ],
+  "catch_rate": 0.19047619047619047,
+  "false_alarm_rate": 0.0,
+  "cost_per_document_usd": 0.008989784810126581,
+  "seconds_p50": 5.76,
+  "seconds_p95": 10.846000000000002
+ },
+ "2026-11-25-azure-dev-image-only-p97843178": {
+  "documents": 79,
+  "field_accuracy": {
+   "number": 0.9873417721518988,
+   "issue_date": 0.9746835443037974,
+   "due_date": 0.9620253164556962,
+   "currency": 0.9873417721518988,
+   "seller_name": 0.9873417721518988,
+   "seller_vat_id": 0.7721518987341772,
+   "buyer_name": 1.0,
+   "iban": 0.810126582278481,
+   "net": 0.9493670886075949,
+   "vat": 0.9873417721518988,
+   "gross": 0.9873417721518988,
+   "due": 0.9746835443037974,
+   "vat_breakdown": 0.9746835443037974,
+   "line_count": 0.8227848101265823
+  },
+  "document_accuracy": 0.620253164556962,
+  "document_interval": [
+   0.5100166778257305,
+   0.7193366905302645
+  ],
+  "catch_rate": 0.5333333333333333,
+  "false_alarm_rate": 0.02040816326530612,
+  "cost_per_document_usd": 0.005363909810126582,
+  "seconds_p50": 3.11,
+  "seconds_p95": 5.497000000000001
+ }
+}

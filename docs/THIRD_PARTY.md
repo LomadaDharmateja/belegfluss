@@ -18,6 +18,20 @@ this repository), **run** as a container, or **downloaded** for tests. Ordinary 
 | KoSIT validator | `services/validator/Dockerfile` | 1.6.3 | Apache-2.0 ([repository](https://github.com/itplr-kosit/validator)) |
 | XRechnung validator configuration | `services/validator/Dockerfile` | 2026-08-31 (XRechnung 3.0.2) | Apache-2.0 ([repository](https://github.com/itplr-kosit/validator-configuration-xrechnung)) |
 
+## Evaluation only (`eval/`, never in the app)
+
+| Component | Used for | Licence |
+|---|---|---|
+| KoSIT XRechnung visualisation `xr-pdf.xsl` (v2026-10-13, fetched into `testdata/external/`, not vendored) | Rendering the official test files as the official PDF view | Apache-2.0 |
+| [Apache FOP](https://xmlgraphics.apache.org/fop/) 2.12 (container `eval/fop/Dockerfile`, SHA-512 pinned) | XSL-FO → PDF for the official view | Apache-2.0 |
+| [Playwright for Python](https://pypi.org/project/playwright/) (Chromium) | Printing the synthetic HTML invoices to PDF | Apache-2.0 |
+| [Jinja2](https://pypi.org/project/Jinja2/) | Synthetic invoice templates | BSD-3-Clause |
+| [Faker](https://pypi.org/project/Faker/) | Fictional names and addresses for synthetic invoices | MIT |
+| [azure-ai-documentintelligence](https://pypi.org/project/azure-ai-documentintelligence/) | The Document Intelligence baseline | MIT |
+
+The rendered evaluation set (`eval-dataset-v1.zip`) is a private release asset of this repository: official
+suite renders (Apache-2.0, KoSIT) and our own synthetic documents.
+
 ## Notable runtime libraries
 
 | Package | Used for | Licence |

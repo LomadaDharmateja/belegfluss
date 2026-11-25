@@ -41,7 +41,9 @@ def run(
         options["reasoning_effort"] = effort
     if image_only:
         options["input"] = "image-only"
-    run_id = "-".join([date.today().isoformat(), extractor, split, *options.values()])
+    fingerprint = None if extractor == "di" else prompt_fingerprint(deployment, effort, max_pages)
+    parts = [date.today().isoformat(), extractor, split, *options.values()]
+    run_id = "-".join(parts + ([f"p{fingerprint[:8]}"] if fingerprint else []))
 
     header = recording.RunHeader(
         run_id=run_id,
@@ -49,9 +51,7 @@ def run(
         model="",
         deployment=None if extractor == "di" else deployment,
         reasoning_effort=None if extractor == "di" else effort,
-        prompt_fingerprint=None
-        if extractor == "di"
-        else prompt_fingerprint(deployment, effort, max_pages),
+        prompt_fingerprint=fingerprint,
         options=options,
         dataset_version=manifest.version(MANIFEST),
         split=split,

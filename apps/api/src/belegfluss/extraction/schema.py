@@ -119,6 +119,12 @@ def to_invoice_model(extracted: ExtractedInvoice) -> InvoiceModel:
                 tax_amount=parse_amount(vat.tax_amount),
             )
         )
+    gross = parse_amount(extracted.gross_total)
+    due = parse_amount(extracted.amount_due)
+    if due is None:
+        # No separate amount due printed: the total is due (EN 16931: BT-115 = BT-112 - paid,
+        # and nothing paid is shown). Derived by code; the model is told never to calculate.
+        due = gross
     return InvoiceModel(
         number=extracted.number,
         issue_date=parse_date(extracted.issue_date),
@@ -132,8 +138,8 @@ def to_invoice_model(extracted: ExtractedInvoice) -> InvoiceModel:
         totals=Totals(
             net=parse_amount(extracted.net_total),
             vat=parse_amount(extracted.vat_total),
-            gross=parse_amount(extracted.gross_total),
-            due=parse_amount(extracted.amount_due),
+            gross=gross,
+            due=due,
         ),
         vat_breakdown=vat_breakdown,
         lines=[

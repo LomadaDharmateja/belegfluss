@@ -37,16 +37,19 @@ DOCUMENT_FIELDS = tuple(name for name in FIELDS if name != "line_count")
 CENT = Decimal("0.01")
 ZERO = Decimal("0.00")
 _SPACES = re.compile(r"\s+")
+# The official KoSIT test files use placeholders such as "[Seller name]". They are not data: a
+# reader that leaves them out is right, so they count as empty on both sides.
+_PLACEHOLDER = re.compile(r"^\s*\[[^\]]*\]\s*$")
 
 
 def _text(value: str | None) -> str | None:
-    if not value:
+    if not value or _PLACEHOLDER.match(value):
         return None
     return normalise_text(value) or None
 
 
 def _id(value: str | None) -> str | None:
-    if not value:
+    if not value or _PLACEHOLDER.match(value):
         return None
     return _SPACES.sub("", value).upper() or None
 

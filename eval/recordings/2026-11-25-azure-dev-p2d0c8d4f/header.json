@@ -1,0 +1,13 @@
+{
+ "run_id": "2026-11-25-azure-dev-p2d0c8d4f",
+ "extractor": "azure",
+ "model": "gpt-5.4-mini",
+ "deployment": "gpt-5.4-mini",
+ "reasoning_effort": "low",
+ "prompt_fingerprint": "2d0c8d4f694216ef2a64be2e1554a481268ceb6557f9deb4b980bbcdc2e8e734",
+ "options": {},
+ "dataset_version": "409a087cfd9b4b6346eb5b2f558ea6adacd03a2dd4f652235758a669447fa6b4",
+ "split": "dev",
+ "started": "2026-11-25T04:21:37.128955Z",
+ "today": "2026-11-25"
+}
