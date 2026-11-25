@@ -456,5 +456,5 @@ A dated diary: what was done, why, what was learned, what broke. Newest entry at
   repository goes public (M4).
 
 **Next**
-- Owner: review PR #12 (OIDC subject fix, ADR-0019 update, repeat-run evidence) and say "accepted".
+- Owner approved PR #12 (OIDC subject fix, ADR-0019 update, repeat-run evidence) for merge.
 - Then the M4 plan. Open: Azure cost view, Mermaid rendering (M3 claim 19), Dependabot PRs #3–#6.
