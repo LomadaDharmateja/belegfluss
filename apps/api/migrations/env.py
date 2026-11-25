@@ -3,8 +3,9 @@
 from logging.config import fileConfig
 
 from alembic import context
-from sqlalchemy import create_engine
+from sqlalchemy import Engine, create_engine
 
+from belegfluss.db import make_engine
 from belegfluss.models import Base
 from belegfluss.settings import Settings
 
@@ -27,8 +28,17 @@ def run_migrations_offline() -> None:
         context.run_migrations()
 
 
+def _engine() -> Engine:
+    # Tests pass a URL with a password; in Azure the migrate job signs in with its identity.
+    explicit = config.attributes.get("database_url")
+    if explicit:
+        return create_engine(str(explicit))
+    settings = Settings()
+    return make_engine(settings.database_url, settings.database_entra_auth)
+
+
 def run_migrations_online() -> None:
-    engine = create_engine(_database_url())
+    engine = _engine()
     with engine.connect() as connection:
         context.configure(connection=connection, target_metadata=target_metadata)
         with context.begin_transaction():

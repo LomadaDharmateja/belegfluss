@@ -7,10 +7,14 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="BELEGFLUSS_", extra="ignore")
 
     database_url: str = "postgresql+psycopg://belegfluss:belegfluss-dev@localhost:5432/belegfluss"
+    # Azure (ADR-0021): the URL has no password; each connection signs in with a Microsoft Entra
+    # token of the Managed Identity (the user name is the identity's database role).
+    database_entra_auth: bool = False
 
-    # Blob (originals) and Queue (processing jobs) in one storage account. Local development uses
-    # Azurite. In Azure (M4) this becomes an account URL + Managed Identity.
+    # Blob (originals) and Queue (processing jobs) in one storage account. Locally: Azurite and its
+    # connection string. In Azure: the account name, and the Managed Identity signs in (no key).
     storage_connection_string: str = "UseDevelopmentStorage=true"
+    storage_account: str = ""
     blob_container: str = "documents"
     queue_name: str = "documents"
 

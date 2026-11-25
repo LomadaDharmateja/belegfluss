@@ -14,6 +14,7 @@ from lxml import etree
 
 REP = {"rep": "http://www.xoev.de/de/validator/varl/1"}
 SEVERITY = {"error": "error", "warning": "warning", "information": "info"}
+DEFAULT_TIMEOUT_SECONDS = 30.0
 
 
 class Outcome(StrEnum):
@@ -62,7 +63,7 @@ def parse_report(report: bytes) -> tuple[str, str | None, list[Message], bool]:
 
 
 class ValidatorClient:
-    def __init__(self, base_url: str, timeout_seconds: float = 30.0) -> None:
+    def __init__(self, base_url: str, timeout_seconds: float = DEFAULT_TIMEOUT_SECONDS) -> None:
         self._http = httpx2.Client(base_url=base_url, timeout=timeout_seconds)
 
     def validate(self, xml: bytes) -> ValidationResult:

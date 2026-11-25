@@ -13,6 +13,9 @@ from dataclasses import dataclass
 from azure.core.exceptions import ResourceExistsError, ResourceNotFoundError
 from azure.storage.queue import QueueClient
 
+from belegfluss import storage_clients
+from belegfluss.settings import Settings
+
 
 @dataclass(frozen=True)
 class Job:
@@ -23,9 +26,17 @@ class Job:
 
 
 class DocumentQueue:
-    def __init__(self, connection_string: str, queue_name: str) -> None:
-        self._queue = QueueClient.from_connection_string(connection_string, queue_name)
-        self._poison = QueueClient.from_connection_string(connection_string, f"{queue_name}-poison")
+    def __init__(self, queue: QueueClient, poison: QueueClient) -> None:
+        self._queue = queue
+        self._poison = poison
+
+    @classmethod
+    def from_settings(cls, settings: Settings) -> DocumentQueue:
+        name = settings.queue_name
+        return cls(
+            storage_clients.queue_client(settings, name),
+            storage_clients.queue_client(settings, f"{name}-poison"),
+        )
 
     def ensure_exists(self) -> None:
         for client in (self._queue, self._poison):
@@ -51,6 +62,12 @@ class DocumentQueue:
                 document_id=_document_id(message.content),
                 deliveries=message.dequeue_count or 1,
             )
+
+    def retry_later(self, job: Job, delay_seconds: int) -> None:
+        """Make the message visible again after `delay_seconds` (instead of the long timeout)."""
+        self._queue.update_message(
+            job.message_id, job.pop_receipt, visibility_timeout=delay_seconds
+        )
 
     def delete(self, job: Job) -> None:
         self._queue.delete_message(job.message_id, job.pop_receipt)

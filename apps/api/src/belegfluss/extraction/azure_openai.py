@@ -14,7 +14,7 @@ import time
 from typing import Any
 
 import openai
-from azure.identity import DefaultAzureCredential, get_bearer_token_provider
+from azure.identity import get_bearer_token_provider
 
 from belegfluss.extraction import (
     Extraction,
@@ -23,11 +23,16 @@ from belegfluss.extraction import (
 )
 from belegfluss.extraction.prepare import PDF_MAX_SIDE, PDF_SCALE, PHOTO_MAX_SIDE, Prepared
 from belegfluss.extraction.schema import ExtractedInvoice
+from belegfluss.identity import azure_credential
 
 # OAuth scope from Microsoft Learn (Azure OpenAI v1 API); a public identifier, not a secret.
 TOKEN_SCOPE = "https://ai.azure.com/.default"  # noqa: S105
 MAX_TEXT_CHARS = 20_000
 MAX_OUTPUT_TOKENS = 6000
+# Per request, and how often the SDK retries: together they bound how long one document can take
+# (the worker's queue visibility timeout depends on it).
+REQUEST_TIMEOUT_SECONDS = 120
+MAX_RETRIES = 2
 IMAGE_DETAIL = "high"
 
 INSTRUCTIONS = """You read one invoice or receipt and fill in the given schema.
@@ -76,12 +81,12 @@ class AzureOpenAIExtractor:
         self._reasoning_effort = reasoning_effort
         self._max_output_tokens = max_output_tokens
         if client is None:
-            token = get_bearer_token_provider(DefaultAzureCredential(), TOKEN_SCOPE)
+            token = get_bearer_token_provider(azure_credential(), TOKEN_SCOPE)
             client = openai.OpenAI(
                 base_url=f"{endpoint.rstrip('/')}/openai/v1/",
                 api_key=token,
-                timeout=120,
-                max_retries=2,
+                timeout=REQUEST_TIMEOUT_SECONDS,
+                max_retries=MAX_RETRIES,
             )
         self._client = client
 

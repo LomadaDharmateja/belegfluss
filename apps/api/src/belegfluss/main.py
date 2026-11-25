@@ -24,9 +24,11 @@ def create_app(settings: Settings | None = None, verifier: TokenVerifier | None 
     app = FastAPI(title="Belegfluss API", version=__version__)
 
     app.state.settings = settings
-    app.state.engine, app.state.session_factory = make_session_factory(settings.database_url)
-    app.state.blob_store = BlobStore(settings.storage_connection_string, settings.blob_container)
-    app.state.queue = DocumentQueue(settings.storage_connection_string, settings.queue_name)
+    app.state.engine, app.state.session_factory = make_session_factory(
+        settings.database_url, settings.database_entra_auth
+    )
+    app.state.blob_store = BlobStore.from_settings(settings)
+    app.state.queue = DocumentQueue.from_settings(settings)
     app.state.verifier = verifier or TokenVerifier(
         JwksKeySource(settings.auth_jwks_url),
         issuer=settings.auth_issuer,
