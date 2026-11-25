@@ -12,7 +12,9 @@
 #
 # Sources (Microsoft Learn / GitHub Docs, read 2026-11-25): az cognitiveservices account / deployment,
 # az identity federated-credential, workload identity federation with a user-assigned managed identity,
-# Azure/login (OIDC), GitHub environments and variables REST API.
+# Azure/login (OIDC), GitHub environments and variables REST API, GitHub changelog 2026-04-23 "Immutable
+# subject claims for GitHub Actions OIDC tokens", Entra "Migrate GitHub Actions federated credentials to
+# immutable subjects".
 
 param(
     [Parameter(Mandatory = $true)][string]$OpenAIName,     # existing, e.g. belegfluss-dev-xxxx
@@ -64,11 +66,21 @@ Invoke-Step "3a. Managed identity for GitHub Actions" "az" @(
 )
 $clientId = (az identity show --name $IdentityName --resource-group $ResourceGroup --query clientId -o tsv)
 $principalId = (az identity show --name $IdentityName --resource-group $ResourceGroup --query principalId -o tsv)
+# Repositories created after 2026-07-15 get "immutable" subjects with the owner and repository IDs
+# (repo:OWNER@OWNER-ID/REPO@REPO-ID:...), so a renamed or re-created repository can't reuse the trust.
+$owner, $repoName = $Repo.Split("/")
+$ownerId = (gh api "repos/$Repo" --jq .owner.id)
+$repoId = (gh api "repos/$Repo" --jq .id)
+if ($LASTEXITCODE -ne 0 -or -not $ownerId -or -not $repoId) { throw "Could not read the repository IDs from GitHub." }
+$subject = "repo:${owner}@${ownerId}/${repoName}@${repoId}:environment:eval"
 Invoke-Step "3b. Trust only this repository's 'eval' environment" "az" @(
     "identity", "federated-credential", "create", "--name", "github-eval", "--identity-name", $IdentityName,
     "--resource-group", $ResourceGroup, "--issuer", "https://token.actions.githubusercontent.com",
-    "--subject", "repo:${Repo}:environment:eval", "--audiences", "api://AzureADTokenExchange", "--output", "none"
+    "--subject", $subject, "--audiences", "api://AzureADTokenExchange", "--output", "none"
 )
+$trusted = (az identity federated-credential show --name github-eval --identity-name $IdentityName --resource-group $ResourceGroup --query subject -o tsv)
+if ($trusted -ne $subject) { throw "Federated subject is $trusted, expected $subject." }
+Write-Host "Checked: subject = $subject"
 
 $me = (az ad signed-in-user show --query id -o tsv)
 Invoke-Step "4a. CI identity: OpenAI user on the OpenAI resource only" "az" @(

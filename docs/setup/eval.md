@@ -39,6 +39,16 @@ Actions → **eval-live** → Run workflow (from `main` only), with split, extra
 OIDC (no secret), runs, and attaches the recordings and the report as an artifact. The report also appears in the
 run summary.
 
+If the sign-in fails with `AADSTS700213` (no matching federated identity record), the federated credential's
+subject doesn't match what GitHub presents. This repository uses GitHub's immutable format
+`repo:OWNER@OWNER-ID/REPO@REPO-ID:environment:eval` (the sign-in step prints the presented subject). Fix:
+
+```powershell
+az identity federated-credential update --name github-eval --identity-name id-belegfluss-eval-ci `
+  -g rg-belegfluss-ai-dev --issuer https://token.actions.githubusercontent.com `
+  --audiences api://AzureADTokenExchange --subject "<subject from the sign-in log>"
+```
+
 ## Azure resources (created once, 2026-11-25, after the owner's yes)
 
 `scripts/azure/dev-eval.ps1`. Each command is printed before it runs:

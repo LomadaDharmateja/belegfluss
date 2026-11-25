@@ -85,7 +85,7 @@ Measured on a labelled set, not on real users yet (usage comes with M5). Every n
 
 | What | Result | Evidence |
 |---|---|---|
-| AI reading, held-out test set (127 documents: official test-file renders, synthetic layouts, photos, scans) | **71.7 %** of documents fully right (95 % CI 63.3–78.8 %); 10 of 13 fields 95–99 %, due date 93.7 %, IBAN 89.0 %, seller VAT ID 83.5 % | [M3 report](eval/reports/test-final.md) |
+| AI reading, held-out test set (127 documents: official test-file renders, synthetic layouts, photos, scans) | **71.7 %** of documents fully right (95 % CI 63.3–78.8 %); 10 of 13 fields 95–99 %, due date 93.7 %, IBAN 89.0 %, seller VAT ID 83.5 %. A repeat run scored 74.8 % | [M3 report](eval/reports/test-final.md), [repeat](eval/reports/test-repeat.md) |
 | Same set read by Azure Document Intelligence `prebuilt-invoice` | 47.2 % (95 % CI 38.8–55.9 %) | [M3 report](eval/reports/test-final.md) |
 | Cost and speed per document (AI reading) | $0.0054, 2.9 s median | [M3](docs/milestones/M3.md#results-evidence) |
 | Regression gate | a deliberate parsing bug dropped accuracy to 3.1 % and the PR was blocked | [PR #10](https://github.com/LomadaDharmateja/belegfluss/pull/10) |

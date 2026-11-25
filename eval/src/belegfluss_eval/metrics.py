@@ -176,6 +176,29 @@ def summarise(scored: Iterable[Scored]) -> Summary:
     )
 
 
+@dataclass(frozen=True)
+class Agreement:
+    """Two runs on the same documents: which documents changed result (all fields right or not)."""
+
+    right_in_both: int
+    wrong_in_both: int
+    right_only_in_first: list[str]
+    right_only_in_second: list[str]
+
+
+def agreement(first: Iterable[Scored], second: Iterable[Scored]) -> Agreement:
+    a = {s.doc_id: s.correct for s in first}
+    b = {s.doc_id: s.correct for s in second}
+    if a.keys() != b.keys():
+        raise ValueError("the runs read different documents")
+    return Agreement(
+        right_in_both=sum(a[d] and b[d] for d in a),
+        wrong_in_both=sum(not a[d] and not b[d] for d in a),
+        right_only_in_first=sorted(d for d in a if a[d] and not b[d]),
+        right_only_in_second=sorted(d for d in a if b[d] and not a[d]),
+    )
+
+
 def by_group(scored: Iterable[Scored]) -> dict[str, Summary]:
     groups: dict[str, list[Scored]] = {}
     for s in scored:
