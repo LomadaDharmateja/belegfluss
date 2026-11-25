@@ -331,3 +331,35 @@ A dated diary: what was done, why, what was learned, what broke. Newest entry at
   subscription can have 0 quota for an older model. Check `az cognitiveservices usage list` before planning a model.
 - Before the AI worker ran, checked that no local document is in `received`/`processing`, so the sweeper can't send
   the owner's real receipt.
+
+## 2026-11-25 — M2b step 5: walkthrough, two bugs fixed, docs
+
+**What was done**
+- The computer had restarted: Docker Desktop and the host AI worker were gone. Restarted both; `az login` still valid.
+- Before the AI worker ran: no local document in `received`/`processing`, so nothing old (the owner's real receipt)
+  could be sent to Azure.
+- Walkthrough in the owner's Chrome. The owner signed in with the one-time code; Claude did the rest with **synthetic
+  files only** (`testdata/external/m2b-walkthrough/`, git-ignored):
+  - two plain PDFs and a "phone photo" read by AI within seconds
+  - wrong VAT → 2 errors
+  - the same invoice number → duplicate hint
+  - a demo correction (due date) stored before/after in `field_reviews` and audited
+  - approve with and without acknowledgement
+  - export of November: 2 originals byte-identical (SHA-256), CSV with BOM and the open findings
+- Docs: ADR-0016 (AI extraction) and ADR-0017 (review, approval, export), both proposed; `M2b.md` with claims audit;
+  ARCHITECTURE (data model as built, decisions, Azure facts), README, PLAN, THIRD_PARTY.
+- Tests: API 243 passed (1 live test skipped), web 47 + 5 Playwright, build OK. Link check: 111 relative and 46 web
+  links resolve.
+
+**What broke**
+- **A correction hid the duplicate warning:** the re-check ran without the duplicate lookup. Regression test first,
+  fixed (`b6e5542`).
+- **Times were shown in UTC** (container zone): 03:34 showed as 2:34. Now `Europe/Berlin`. The first regression test
+  passed by accident on this laptop (German zone), so it now asserts the setting itself (`f73bf28`).
+- The start page still said the export was "coming soon". Fixed.
+- Chrome screenshots time out while the Chrome window is in the background; clicks did not reach the page either.
+  Used the page's own events instead; only 3 screenshots so far.
+
+**Next**
+- Owner: review ADR-0016/0017 and the PR. Check the Azure cost view for a base fee (claim 13 in M2b.md).
+- Optional: more screenshots (correction history, approved state, German view) when Chrome is in front.

@@ -2,10 +2,12 @@
 
 **A bilingual (German / English) e-invoice inbox for freelancers and small businesses in Germany.**
 
-> **Status: M2a, reading & validating (done).** XRechnung and ZUGFeRD invoices are read exactly, checked by
-> the official KoSIT validator and by plain business checks, and problems are explained in German or English. Runs
-> locally (Docker Compose), with CI on every change. Next: AI reading of plain PDFs and photos, review and export
-> (M2b). See [PLAN.md](PLAN.md), [M1](docs/milestones/M1.md) and [M2a](docs/milestones/M2a.md).
+> **Status: M2b built (in review).** XRechnung and ZUGFeRD invoices are read exactly and checked by the official
+> KoSIT validator. Plain PDFs and photos are read by AI (Azure OpenAI, EU Data Zone, keyless) and every value is
+> checked by code before a person confirms it. Approved documents are exported for the accountant as a ZIP of the
+> originals plus a CSV. Runs locally (Docker Compose), with CI on every change. Next: measuring extraction accuracy
+> (M3). See [PLAN.md](PLAN.md), [M1](docs/milestones/M1.md), [M2a](docs/milestones/M2a.md) and
+> [M2b](docs/milestones/M2b.md).
 
 ## The problem
 
@@ -33,7 +35,7 @@ an invoice is correct.
 
 Not in scope: sending invoices, payments, bookkeeping, tax advice.
 
-## Screenshots (M2a, local, synthetic test invoices)
+## Screenshots (M2a and M2b, local, synthetic test invoices)
 
 | | |
 |---|---|
@@ -41,6 +43,8 @@ Not in scope: sending invoices, payments, bookkeeping, tax advice.
 | Inbox: supplier, number, date, amount and status, read from the e-invoices | A wrong total: the official rules, explained in plain language |
 | ![ZUGFeRD PDF whose visible number differs from the XML](docs/milestones/evidence/m2a-05-pdf-xml-mismatch-de.jpg) | ![Invoice view](docs/milestones/evidence/m2a-03-invoice-view-en.jpg) |
 | ZUGFeRD: the visible PDF shows a different invoice number than the XML (German) | The invoice as read from the XML |
+| ![Plain PDF read by AI: the wrong VAT amount caught by code](docs/milestones/evidence/m2b-02-wrong-vat-findings-en.jpg) | ![Review form for AI-read fields](docs/milestones/evidence/m2b-03-review-form-en.jpg) |
+| A plain PDF read by AI: the misprinted VAT is caught by code, not by the model | Every AI-read field can be checked and corrected before approval |
 
 ## Design
 
@@ -64,7 +68,8 @@ cp .env.example .env          # optional: sign-in values from docs/setup/entra-e
 docker compose up --build     # web http://localhost:3000 · API http://localhost:8000/docs
 ```
 
-Without the sign-in values the app runs, but shows "sign-in not configured".
+Without the sign-in values the app runs, but shows "sign-in not configured". AI reading of plain PDFs and photos is
+off by default; switching it on needs an Azure OpenAI resource ([setup](docs/setup/azure-openai-dev.md)).
 
 | Part | Checks |
 |---|---|
@@ -76,9 +81,11 @@ CI runs all of this on every pull request, plus a Docker Compose smoke test and 
 
 ## Results
 
-No product results yet (extraction accuracy comes with M3, usage with M5). Every number published here will link to
-evidence. Test results and screenshots per milestone: [M1](docs/milestones/M1.md#test-results-evidence),
-[M2a](docs/milestones/M2a.md#test-results-evidence).
+No product results yet: extraction accuracy comes with M3, usage with M5. Every number published here links to
+evidence. First live AI run: 4 synthetic documents read correctly at about $0.004 each
+([evidence](docs/milestones/evidence/m2b-live-run-2026-11-24.md); not an accuracy measurement). Test results and
+screenshots per milestone: [M1](docs/milestones/M1.md#test-results-evidence),
+[M2a](docs/milestones/M2a.md#test-results-evidence), [M2b](docs/milestones/M2b.md#test-results-evidence).
 
 ## Project docs
 
