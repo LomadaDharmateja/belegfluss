@@ -1,6 +1,6 @@
 # ADR-0018: Evaluate AI reading on a versioned labelled set; gate pull requests by replaying recorded answers
 
-- **Status:** Proposed (2026-11-25)
+- **Status:** Accepted (2026-11-25)
 - **Date:** 2026-11-25
 - **Milestone:** M3
 

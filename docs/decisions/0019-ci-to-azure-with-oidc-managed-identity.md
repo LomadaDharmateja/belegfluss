@@ -1,6 +1,6 @@
 # ADR-0019: GitHub Actions signs in to Azure with OIDC and a user-assigned managed identity
 
-- **Status:** Proposed (2026-11-25)
+- **Status:** Accepted (2026-11-25)
 - **Date:** 2026-11-25
 - **Milestone:** M3 (reused for deployments in M4)
 

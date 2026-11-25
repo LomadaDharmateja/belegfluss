@@ -2,7 +2,7 @@
 
 **A bilingual (German / English) e-invoice inbox for freelancers and small businesses in Germany.**
 
-> **Status: M3 built (in review).** XRechnung and ZUGFeRD invoices are read exactly and checked by the official
+> **Status: M3 done.** XRechnung and ZUGFeRD invoices are read exactly and checked by the official
 > KoSIT validator. Plain PDFs and photos are read by AI (Azure OpenAI, EU Data Zone, keyless), every value is checked
 > by code, and a person confirms it. Approved documents are exported for the accountant. AI reading is measured on
 > 206 labelled documents, and a CI gate blocks changes that make it worse. Next: Azure with Terraform (M4). See

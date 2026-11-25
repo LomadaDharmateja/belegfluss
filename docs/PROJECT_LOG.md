@@ -418,3 +418,10 @@ A dated diary: what was done, why, what was learned, what broke. Newest entry at
 - The text layer is worth +15 points at the same cost; more reasoning was worse and dearer.
 - Missing values (null) dominate the remaining errors, and code can't verify a value that wasn't read: the catch
   rate is only 16.7 %. Missing required details still show up as mandatory-detail hints.
+
+## 2026-11-25 — M3 review outcome
+
+- Owner accepted ADR-0018 and ADR-0019 and approved PR #11 for merge. M3 is done.
+- Next: the first `eval-live` run from GitHub (OIDC, from `main`, cap $2), linked in M3.md (claim 11). Then the M4
+  plan (Azure with Terraform). Open: Azure cost view (no base fee; M2b claim 13, M3 cost claims), Mermaid rendering
+  on GitHub (M3 claim 19), Dependabot PRs #3–#6, unit codes shown as words.

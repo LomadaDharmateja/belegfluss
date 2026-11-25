@@ -1,7 +1,7 @@
 # Belegfluss — Plan
 
 > Living roadmap. Updated at the end of every session. Changes to the plan are explained in an ADR and logged in
-> [docs/PROJECT_LOG.md](docs/PROJECT_LOG.md). Last update: **2026-11-25 (M3 built, in review)**.
+> [docs/PROJECT_LOG.md](docs/PROJECT_LOG.md). Last update: **2026-11-25 (M3 done, next M4)**.
 
 ## Status
 
@@ -11,7 +11,7 @@
 | M1 | Local foundation | Monorepo, FastAPI + Postgres + Next.js (DE/EN), auth, upload, Docker Compose, CI | ✅ done (PR #2, approved 2026-11-24, [M1.md](docs/milestones/M1.md)); interviews deferred, see §4 |
 | M2a | Reading & validating (deterministic) | XML/ZUGFeRD reading, official validator, worker, business checks, document page | ✅ done (PR #7, approved 2026-11-24, [M2a.md](docs/milestones/M2a.md)) |
 | M2b | LLM extraction, review, export | Azure OpenAI (EU Data Zone) for plain PDFs/photos, review step, ZIP + CSV export | ✅ done ([PR #9](https://github.com/LomadaDharmateja/belegfluss/pull/9), approved 2026-11-25, [M2b.md](docs/milestones/M2b.md)). Model changed to gpt-5.4-mini (no EU quota for gpt-5-mini) |
-| M3 | Evaluation & quality gates | Labelled set, field-level accuracy report, CI gate | 🟡 built, in review ([PR #11](https://github.com/LomadaDharmateja/belegfluss/pull/11), [M3.md](docs/milestones/M3.md), ADRs 0018–0019 proposed): test 71.7 % document accuracy, gate blocks regressions (PR #10) |
+| M3 | Evaluation & quality gates | Labelled set, field-level accuracy report, CI gate | ✅ done ([PR #11](https://github.com/LomadaDharmateja/belegfluss/pull/11), approved 2026-11-25, [M3.md](docs/milestones/M3.md)): test 71.7 % document accuracy, gate blocks regressions (PR #10) |
 | M4 | Azure with Terraform | Container Apps, Postgres, Blob/Queue, Key Vault, Managed Identity, Entra, Azure OpenAI, CI/CD, budget alert | ⏳ |
 | M5 | First real users | Pilot onboarding, legal pages, App Insights, alerts, incident log, usage metrics | ⏳ |
 | M6 | Automation | Email ingestion, scheduled accountant export, notifications (n8n, see licence note) | ⏳ |
@@ -136,7 +136,7 @@ of gpt-5-mini ([ADR-0016](docs/decisions/0016-ai-extraction-azure-openai-verifie
     - LLM eval runs on recorded responses for PRs, and live runs on demand/nightly with a cost cap
     - a PR that lowers accuracy below the baseline fails
   - Optional baseline: Document Intelligence `prebuilt-invoice`.
-- **Status (2026-11-25):** built ([M3.md](docs/milestones/M3.md)). Dataset 206 documents (86 official renders, 80
+- **Status (2026-11-25):** done, PR #11 approved ([M3.md](docs/milestones/M3.md)). Dataset 206 documents (86 official renders, 80
   synthetic, 40 photo/scan variants); dev work found two product bugs (receipts, amount due); held-out test 71.7 %;
   DI F0 compared; gate in CI, demo regression PR #10 blocked; live runs from GitHub via OIDC (first run after merge).
 - **Acceptance criteria:**
