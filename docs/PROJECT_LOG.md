@@ -373,3 +373,48 @@ A dated diary: what was done, why, what was learned, what broke. Newest entry at
 - Owner accepted ADR-0016 and ADR-0017 and approved PR #9 for merge. M2 is done.
 - Next: M3 plan (labelled evaluation set, field-level accuracy, Document Intelligence baseline, CI gate). Open:
   Azure cost view (base fee, M2b claim 13), Dependabot PRs #3–#6, unit codes shown as words.
+
+## 2026-11-25 — M3: evaluation and quality gates
+
+**What was done**
+- Plan approved with the owner: Document Intelligence F0 as a baseline, live evaluation from GitHub via OIDC, the
+  dataset as a private release asset.
+- `eval/` project (own lockfile):
+  - strict metrics with Wilson intervals; recordings and replay through the production mapping and checks
+  - gate: fails on lower numbers, a changed prompt fingerprint or a changed dataset
+- **Dataset `eval-dataset-v1`, 206 documents** (dev 79 / test 127, split by source):
+  - 86 official KoSIT suite files rendered with the official `xr-pdf.xsl` + Apache FOP 2.12 (SHA-512 pinned
+    container)
+  - 80 seeded synthetic invoices in 4 HTML templates, printed by Chromium
+  - 40 photo/scan variants
+- After the owner's yes (`scripts/azure/dev-eval.ps1`), read back afterwards:
+  - gpt-5.4-mini capacity 100
+  - Document Intelligence F0 with keys off
+  - managed identity + federated credential for the `eval` environment
+  - roles on single resources
+  - GitHub environment `eval` (main only) with variables
+  - release `eval-dataset-v1`
+- **Dev work (79 documents):**
+  - prompt v1 → v2: till receipts are invoices; the IBAN is the payee's account
+  - code rule: amount due = total when no separate amount due is printed
+  - document accuracy 55.7 % → 77.2 %
+  - ablations: reasoning effort medium 73.4 % at +64 % cost; images only 62.0 %
+- **Held-out test (127 documents, once): 71.7 %** (95 % CI 63.3–78.8 %), $0.0054 per document. Set as the baseline.
+- **Demo regression PR #10** ("German notation only" amount parsing): the eval gate failed in CI (document
+  accuracy 3.1 % vs 71.7 %), and the PR was closed unmerged.
+
+**What broke**
+- The trial run scored 0 %: the official test files use placeholders ("[Seller name]"), which the model rightly
+  leaves out. Placeholders now count as empty on both sides (documented convention).
+- Till receipts were answered as "not an invoice", so the pipeline dropped them: a real product bug, found on dev.
+- Most invoices print one total and no "amount due", so the export had no amount due. Now derived by code.
+- The first synthetic build wasn't repeatable (an unseeded English Faker); a test now checks repeatability.
+- FOP: fonts are resolved next to the input file and the cache wanted a writable folder. Solved without changing
+  the official configuration.
+- On the demo PR the eval unit tests failed first, so the gate step didn't run. The gate now always runs, so its
+  numbers are visible.
+
+**Learned**
+- The text layer is worth +15 points at the same cost; more reasoning was worse and dearer.
+- Missing values (null) dominate the remaining errors, and code can't verify a value that wasn't read: the catch
+  rate is only 16.7 %. Missing required details still show up as mandatory-detail hints.

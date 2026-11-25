@@ -2,12 +2,12 @@
 
 **A bilingual (German / English) e-invoice inbox for freelancers and small businesses in Germany.**
 
-> **Status: M2b built (in review).** XRechnung and ZUGFeRD invoices are read exactly and checked by the official
-> KoSIT validator. Plain PDFs and photos are read by AI (Azure OpenAI, EU Data Zone, keyless) and every value is
-> checked by code before a person confirms it. Approved documents are exported for the accountant as a ZIP of the
-> originals plus a CSV. Runs locally (Docker Compose), with CI on every change. Next: measuring extraction accuracy
-> (M3). See [PLAN.md](PLAN.md), [M1](docs/milestones/M1.md), [M2a](docs/milestones/M2a.md) and
-> [M2b](docs/milestones/M2b.md).
+> **Status: M3 built (in review).** XRechnung and ZUGFeRD invoices are read exactly and checked by the official
+> KoSIT validator. Plain PDFs and photos are read by AI (Azure OpenAI, EU Data Zone, keyless), every value is checked
+> by code, and a person confirms it. Approved documents are exported for the accountant. AI reading is measured on
+> 206 labelled documents, and a CI gate blocks changes that make it worse. Next: Azure with Terraform (M4). See
+> [PLAN.md](PLAN.md) and the milestones [M1](docs/milestones/M1.md), [M2a](docs/milestones/M2a.md),
+> [M2b](docs/milestones/M2b.md), [M3](docs/milestones/M3.md).
 
 ## The problem
 
@@ -81,11 +81,19 @@ CI runs all of this on every pull request, plus a Docker Compose smoke test and 
 
 ## Results
 
-No product results yet: extraction accuracy comes with M3, usage with M5. Every number published here links to
-evidence. First live AI run: 4 synthetic documents read correctly at about $0.004 each
-([evidence](docs/milestones/evidence/m2b-live-run-2026-11-24.md); not an accuracy measurement). Test results and
-screenshots per milestone: [M1](docs/milestones/M1.md#test-results-evidence),
-[M2a](docs/milestones/M2a.md#test-results-evidence), [M2b](docs/milestones/M2b.md#test-results-evidence).
+Measured on a labelled set, not on real users yet (usage comes with M5). Every number links to evidence.
+
+| What | Result | Evidence |
+|---|---|---|
+| AI reading, held-out test set (127 documents: official test-file renders, synthetic layouts, photos, scans) | **71.7 %** of documents fully right (95 % CI 63.3–78.8 %); 10 of 13 fields 95–99 %, due date 93.7 %, IBAN 89.0 %, seller VAT ID 83.5 % | [M3 report](eval/reports/test-final.md) |
+| Same set read by Azure Document Intelligence `prebuilt-invoice` | 47.2 % (95 % CI 38.8–55.9 %) | [M3 report](eval/reports/test-final.md) |
+| Cost and speed per document (AI reading) | $0.0054, 2.9 s median | [M3](docs/milestones/M3.md#results-evidence) |
+| Regression gate | a deliberate parsing bug dropped accuracy to 3.1 % and the PR was blocked | [PR #10](https://github.com/LomadaDharmateja/belegfluss/pull/10) |
+
+The set is cleaner than real mail, so treat these numbers as an upper bound until consented pilot invoices exist.
+Test results and screenshots per milestone: [M1](docs/milestones/M1.md#test-results-evidence),
+[M2a](docs/milestones/M2a.md#test-results-evidence), [M2b](docs/milestones/M2b.md#test-results-evidence),
+[M3](docs/milestones/M3.md#results-evidence).
 
 ## Project docs
 

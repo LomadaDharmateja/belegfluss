@@ -72,10 +72,17 @@ def _di_rate(value: Any) -> Decimal | None:
 
 
 def read_di(answer: dict[str, Any]) -> InvoiceModel | None:
-    """Document Intelligence fields mapped onto our model, as plainly as possible."""
+    """Document Intelligence fields mapped onto our model, as plainly as possible.
+
+    Two rules give the baseline the same chance as our reader:
+    - without a printed amount due, the total is due (the rule in `to_invoice_model`);
+    - tax entries without a rate are left out (DI repeats each tax amount once without its rate).
+    """
     payments = [p for p in answer.get("PaymentDetails") or [] if isinstance(p, dict)]
     iban = next((p["IBAN"] for p in payments if p.get("IBAN")), None)
-    taxes = [t for t in answer.get("TaxDetails") or [] if isinstance(t, dict)]
+    taxes = [t for t in answer.get("TaxDetails") or [] if isinstance(t, dict) and t.get("Rate")]
+    gross = _di_amount(answer.get("InvoiceTotal"))
+    due = _di_amount(answer.get("AmountDue"))
     totals = [answer.get(k) for k in ("InvoiceTotal", "AmountDue", "SubTotal")]
     currency = next(
         (v["currency"] for v in totals if isinstance(v, dict) and v.get("currency")), None
@@ -91,8 +98,8 @@ def read_di(answer: dict[str, Any]) -> InvoiceModel | None:
         totals=Totals(
             net=_di_amount(answer.get("SubTotal")),
             vat=_di_amount(answer.get("TotalTax")),
-            gross=_di_amount(answer.get("InvoiceTotal")),
-            due=_di_amount(answer.get("AmountDue")),
+            gross=gross,
+            due=gross if due is None else due,
         ),
         vat_breakdown=[
             VatBreakdown(rate=_di_rate(t.get("Rate")), tax_amount=_di_amount(t.get("Amount")))

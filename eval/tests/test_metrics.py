@@ -120,3 +120,24 @@ def test_placeholders_of_the_official_test_files_count_as_empty() -> None:
     assert not compare(label, model(seller=Party(name="Real GmbH", vat_id="DE123456789")))[
         "seller_name"
     ]
+
+
+def test_document_intelligence_mapping_gets_the_same_rules() -> None:
+    from belegfluss_eval.scoring import read_di
+
+    model = read_di(
+        {
+            "InvoiceId": "RE-1",
+            "InvoiceTotal": {"amount": 119.0, "currency": "EUR"},
+            "AmountDue": None,
+            "TaxDetails": [
+                {"Amount": {"amount": 19.0, "currency": "EUR"}},
+                {"Amount": {"amount": 19.0, "currency": "EUR"}, "Rate": "19,00%"},
+            ],
+        }
+    )
+    assert model is not None
+    assert model.totals.due == Decimal("119.00")
+    assert [(v.rate, v.tax_amount) for v in model.vat_breakdown] == [
+        (Decimal("19.00"), Decimal("19.00"))
+    ]
