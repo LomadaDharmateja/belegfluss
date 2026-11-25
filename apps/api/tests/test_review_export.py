@@ -320,7 +320,7 @@ def test_file_names_are_safe_and_unique() -> None:
     taken: set[str] = set()
     names = []
     for _ in range(2):
-        invoice = Invoice(issue_date=None, seller_name="../../etc/passwd", number="A/B C")
+        invoice = Invoice(issue_date=None, seller_name="../../etc/hosts", number="A/B C")
         document = Document(media_type="application/pdf", id=uuid.uuid4(), blob_name="x")
         names.append(export.file_name(export.ExportItem(document, invoice), taken))
-    assert names == ["etc-passwd_A-B-C.pdf", "etc-passwd_A-B-C-2.pdf"]
+    assert names == ["etc-hosts_A-B-C.pdf", "etc-hosts_A-B-C-2.pdf"]

@@ -1,0 +1,4 @@
+# False positives, one fingerprint each (commit:file:rule:line), with the reason.
+# Test of safe export file names: "../../etc/passwd" is a path-traversal example, not a secret. The test now uses
+# "../../etc/hosts"; this entry only covers the commit that added the old line.
+9b4fc367cab3c8f5003674083a53deaf9f0ba128:apps/api/tests/test_review_export.py:generic-api-key:307
