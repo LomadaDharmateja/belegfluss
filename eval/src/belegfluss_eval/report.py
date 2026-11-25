@@ -5,7 +5,7 @@ from dataclasses import asdict
 from pathlib import Path
 
 from belegfluss_eval import manifest, recording
-from belegfluss_eval.metrics import FIELDS, Scored, Summary, by_group, summarise
+from belegfluss_eval.metrics import FIELDS, Scored, Summary, agreement, by_group, summarise
 from belegfluss_eval.paths import MANIFEST, RECORDINGS, REPORTS
 from belegfluss_eval.scoring import reader_for, score
 
@@ -98,6 +98,20 @@ def write(runs: list[str], name: str) -> Path:
             f"{s.documents}, "
             f"document accuracy {_percent(s.document_accuracy)}.",
         ]
+
+    for run, (_, other) in zip(runs[1:], results[1:], strict=True):
+        if {s.doc_id for s in other} != {s.doc_id for s in main}:
+            continue
+        same = agreement(main, other)
+        changed = same.right_only_in_first + same.right_only_in_second
+        lines += ["", f"## Same documents, run by run (`{runs[0]}` vs `{run}`)", ""]
+        lines += ["| | Documents |", "|---|---:|"]
+        lines += [f"| right in both | {same.right_in_both} |"]
+        lines += [f"| wrong in both | {same.wrong_in_both} |"]
+        lines += [f"| right only in `{runs[0]}` | {len(same.right_only_in_first)} |"]
+        lines += [f"| right only in `{run}` | {len(same.right_only_in_second)} |"]
+        if changed:
+            lines += ["", "Changed result: " + ", ".join(sorted(changed)) + "."]
 
     examples = [(s.doc_id, f, e, g) for s in main for f, (e, g) in s.differences.items()]
     lines += ["", f"## Wrong fields (main run, first 25 of {len(examples)})", ""]

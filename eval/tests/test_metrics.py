@@ -5,7 +5,7 @@ import pytest
 from belegfluss.reading import InvoiceModel
 from belegfluss.reading.model import Party, Totals, VatBreakdown
 
-from belegfluss_eval.metrics import FIELDS, Scored, compare, summarise, wilson
+from belegfluss_eval.metrics import FIELDS, Scored, agreement, compare, summarise, wilson
 
 
 def model(**changes: object) -> InvoiceModel:
@@ -94,6 +94,18 @@ def test_summary_rates() -> None:
     assert summary.false_alarm_rate == 0.5
     assert summary.cost_per_document_usd == pytest.approx(0.004)
     assert summary.seconds_p50 == 3.5
+
+
+def test_two_runs_on_the_same_documents_show_which_changed_result() -> None:
+    # A live model isn't deterministic: the same prompt on the same documents can differ per run.
+    first = [scored(d, bool(ok), False, 1) for d, ok in zip("abcd", [1, 1, 0, 0], strict=True)]
+    second = [scored(d, bool(ok), False, 1) for d, ok in zip("abcd", [1, 0, 1, 0], strict=True)]
+    result = agreement(first, second)
+    assert (result.right_in_both, result.wrong_in_both) == (1, 1)
+    assert result.right_only_in_first == ["b"]
+    assert result.right_only_in_second == ["c"]
+    with pytest.raises(ValueError, match="different documents"):
+        agreement(first, second[:3])
 
 
 def test_no_vat_written_as_zero_or_left_out_is_the_same() -> None:
