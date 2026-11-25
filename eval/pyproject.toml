@@ -4,7 +4,12 @@ version = "0.1.0"
 description = "Belegfluss extraction evaluation: labelled set, metrics, reports and the CI gate (ADR-0018)"
 readme = "README.md"
 requires-python = ">=3.14"
-dependencies = ["belegfluss"]
+dependencies = [
+    "belegfluss",
+    "faker>=40.63.0",
+    "jinja2>=3.1.6",
+    "playwright>=1.65.2",
+]
 
 [tool.uv.sources]
 belegfluss = { path = "../apps/api", editable = true }

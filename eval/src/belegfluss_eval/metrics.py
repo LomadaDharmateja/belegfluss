@@ -30,7 +30,12 @@ FIELDS = (
     "vat_breakdown",
     "line_count",
 )
+# A document counts as correct when everything the accountant export uses is right (header, totals,
+# VAT breakdown). Line count is reported on its own: the AI sees at most 3 pages, so long documents
+# lose lines by design.
+DOCUMENT_FIELDS = tuple(name for name in FIELDS if name != "line_count")
 CENT = Decimal("0.01")
+ZERO = Decimal("0.00")
 _SPACES = re.compile(r"\s+")
 
 
@@ -62,11 +67,13 @@ def field_values(model: InvoiceModel) -> dict[str, object]:
         "buyer_name": _text(model.buyer.name),
         "iban": _id(model.ibans[0]) if model.ibans else None,
         "net": _money(model.totals.net),
-        "vat": _money(model.totals.vat),
+        "vat": _money(model.totals.vat) or ZERO,  # "no VAT" may be written as 0.00 or left out
         "gross": _money(model.totals.gross),
         "due": _money(model.totals.due),
         "vat_breakdown": frozenset(
-            (_money(v.rate), _money(v.tax_amount)) for v in model.vat_breakdown
+            (_money(v.rate), _money(v.tax_amount))
+            for v in model.vat_breakdown
+            if (v.rate or v.tax_amount)  # a 0 % entry only says "no VAT" again
         ),
         "line_count": len(model.lines),
     }
@@ -101,7 +108,7 @@ class Scored:
 
     @property
     def correct(self) -> bool:
-        return all(self.fields.values())
+        return all(self.fields[name] for name in DOCUMENT_FIELDS)
 
 
 @dataclass(frozen=True)

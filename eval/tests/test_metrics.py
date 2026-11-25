@@ -94,3 +94,21 @@ def test_summary_rates() -> None:
     assert summary.false_alarm_rate == 0.5
     assert summary.cost_per_document_usd == pytest.approx(0.004)
     assert summary.seconds_p50 == 3.5
+
+
+def test_no_vat_written_as_zero_or_left_out_is_the_same() -> None:
+    label = model(
+        totals=Totals(net=Decimal("100.00"), vat=None, gross=Decimal("100.00")),
+        vat_breakdown=[],
+    )
+    read = model(
+        totals=Totals(net=Decimal("100.00"), vat=Decimal("0.00"), gross=Decimal("100.00")),
+        vat_breakdown=[VatBreakdown(rate=Decimal(0), tax_amount=Decimal("0.00"))],
+    )
+    assert all(compare(label, read).values())
+
+
+def test_line_count_does_not_decide_document_accuracy() -> None:
+    fields = {name: True for name in FIELDS}
+    fields["line_count"] = False
+    assert Scored("a", "official/original", fields, False, 0.0, 1.0).correct

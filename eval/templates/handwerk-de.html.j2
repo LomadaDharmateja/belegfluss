@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<style>
+  @page { size: A4; margin: 15mm 15mm 20mm 15mm; }
+  body { font-family: "Trebuchet MS", Verdana, sans-serif; font-size: 9.5pt; color: #1b1b1b; }
+  .banner { background: #1f5f8b; color: #fff; padding: 6mm 8mm; display: flex; justify-content: space-between; align-items: center; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .banner .name { font-size: 16pt; font-weight: bold; }
+  .banner .contact { font-size: 8pt; text-align: right; line-height: 1.4; }
+  .row { display: flex; justify-content: space-between; margin-top: 8mm; }
+  .box { border: 0.8pt solid #1f5f8b; padding: 3mm 4mm; line-height: 1.5; min-width: 60mm; }
+  h1 { color: #1f5f8b; font-size: 20pt; margin: 8mm 0 2mm; letter-spacing: 1pt; }
+  table.items { width: 100%; border-collapse: collapse; margin-top: 4mm; }
+  table.items th { background: #e6eff5; text-align: left; padding: 2mm; font-size: 8.5pt; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  table.items td { padding: 1.6mm 2mm; border-bottom: 0.3pt dotted #999; }
+  .num { text-align: right; white-space: nowrap; }
+  .sumbox { margin-left: auto; margin-top: 5mm; width: 85mm; border: 1pt solid #1f5f8b; }
+  .sumbox div { display: flex; justify-content: space-between; padding: 1.4mm 3mm; }
+  .sumbox .total { background: #1f5f8b; color: #fff; font-weight: bold; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .foot { margin-top: 10mm; font-size: 8pt; line-height: 1.5; }
+</style>
+</head>
+<body>
+<div class="banner">
+  <div class="name">{{ doc.seller.name }}</div>
+  <div class="contact">{{ x.seller_street }} · {{ doc.seller.address.post_code }} {{ doc.seller.address.city }}<br>Telefon {{ x.seller_phone }}<br>Meisterbetrieb</div>
+</div>
+
+<div class="row">
+  <div class="box">
+    <strong>Rechnungsempfänger</strong><br>
+    {{ doc.buyer.name }}<br>{{ x.buyer_street }}<br>{{ doc.buyer.address.post_code }} {{ doc.buyer.address.city }}
+  </div>
+  <div class="box">
+    Rechnung Nr.: <strong>{{ doc.number }}</strong><br>
+    Datum: {{ day(doc.issue_date) }}<br>
+    Ausführung der Arbeiten: {{ day(doc.delivery_date) }}<br>
+    {% if doc.due_date %}Fällig am: {{ day(doc.due_date) }}{% endif %}
+  </div>
+</div>
+
+<h1>RECHNUNG</h1>
+<div>Für die ausgeführten Arbeiten erlauben wir uns zu berechnen:</div>
+
+<table class="items">
+  <thead><tr><th>Nr.</th><th>Leistung / Material</th><th class="num">Menge</th><th>Einheit</th><th class="num">E-Preis</th><th class="num">Betrag</th></tr></thead>
+  <tbody>
+  {% for line in doc.lines %}
+    <tr><td>{{ line.id }}</td><td>{{ line.name }}</td><td class="num">{{ qty(line.quantity) }}</td><td>{{ line.unit }}</td><td class="num">{{ amount(line.unit_price) }}</td><td class="num">{{ amount(line.net_amount) }}</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+
+<div class="sumbox">
+  <div><span>Summe netto</span><span>{{ amount(doc.totals.net) }} €</span></div>
+  {% for vat in doc.vat_breakdown %}<div><span>MwSt. {{ qty(vat.rate) }} %</span><span>{{ amount(vat.tax_amount) }} €</span></div>{% endfor %}
+  <div class="{{ '' if doc.totals.paid else 'total' }}"><span>Gesamtbetrag brutto</span><span>{{ amount(doc.totals.gross) }} €</span></div>
+  {% if doc.totals.paid %}
+  <div><span>abzgl. {{ x.notes[0] }}</span><span>-{{ amount(doc.totals.paid) }} €</span></div>
+  <div class="total"><span>Noch zu zahlen</span><span>{{ amount(doc.totals.due) }} €</span></div>
+  {% endif %}
+</div>
+
+<div class="foot">
+  {% if x.terms %}{{ x.terms }}{% else %}Zahlbar ohne Abzug bis {{ day(doc.due_date) }}.{% endif %}<br>
+  Bankverbindung: IBAN {{ doc.ibans[0] }} · USt-IdNr. {{ doc.seller.vat_id }} · St.-Nr. {{ doc.seller.tax_number }}<br>
+  Vielen Dank für Ihren Auftrag!
+</div>
+</body>
+</html>
