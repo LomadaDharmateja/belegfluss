@@ -132,7 +132,8 @@ def _read_with_ai(data: bytes, media_type: str, services: Services, analysis: An
     return analysis
 
 
-def _find_duplicate(session: Session, document: Document, invoice: InvoiceModel) -> str | None:
+def find_duplicate(session: Session, document: Document, invoice: InvoiceModel) -> str | None:
+    """Another document of the organisation with the same invoice number from the same supplier."""
     if not invoice.number or not (invoice.seller.vat_id or invoice.seller.name):
         return None
     same_seller = []
@@ -169,7 +170,7 @@ def _check(session: Session, document: Document, analysis: Analysis) -> None:
         and validation.outcome in (Outcome.ACCEPTED, Outcome.REJECTED),
         validator_terms=frozenset(reported),
         pdf_text=analysis.pdf_text,
-        duplicate_of=_find_duplicate(session, document, analysis.invoice),
+        duplicate_of=find_duplicate(session, document, analysis.invoice),
     )
     checks = check_invoice(analysis.invoice, context)
     if analysis.source is Source.AI:

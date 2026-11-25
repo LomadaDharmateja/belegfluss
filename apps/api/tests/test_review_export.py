@@ -114,6 +114,25 @@ def test_a_correction_runs_the_checks_again(
     assert "BF-TOTAL-GROSS" not in {f["code"] for f in body["findings"]}
 
 
+# Regression (found in the M2b walkthrough): the re-check after a correction ran without the
+# duplicate lookup, so BF-DUPLICATE disappeared and the same invoice could be exported twice.
+def test_a_correction_keeps_the_duplicate_warning(
+    client: TestClient, user: SignedInUser, worker: Worker
+) -> None:
+    first = ai_document(client, worker, user)
+    second = ai_document(client, worker, user)  # same supplier and invoice number
+    body = client.patch(
+        path(user, second, "/invoice"), headers=user.headers, json={"due_date": "2026-12-31"}
+    ).json()
+    duplicates = [f["params"] for f in body["findings"] if f["code"] == "BF-DUPLICATE"]
+    assert duplicates == [{"document_id": str(first)}]
+
+    body = client.patch(
+        path(user, second, "/invoice"), headers=user.headers, json={"number": "RE-UNIQUE-1"}
+    ).json()
+    assert "BF-DUPLICATE" not in {f["code"] for f in body["findings"]}
+
+
 def test_xml_invoices_cannot_be_corrected(
     client: TestClient, user: SignedInUser, worker: Worker
 ) -> None:

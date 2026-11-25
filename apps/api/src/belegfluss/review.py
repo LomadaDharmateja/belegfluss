@@ -20,6 +20,7 @@ from belegfluss.checks import CheckFinding, Context, check_invoice
 from belegfluss.errors import AppError
 from belegfluss.extraction.verify import check_formats
 from belegfluss.models import Document, DocumentStatus, FieldReview, Finding, Invoice
+from belegfluss.pipeline import find_duplicate
 from belegfluss.reading import InvoiceModel, Source
 
 
@@ -145,7 +146,11 @@ def _recheck(session: Session, document: Document, model: InvoiceModel, changed:
             Finding.id.not_in(kept),
         )
     )
-    context = Context(source=Source.UNSTRUCTURED, validator_ran=False)
+    context = Context(
+        source=Source.AI,
+        validator_ran=False,
+        duplicate_of=find_duplicate(session, document, model),
+    )
     new: list[CheckFinding] = check_invoice(model, context) + check_formats(
         model, datetime.now(UTC).date()
     )
