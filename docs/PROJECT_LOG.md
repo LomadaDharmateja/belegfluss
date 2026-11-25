@@ -422,6 +422,10 @@ A dated diary: what was done, why, what was learned, what broke. Newest entry at
 ## 2026-11-25 — M3 review outcome
 
 - Owner accepted ADR-0018 and ADR-0019 and approved PR #11 for merge. M3 is done.
+- Found before the merge: a second live run on the same day with the same prompt got the same folder name as
+  the committed baseline run, so it would have overwritten those recordings, and `eval-live` picked the newest
+  folder by time, which could be the wrong run. Fixed with a regression test: a new run gets a free name
+  (`-2`, ...), writing refuses an existing folder, and the workflow uses the name the run prints.
 - Next: the first `eval-live` run from GitHub (OIDC, from `main`, cap $2), linked in M3.md (claim 11). Then the M4
   plan (Azure with Terraform). Open: Azure cost view (no base fee; M2b claim 13, M3 cost claims), Mermaid rendering
   on GitHub (M3 claim 19), Dependabot PRs #3–#6, unit codes shown as words.

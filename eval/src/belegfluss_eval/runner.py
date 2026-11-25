@@ -44,6 +44,7 @@ def run(
     fingerprint = None if extractor == "di" else prompt_fingerprint(deployment, effort, max_pages)
     parts = [date.today().isoformat(), extractor, split, *options.values()]
     run_id = "-".join(parts + ([f"p{fingerprint[:8]}"] if fingerprint else []))
+    run_id = recording.free_run_id(RECORDINGS, run_id)
 
     header = recording.RunHeader(
         run_id=run_id,

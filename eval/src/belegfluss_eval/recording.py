@@ -36,8 +36,17 @@ class Recording(BaseModel):
     seconds: float = 0.0
 
 
+def free_run_id(base: Path, run_id: str) -> str:
+    """`run_id`, or with -2, -3, ... if an earlier run (such as a committed one) has that name."""
+    candidate, number = run_id, 1
+    while (base / candidate).exists():
+        number += 1
+        candidate = f"{run_id}-{number}"
+    return candidate
+
+
 def write(folder: Path, header: RunHeader, recordings: list[Recording]) -> None:
-    folder.mkdir(parents=True, exist_ok=True)
+    folder.mkdir(parents=True, exist_ok=False)  # never overwrite a recorded run
     (folder / "header.json").write_text(
         header.model_dump_json(indent=1) + "\n", encoding="utf-8", newline="\n"
     )

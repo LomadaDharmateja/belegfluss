@@ -56,21 +56,27 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: uv run python -m belegfluss_eval fetch
       - name: Live run (stops at the cost cap)
+        id: live
+        shell: bash # -o pipefail: a failed run fails the step despite tee
         env:
           BELEGFLUSS_OPENAI_ENDPOINT: ${{ vars.BELEGFLUSS_OPENAI_ENDPOINT }}
           BELEGFLUSS_DI_ENDPOINT: ${{ vars.BELEGFLUSS_DI_ENDPOINT }}
           SPLIT: ${{ inputs.split }}
           EXTRACTOR: ${{ inputs.extractor }}
           MAX_USD: ${{ inputs.max_usd }}
-        run: uv run python -m belegfluss_eval run --split "$SPLIT" --extractor "$EXTRACTOR" --max-usd "$MAX_USD"
-      - name: Report
+          PYTHONUNBUFFERED: "1" # progress shows while it runs
         run: |
-          run_id=$(ls -td recordings/*/ | head -1 | xargs basename)
-          uv run python -m belegfluss_eval report "ci-${GITHUB_RUN_ID}" "$run_id"
+          uv run python -m belegfluss_eval run --split "$SPLIT" --extractor "$EXTRACTOR" --max-usd "$MAX_USD" | tee run.log
+          echo "run_id=$(sed -n 's/^recorded: //p' run.log)" >> "$GITHUB_OUTPUT"
+      - name: Report
+        env:
+          RUN_ID: ${{ steps.live.outputs.run_id }}
+        run: |
+          uv run python -m belegfluss_eval report "ci-${GITHUB_RUN_ID}" "$RUN_ID"
           cat "reports/ci-${GITHUB_RUN_ID}.md" >> "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: eval-${{ github.run_id }}
           path: |
-            eval/recordings/
+            eval/recordings/${{ steps.live.outputs.run_id }}/
             eval/reports/ci-*
