@@ -1,6 +1,6 @@
 # M2b — AI reading, review, approval and export
 
-> Date: 2026-11-25 · Branch: `m2b-ai-review-export` · PR: see PLAN.md
+> Date: 2026-11-25 · Branch: `m2b-ai-review-export` · [PR #9](https://github.com/LomadaDharmateja/belegfluss/pull/9)
 > M2 was split into two PRs: **M2a** reads and checks structured e-invoices; **M2b** (this one) reads plain PDFs and
 > photos with AI, lets a person check and approve, and exports for the accountant. First paid cloud service.
 
