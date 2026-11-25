@@ -18,6 +18,40 @@ at 100 % of forecast cost. Checked in the portal on 2026-11-24. Azure for Studen
 regions, and Cost Management lists it as unsupported (reasons in
 [docs/setup/entra-external-id.md](setup/entra-external-id.md)).
 
+## Whole-project budget: careful path (agreed 2026-11-25)
+
+- **Target: about €12–15 for the whole project**, including ≈ €3.20 already spent on AI calls in M2b/M3.
+- The €10 budget is a **monthly alert**, not a limit: the pay-as-you-go subscription has no spending limit.
+- **Choices that keep it there:**
+  - M4: free-tier database and registry; everything scales to zero.
+  - M5: no custom domain unless it is needed.
+  - M6: n8n runs on a schedule, not always on.
+  - M7: fine-tuning on free GPUs (Kaggle/Colab).
+  - M8: AKS for about one day, then deleted.
+  - M9: load test from GitHub.
+
+## Estimate for M4a (shared 2026-11-25, before anything is created)
+
+List prices, Germany West Central, from the Azure Retail Prices API (2026-11-25). Free amounts from the official
+free-services and purchase-options pages.
+
+| Resource | List price | Months 1–12 | After 12 months |
+|---|---|---|---|
+| PostgreSQL Flexible Server B1ms + 32 GB, **one** server for dev and prod | $0.0199/h + $0.137/GB-month ≈ $19/month | €0: 750 h/month B1MS, 32 GB storage, 32 GB backup free for new pay-as-you-go customers | ≈ $19/month |
+| Container Registry **Standard** (one) | $0.6666/day ≈ $20/month | €0: one Standard registry free | switch to Basic ($0.1666/day ≈ $5) or GHCR (free once the repository is public) |
+| Container Apps, consumption, every app at 0 replicas | vCPU $0.000024/s active, $0.000003/s idle; memory $0.000003/GiB-s | €0: free grant 180,000 vCPU-s, 360,000 GiB-s, 2M requests per month | €0 |
+| Storage (blob + queues, LRS hot), KEDA queue polling | $0.0196/GB-month; queue operations $0.004 per 10K | < €0.50 | < €0.50 |
+| Log Analytics, one workspace per environment, daily cap 0.08 GB | $2.99/GB after the free amount | €0 if within the free monthly amount (to confirm on the bill) | €0 |
+| Azure OpenAI (dev account from M2b) | pay per token | ≈ $0.005 per document read | same |
+| **Total** | | **≈ €0.50–2 a month** | **re-plan before the free year ends (≈ November 2027)** |
+
+**Risks checked on the first bill:**
+- The free tier must show the database and the registry at €0. If not, the fallback is to stop the server when
+  not demoing (≈ €5 a month).
+- Container Apps has a new meter, `Environment Management Hour` ($0.10/h, effective 2026-11-01). The billing docs say
+  it applies to dedicated workload profiles, private endpoints and planned maintenance, none of which M4 uses.
+  This is confirmed on the bill the day after creation.
+
 ## M3 measured (2026-11-25)
 
 - **Created (free):**
