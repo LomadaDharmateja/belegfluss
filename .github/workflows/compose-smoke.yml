@@ -4,8 +4,7 @@ name: compose-smoke
 on:
   pull_request:
     paths: ["apps/**", "services/**", "compose.yaml", ".dockerignore", "pnpm-lock.yaml", ".github/workflows/compose-smoke.yml"]
-  push:
-    branches: [main]
+  workflow_call: # on main: run by deploy.yml before anything is deployed
 
 permissions:
   contents: read
@@ -26,8 +25,10 @@ jobs:
         run: |
           curl --fail --silent -H "Accept-Language: de-DE" http://127.0.0.1:3000/ | grep -q 'lang="de"'
           curl --fail --silent -H "Accept-Language: en-GB" http://127.0.0.1:3000/ | grep -q 'lang="en"'
-      - name: Migrations ran
-        run: docker compose exec -T postgres psql -U belegfluss -d belegfluss -tAc "select count(*) from invoices"
+      - name: Migrations ran as their own step
+        run: |
+          test "$(docker compose ps --all --format '{{.State}} {{.ExitCode}}' migrate)" = "exited 0"
+          docker compose exec -T postgres psql -U belegfluss -d belegfluss -tAc "select count(*) from invoices"
       - name: Worker runs, validator is internal only
         run: |
           test "$(docker compose ps --format '{{.State}}' worker)" = "running"

@@ -37,6 +37,15 @@ services:
     # reachable only inside this network, by the worker.
     build: { context: services/validator }
 
+  migrate:
+    # One-shot: brings the database schema up to date, then exits. The API and worker wait for it.
+    build: { context: apps/api }
+    command: ["alembic", "upgrade", "head"]
+    environment: *backend-env
+    healthcheck: { disable: true }
+    depends_on:
+      postgres: { condition: service_healthy }
+
   api:
     build: { context: apps/api }
     environment:
@@ -47,7 +56,7 @@ services:
       BELEGFLUSS_CORS_ORIGINS: '["http://localhost:3000"]'
     ports: ["127.0.0.1:8000:8000"]
     depends_on:
-      postgres: { condition: service_healthy }
+      migrate: { condition: service_completed_successfully }
       azurite: { condition: service_started }
 
   worker:
@@ -59,7 +68,8 @@ services:
       BELEGFLUSS_VALIDATOR_URL: http://validator:8080
     healthcheck: { disable: true } # the image's check targets the API's HTTP port
     depends_on:
-      api: { condition: service_healthy } # the API applies the migrations
+      migrate: { condition: service_completed_successfully }
+      azurite: { condition: service_started }
       validator: { condition: service_healthy }
 
   web:

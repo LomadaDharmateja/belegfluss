@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 # Belegfluss web app: Next.js standalone server. Build context: repository root (pnpm workspace).
 
-FROM node:24-alpine AS base
+FROM node:24-alpine@sha256:116b800c3754b440ee0aa3ed2f20f5bf3d99a554bfd9adeea09ea8017f6e85f5 AS base
 ENV NEXT_TELEMETRY_DISABLED=1 COREPACK_ENABLE_DOWNLOAD_PROMPT=0
 RUN corepack enable
 WORKDIR /repo
@@ -15,7 +15,7 @@ FROM deps AS build
 COPY apps/web apps/web
 RUN pnpm --filter @belegfluss/web build
 
-FROM node:24-alpine AS runtime
+FROM node:24-alpine@sha256:116b800c3754b440ee0aa3ed2f20f5bf3d99a554bfd9adeea09ea8017f6e85f5 AS runtime
 ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1 PORT=3000 HOSTNAME=0.0.0.0
 RUN addgroup -S app && adduser -S app -G app
 WORKDIR /app
