@@ -429,3 +429,32 @@ A dated diary: what was done, why, what was learned, what broke. Newest entry at
 - Next: the first `eval-live` run from GitHub (OIDC, from `main`, cap $2), linked in M3.md (claim 11). Then the M4
   plan (Azure with Terraform). Open: Azure cost view (no base fee; M2b claim 13, M3 cost claims), Mermaid rendering
   on GitHub (M3 claim 19), Dependabot PRs #3–#6, unit codes shown as words.
+
+## 2026-11-25 — First live evaluation from GitHub (after the M3 merge)
+
+**Done**
+- PR #11 merged. First `eval-live` run (run 45561359881) **failed at the Azure sign-in**: `AADSTS700213`, no
+  matching federated identity record. No AI call, nothing spent.
+- **Cause:** GitHub's immutable OIDC subject claims. Repositories created after 2026-07-15 present
+  `repo:OWNER@OWNER-ID/REPO@REPO-ID:environment:eval`; this one was created on 2026-11-23. The credential trusted
+  the name-only subject, which can never match. Checked against the GitHub changelog (2026-04-23) and Microsoft's
+  migration guide; the presented subject is printed by `azure/login`.
+- **Fix (after the owner's yes):** `az identity federated-credential update` on `github-eval` with the immutable
+  subject, same issuer and audience; read back (one credential). `dev-eval.ps1` now builds the subject from the
+  GitHub IDs and reads it back. ADR-0019 has a dated update; the decision stands.
+- **Second run (45564923717): green.** OIDC login, dataset checksums ok, 127/127 documents, **$0.690**, recorded as
+  `…-p97843178-2` (the run-name fix worked). **74.8 %** (95 % CI 66.6–81.5 %) vs the baseline run's 71.7 %.
+- New: multi-run reports show which documents changed result (`metrics.agreement`, with a test).
+  `eval/reports/test-repeat.md`: 87 right in both, 28 wrong in both, **12 of 127 changed**.
+- M3 AI spend now about **$3.41** (limit €8).
+
+**Learned**
+- Read the claim the token actually presents (it is in the log) before trusting a tutorial's subject format.
+- The same model, prompt and documents move by about 3 points between runs. Gate on replays; judge live runs by
+  their interval.
+- `azure/login` echoes the client, tenant and subscription IDs in the log. Fine while private; decide before the
+  repository goes public (M4).
+
+**Next**
+- Owner: review PR #12 (OIDC subject fix, ADR-0019 update, repeat-run evidence) and say "accepted".
+- Then the M4 plan. Open: Azure cost view, Mermaid rendering (M3 claim 19), Dependabot PRs #3–#6.
