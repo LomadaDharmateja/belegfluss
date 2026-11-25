@@ -87,17 +87,29 @@ resource "azurerm_storage_account" "main" {
   blob_properties {
     delete_retention_policy { days = 7 }
   }
+
+  lifecycle {
+    prevent_destroy = true # holds data: deleting it needs a deliberate code change
+  }
 }
 
 resource "azurerm_storage_container" "documents" {
   name               = "documents"
   storage_account_id = azurerm_storage_account.main.id
+
+  lifecycle {
+    prevent_destroy = true # holds data: deleting it needs a deliberate code change
+  }
 }
 
 resource "azurerm_storage_queue" "documents" {
   for_each           = toset(["documents", "documents-poison"])
   name               = each.key
   storage_account_id = azurerm_storage_account.main.id
+
+  lifecycle {
+    prevent_destroy = true # holds data: deleting it needs a deliberate code change
+  }
 }
 
 resource "azurerm_role_assignment" "app_blob" {

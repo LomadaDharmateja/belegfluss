@@ -79,12 +79,20 @@ resource "azurerm_storage_account" "tfstate" {
     delete_retention_policy { days = 30 }
     container_delete_retention_policy { days = 30 }
   }
+
+  lifecycle {
+    prevent_destroy = true # holds data: deleting it needs a deliberate code change
+  }
 }
 
 resource "azurerm_storage_container" "tfstate" {
   for_each           = toset(local.state_containers)
   name               = "tfstate-${each.key}"
   storage_account_id = azurerm_storage_account.tfstate.id
+
+  lifecycle {
+    prevent_destroy = true # holds data: deleting it needs a deliberate code change
+  }
 }
 
 resource "azurerm_role_assignment" "owner_state" {

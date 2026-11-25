@@ -85,6 +85,10 @@ resource "azurerm_postgresql_flexible_server" "main" {
     password_auth_enabled         = false
     tenant_id                     = data.azurerm_client_config.owner.tenant_id
   }
+
+  lifecycle {
+    prevent_destroy = true # holds data: deleting it needs a deliberate code change
+  }
 }
 
 resource "azurerm_postgresql_flexible_server_active_directory_administrator" "owner" {
