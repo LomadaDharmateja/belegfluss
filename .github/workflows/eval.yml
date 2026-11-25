@@ -5,9 +5,7 @@ name: eval
 on:
   pull_request:
     paths: ["apps/api/**", "eval/**", ".github/workflows/eval.yml"]
-  push:
-    branches: [main]
-    paths: ["apps/api/**", "eval/**", ".github/workflows/eval.yml"]
+  workflow_call: # on main: run by deploy.yml before anything is deployed
 
 permissions:
   contents: read
