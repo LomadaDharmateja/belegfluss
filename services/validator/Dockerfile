@@ -19,7 +19,7 @@ ADD --checksum=sha256:2530cd107c414511c5d0462ec10f886910395abfca820db82e83d70bf0
 RUN mkdir /fetch/config && unzip -q /fetch/config.zip -d /fetch/config && rm /fetch/config.zip \
     && chmod 0644 /fetch/validator.jar && chmod -R a+rX /fetch/config
 
-FROM eclipse-temurin:21-jre@sha256:d77e090ae1f6970c047b443c6f0a6c1358b0426d44432bb5a7753408cd43de0d
+FROM eclipse-temurin:25-jre@sha256:4ed132f6832e9804b123e89a849a7b4502756ae64a4ee08ebab939d9d5d0a9fa
 ARG VALIDATOR_VERSION
 ARG CONFIG_VERSION
 LABEL org.opencontainers.image.title="belegfluss-validator" \
