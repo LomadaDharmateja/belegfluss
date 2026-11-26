@@ -62,10 +62,12 @@ jobs:
           tar -xzf trivy.tar.gz trivy
       - name: Scan (fails on HIGH/CRITICAL with a fix available) and write SBOMs
         run: |
+          status=0 # scan all three, then fail: one run shows every finding
           for name in api web validator; do
-            ./trivy image --exit-code 1 --severity HIGH,CRITICAL --ignore-unfixed --no-progress "$REGISTRY/belegfluss-$name:$TAG"
+            ./trivy image --exit-code 1 --severity HIGH,CRITICAL --ignore-unfixed --no-progress "$REGISTRY/belegfluss-$name:$TAG" || status=1
             ./trivy image --format cyclonedx --output "sbom-$name.cdx.json" --no-progress "$REGISTRY/belegfluss-$name:$TAG"
           done
+          exit $status
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: sbom-${{ github.sha }}

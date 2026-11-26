@@ -157,7 +157,8 @@ of gpt-5-mini ([ADR-0016](docs/decisions/0016-ai-extraction-azure-openai-verifie
     - Azure OpenAI deployment
     - Managed Identities + role assignments
     - **budget alert**
-  - Environments `dev` and `prod` (Germany West Central, availability confirmed).
+  - Environments `dev` and `prod`. Region as built: North Europe for apps and data (ADR-0021: Germany West
+    Central refused PostgreSQL for this subscription); AI and identities stay in Germany West Central.
   - GitHub Actions with OIDC federation (no cloud secrets in GitHub): test → build → scan → push → deploy dev → smoke
     test → manual approval → prod.
   - Custom domain + managed TLS certificate. The free managed certificate needs the app reachable during issuance

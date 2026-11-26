@@ -12,7 +12,11 @@ COPY src ./src
 RUN uv sync --locked --no-dev --no-editable
 
 FROM python:3.14-slim@sha256:22eafb370920ad8b429e0aec3fff433e0669968519f5d60469d83729c138b28b AS runtime
-RUN useradd --system --uid 10001 --no-create-home app
+# Security updates of the base image's OS packages, and no package manager in the running image: pip
+# isn't used at runtime, and the copies of libraries it bundles are what image scanners flag (M4a).
+RUN apt-get update && apt-get upgrade --yes --no-install-recommends && rm -rf /var/lib/apt/lists/* \
+    && python -m pip uninstall --yes --quiet pip && rm -rf /usr/local/lib/python3.14/ensurepip \
+    && useradd --system --uid 10001 --no-create-home app
 WORKDIR /app
 COPY --from=build /app/.venv /app/.venv
 COPY alembic.ini ./

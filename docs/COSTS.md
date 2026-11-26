@@ -32,6 +32,16 @@ regions, and Cost Management lists it as unsupported (reasons in
 
 ## Estimate for M4a (shared 2026-11-25, before anything is created)
 
+> **Changed 2026-11-26, during creation:** the database, registry and apps run in **North Europe** (ADR-0021). Germany
+> West Central refused PostgreSQL for this subscription, West Europe refused new customers, and Sweden Central had no
+> B1ms capacity. North Europe list prices are slightly lower:
+> - PostgreSQL B1ms $0.018/h, storage $0.1265/GB-month (≈ $17/month)
+> - Standard registry $0.6666/day
+> - Container Apps rates are the same
+> - Log Analytics: first 5 GB a month free, then $2.76/GB
+>
+> The free amounts don't depend on the region. The estimate below is unchanged.
+
 List prices, Germany West Central, from the Azure Retail Prices API (2026-11-25). Free amounts from the official
 free-services and purchase-options pages.
 

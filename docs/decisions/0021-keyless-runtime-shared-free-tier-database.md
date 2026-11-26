@@ -51,6 +51,23 @@
   - The first secret-like value is the Application Insights connection string, which comes with telemetry in M5.
 - **Database network:** public access limited to "Azure services", with Entra tokens and TLS. Private networking is
   M9 hardening.
+- **Region: North Europe (Ireland)** for the apps, the document storage, the registry and the database, so they run
+  in one region.
+  - Identities, the M2b/M3 AI resources and the Terraform state stay in Germany West Central.
+  - Azure OpenAI keeps EU Data Zone processing (ADR-0016).
+  - Data stays in the EU, but not in Germany.
+  - **How the region was found** (2026-11-26, for this new tenant):
+
+    | Region | Result |
+    |---|---|
+    | Germany West Central | refused PostgreSQL ("Provisioning is restricted in this region") |
+    | West Europe | refused every new resource ("not accepting new customers"; Microsoft keeps it for tenants that already use it) |
+    | Sweden Central | accepted the subscription, but twice had no B1ms capacity ("RegionalAllocationFailed") |
+    | North Europe | worked |
+
+  - Azure's pre-flight validation passed in all these regions, so only real creation tells.
+  - A failed attempt costs nothing, but Azure keeps the name reserved in that region, so the server name includes
+    its region.
 
 **Found while building it (worker, with regression tests):**
 - The worker took 4 messages at once with 300 s visibility, but one document can take up to 390 s (3 AI attempts
@@ -64,6 +81,8 @@
   money: a dated reminder in COSTS.md and PLAN.md.
 - **First request after idle waits for a cold start.** Measured in M4a.md; the README says so.
 - **The shared server is one failure domain for dev and prod.** Acceptable before real users; revisit at M5.
+- **About 20–25 ms between Germany and Ireland.** It doesn't matter for a demo; the database and apps are in the
+  same region, so queries stay local.
 - **The validator's internal ingress is reachable inside the environment,** not only by the worker. Per-app network
   rules come with Kubernetes in M8 (ADR-0007).
 
@@ -77,4 +96,6 @@
 - Entra authentication for PostgreSQL flexible server:
   https://learn.microsoft.com/en-us/azure/postgresql/security/security-entra-configure
 - Scale rules with managed identity: https://learn.microsoft.com/en-us/azure/container-apps/scale-app
-- Prices: Azure Retail Prices API, Germany West Central, 2026-11-25 (docs/COSTS.md)
+- Location ineligible errors (West Europe for new tenants):
+  https://learn.microsoft.com/en-us/azure/azure-resource-manager/troubleshooting/error-region-access-policy
+- Prices: Azure Retail Prices API, 2026-11-25/26 (docs/COSTS.md)

@@ -27,7 +27,9 @@ LABEL org.opencontainers.image.title="belegfluss-validator" \
 
 COPY --from=fetch /fetch/validator.jar /opt/validator/validator.jar
 COPY --from=fetch /fetch/config /opt/validator/config
-RUN useradd --system --uid 10002 --home-dir /nonexistent --shell /usr/sbin/nologin validator
+# Security updates of the base image's OS packages (image scan, M4a).
+RUN apt-get update && apt-get upgrade --yes --no-install-recommends && rm -rf /var/lib/apt/lists/* \
+    && useradd --system --uid 10002 --home-dir /nonexistent --shell /usr/sbin/nologin validator
 USER validator
 
 # Heap is capped: without it the JVM took ~1.9 GB in a container (M0). Size measured in M2a.

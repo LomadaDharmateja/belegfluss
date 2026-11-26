@@ -1,7 +1,8 @@
 # ADR-0007: Azure Container Apps first (M4), AKS later (M8, time-boxed)
 
-- **Status:** Accepted (2026-11-23). One point superseded by [ADR-0021](0021-keyless-runtime-shared-free-tier-database.md)
-  (2026-11-26): prod also scales to zero, for the budget; cold starts are measured.
+- **Status:** Accepted (2026-11-23). Two points superseded by [ADR-0021](0021-keyless-runtime-shared-free-tier-database.md)
+  (2026-11-26): prod also scales to zero, for the budget, and cold starts are measured; and the apps run in North
+  Europe, because Germany West Central refused PostgreSQL servers for this subscription.
 - **Date:** 2026-11-23
 - **Milestone:** M0 (applies to M4 and M8)
 
