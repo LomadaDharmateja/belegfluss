@@ -15,9 +15,12 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-$server = "psql-belegfluss-$NameSuffix"
+# The one server in the shared group (its name ends with its region, see infra/shared/main.tf).
+$server = (az postgres flexible-server list -g $ResourceGroup --query "[?starts_with(name, 'psql-belegfluss-$NameSuffix')].name | [0]" -o tsv)
 $fqdn = (az postgres flexible-server show -g $ResourceGroup -n $server --query fullyQualifiedDomainName -o tsv)
 $admin = (az ad signed-in-user show --query userPrincipalName -o tsv)
+# The admin's database role name: at most 63 characters, like infra/shared/main.tf.
+if ($admin) { $admin = $admin.Substring(0, [Math]::Min(63, $admin.Length)) }
 if (-not $fqdn -or -not $admin) { throw "Server or signed-in user not found. Run 'az login' first." }
 if (-not $ClientIp) {
     # Your address as the internet sees it (needed for the firewall rule). Pass -ClientIp to skip this.
@@ -35,7 +38,7 @@ function Invoke-Sql([string]$Database, [string]$Sql) {
 }
 
 Write-Host "==> Temporary firewall rule $rule for $ClientIp" -ForegroundColor Cyan
-az postgres flexible-server firewall-rule create -g $ResourceGroup -n $server --rule-name $rule `
+az postgres flexible-server firewall-rule create -g $ResourceGroup --server-name $server --name $rule `
     --start-ip-address $ClientIp --end-ip-address $ClientIp --output none
 try {
     foreach ($envName in $Environments) {
@@ -60,5 +63,5 @@ GRANT USAGE, CREATE ON SCHEMA public TO "$role";
 }
 finally {
     Write-Host "==> Removing firewall rule $rule" -ForegroundColor Cyan
-    az postgres flexible-server firewall-rule delete -g $ResourceGroup -n $server --rule-name $rule --yes --output none
+    az postgres flexible-server firewall-rule delete -g $ResourceGroup --server-name $server --name $rule --yes --output none
 }

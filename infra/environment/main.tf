@@ -38,7 +38,7 @@ data "azurerm_container_registry" "main" {
 }
 
 data "azurerm_postgresql_flexible_server" "main" {
-  name                = "psql-belegfluss-${var.name_suffix}"
+  name                = "psql-belegfluss-${var.name_suffix}-${var.location}"
   resource_group_name = "rg-belegfluss-shared"
 }
 

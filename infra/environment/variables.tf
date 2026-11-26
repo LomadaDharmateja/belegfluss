@@ -3,9 +3,9 @@ variable "subscription_id" {
 }
 
 variable "location" {
-  description = "Apps, storage and logs, next to the database (ADR-0021: Sweden Central)."
+  description = "Apps, storage and logs, next to the database (ADR-0021: North Europe)."
   type        = string
-  default     = "swedencentral"
+  default     = "northeurope"
 }
 
 variable "environment" {

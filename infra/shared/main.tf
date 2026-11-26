@@ -5,10 +5,10 @@
 # Standard registry (docs/COSTS.md). dev and prod therefore share the server, each with its own
 # database and identity.
 #
-# Region: apps and data run in Sweden Central (var.app_location), see ADR-0021. For this new tenant
-# Germany West Central refuses PostgreSQL ("Provisioning is restricted in this region") and West
-# Europe refuses everything ("not accepting new customers"), both 2026-11-26. Identities, the AI
-# resources and the Terraform state stay in Germany West Central.
+# Region: apps and data run in North Europe (var.app_location), see ADR-0021. On 2026-11-26, for this
+# new tenant, Germany West Central refused PostgreSQL ("Provisioning is restricted in this region"),
+# West Europe refused new customers, and Sweden Central had no B1ms capacity twice
+# ("RegionalAllocationFailed"). Identities, AI resources and state stay in Germany West Central.
 
 terraform {
   required_version = "~> 1.17.0"
@@ -73,7 +73,8 @@ resource "azurerm_container_registry" "main" {
 # --- PostgreSQL: Entra ID sign-in only, no password exists ---
 
 resource "azurerm_postgresql_flexible_server" "main" {
-  name                          = "psql-belegfluss-${var.name_suffix}"
+  # The region is part of the name: Azure keeps a name reserved in the region of a failed creation.
+  name                          = "psql-belegfluss-${var.name_suffix}-${var.app_location}"
   resource_group_name           = data.azurerm_resource_group.shared.name
   location                      = var.app_location
   version                       = "18"
@@ -82,7 +83,6 @@ resource "azurerm_postgresql_flexible_server" "main" {
   backup_retention_days         = 7
   geo_redundant_backup_enabled  = false
   public_network_access_enabled = true # limited by the firewall rule below; private network in M9
-  zone                          = "1"
   tags                          = local.tags
 
   authentication {
@@ -91,8 +91,11 @@ resource "azurerm_postgresql_flexible_server" "main" {
     tenant_id                     = data.azurerm_client_config.owner.tenant_id
   }
 
+  # No zone pinned: Azure places the server where B1ms capacity is free (a pinned zone 1 got
+  # RegionalAllocationFailed, 2026-11-26). Burstable has no zone-redundant option anyway.
   lifecycle {
     prevent_destroy = true # holds data: deleting it needs a deliberate code change
+    ignore_changes  = [zone]
   }
 }
 
@@ -101,8 +104,10 @@ resource "azurerm_postgresql_flexible_server_active_directory_administrator" "ow
   resource_group_name = data.azurerm_resource_group.shared.name
   tenant_id           = data.azurerm_client_config.owner.tenant_id
   object_id           = data.azurerm_client_config.owner.object_id
-  principal_name      = var.owner_principal_name
-  principal_type      = "User"
+  # The admin's database role is named after it; PostgreSQL names have at most 63 characters, and
+  # Azure shortens longer ones (guest sign-in names often are), so the same is done here.
+  principal_name = substr(var.owner_principal_name, 0, 63)
+  principal_type = "User"
 }
 
 # 0.0.0.0 means "Azure services": Container Apps have no fixed outbound address on the consumption

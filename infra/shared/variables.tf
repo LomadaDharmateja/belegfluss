@@ -11,7 +11,7 @@ variable "location" {
 variable "app_location" {
   description = "Registry and database: next to the apps (ADR-0021)."
   type        = string
-  default     = "swedencentral"
+  default     = "northeurope"
 }
 
 variable "name_suffix" {
