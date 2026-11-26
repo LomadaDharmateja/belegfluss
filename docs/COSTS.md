@@ -30,6 +30,21 @@ regions, and Cost Management lists it as unsupported (reasons in
   - M8: AKS for about one day, then deleted.
   - M9: load test from GitHub.
 
+## M4a measured (2026-11-26)
+
+- **Created after the owner's yes:**
+  - bootstrap: resource groups, state storage, deploy identity
+  - shared: registry Standard and PostgreSQL B1ms, both under the 12-month free offer; app identity
+  - dev: Container Apps environment, 4 apps, 2 jobs, storage, Log Analytics
+- **Failed creation attempts** in three regions (see ADR-0021) left nothing behind: checked with `az resource
+  list`.
+- **AI calls in M4a:** one synthetic PDF in the dev walkthrough, about $0.005.
+- **Not yet confirmed:** the Azure cost view lags 1–2 days. To check then:
+  - the database and registry show as free
+  - no `Environment Management Hour` charge
+  - storage and logs a few cents
+  - measured total for the month
+
 ## Estimate for M4a (shared 2026-11-25, before anything is created)
 
 > **Changed 2026-11-26, during creation:** the database, registry and apps run in **North Europe** (ADR-0021). Germany
@@ -107,7 +122,7 @@ free-services and purchase-options pages.
   CI makes no paid calls. The real token usage of the first calls is measured and replaces this assumption.
 - **To verify when creating:** that the pay-per-token deployment has no monthly base fee.
 
-## Notes for M4 (to estimate before deploying)
+## Notes for M4 (written in M0; superseded by the M4a estimate above)
 
 Prices did not render on the Azure pricing pages during M0, so all of these are **open**:
 - Container Apps: consumption plan; monthly free grant of 180,000 vCPU-s, 360,000 GiB-s and 2M requests

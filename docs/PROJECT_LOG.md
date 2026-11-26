@@ -458,3 +458,68 @@ A dated diary: what was done, why, what was learned, what broke. Newest entry at
 **Next**
 - Owner approved PR #12 (OIDC subject fix, ADR-0019 update, repeat-run evidence) for merge.
 - Then the M4 plan. Open: Azure cost view, Mermaid rendering (M3 claim 19), Dependabot PRs #3–#6.
+
+## 2026-11-26 — M4a: Azure foundation with Terraform, dev environment, release pipeline
+
+**Decided with the owner (2026-11-25)**
+- **Budget:** careful path, about €12–15 for the whole project. The €10 is a monthly alert, not a cap.
+- **Split:** M4a (dev) and M4b (prod, approval, going public).
+- **No custom domain** before M5.
+- **Free tiers:** one free-tier PostgreSQL B1MS and one Standard registry (12 months for new pay-as-you-go
+  customers), shared by dev and prod; everything scales to zero.
+
+**Built**
+- **App, test first:**
+  - Storage via Managed Identity.
+  - Database sign-in with an Entra token as password (tested against real PostgreSQL with a password-free URL).
+  - Migrations as their own step (Compose `migrate` service, Azure job).
+  - One-shot `python -m belegfluss.sweep`.
+- **Worker fixes for scale-out:**
+  - It took 4 messages × 300 s visibility while one document can take 390 s, so a second replica could read a
+    document twice.
+  - Now: 1 message, 900 s visibility, and retry after 30 s on a transient error.
+- **Terraform:**
+  - `infra/bootstrap`, `infra/shared` (owner) and `infra/environment` (pipeline).
+  - Imports of the M1 budget and the M2b/M3 AI resources.
+  - ABAC-limited role grants for the pipeline.
+  - `prevent_destroy` on everything with data.
+- **CI:**
+  - `infra.yml`: fmt, validate, tflint, Trivy config.
+  - `deploy.yml`: tests as reusable workflows → build once → Trivy + SBOM → push → apply → migrate → deploy →
+    smoke test.
+- **Applied after the owner's yes:**
+  - bootstrap (17 resources) and shared (11 imports, registry, database, identities, grants)
+  - database roles
+  - GitHub environment `dev`
+  - SPA redirect URI (the owner, in the portal)
+
+**What broke**
+- **PostgreSQL region:**
+  - Germany West Central refused it ("Provisioning is restricted in this region").
+  - West Europe refused new customers.
+  - Sweden Central had no B1ms capacity, twice.
+  - **North Europe worked:** apps and data now run there (ADR-0021).
+  - Azure's pre-flight validation passed everywhere, so it couldn't predict any of this.
+  - A failed creation keeps the name reserved in its region, so the region is now part of the server name.
+- **Admin role name:** Azure cuts the Entra admin's role name to PostgreSQL's 63 characters, which caused a
+  perpetual replacement until Terraform did the same.
+- **First release run:** Trivy blocked it.
+  - `libzstd1` needed a Debian security update.
+  - Five HIGH findings were in libraries bundled inside the base image's pip.
+  - Now OS updates are applied at build time and pip, npm, corepack and yarn are removed from the runtime images.
+- **Migrate polling:** used the wrong CLI argument names. The migration itself had already succeeded.
+- **Drift after deploy:**
+  - Azure adds a Consumption workload profile, now declared.
+  - azurerm 5.15 reads the identity-based queue rule back without its identity, so the rule is set at creation and
+    ignored afterwards; Azure shows it with the identity and no secret.
+  - Now `terraform plan` shows no changes after a deploy.
+- **tflint** found missing `prevent_destroy` on the state storage.
+- **Trivy config** flagged storage without network rules: accepted inline with the reason until private
+  networking (M9).
+
+**Learned**
+- Offered is not the same as available. For a new tenant the only reliable test is a real creation, and a failed
+  attempt is free.
+- A drift check right after apply (`plan -detailed-exitcode`) finds the provider and platform quirks that
+  `validate` can't.
+- Image scanning findings often come from tools the app doesn't need at runtime.
