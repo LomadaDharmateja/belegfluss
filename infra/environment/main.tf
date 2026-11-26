@@ -66,8 +66,16 @@ resource "azurerm_container_app_environment" "main" {
   log_analytics_workspace_id = azurerm_log_analytics_workspace.main.id
   logs_destination           = "log-analytics"
   tags                       = local.tags
-  # Consumption only: no workload profiles, no private endpoint, no planned maintenance window,
-  # so no environment management fee (docs/COSTS.md, checked on the bill).
+
+  # Azure gives every new environment this built-in profile: pay per use, scale to zero. No dedicated
+  # profile, private endpoint or planned maintenance, so no management fee (COSTS.md, checked on
+  # the bill). Declared here so `terraform plan` doesn't try to remove it.
+  workload_profile {
+    name                  = "Consumption"
+    workload_profile_type = "Consumption"
+    minimum_count         = 0
+    maximum_count         = 0
+  }
 }
 
 # --- Storage for originals (blob) and processing jobs (queue): no account keys ---

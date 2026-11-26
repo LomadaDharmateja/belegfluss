@@ -28,6 +28,7 @@ resource "azurerm_container_app" "api" {
   resource_group_name          = data.azurerm_resource_group.environment.name
   revision_mode                = "Single"
   max_inactive_revisions       = 3
+  workload_profile_name        = "Consumption"
   tags                         = local.tags
 
   identity {
@@ -98,6 +99,7 @@ resource "azurerm_container_app" "web" {
   resource_group_name          = data.azurerm_resource_group.environment.name
   revision_mode                = "Single"
   max_inactive_revisions       = 3
+  workload_profile_name        = "Consumption"
   tags                         = local.tags
 
   identity {
@@ -159,6 +161,7 @@ resource "azurerm_container_app" "validator" {
   resource_group_name          = data.azurerm_resource_group.environment.name
   revision_mode                = "Single"
   max_inactive_revisions       = 3
+  workload_profile_name        = "Consumption"
   tags                         = local.tags
 
   identity {
@@ -214,6 +217,7 @@ resource "azurerm_container_app" "worker" {
   resource_group_name          = data.azurerm_resource_group.environment.name
   revision_mode                = "Single"
   max_inactive_revisions       = 3
+  workload_profile_name        = "Consumption"
   tags                         = local.tags
 
   identity {
@@ -262,7 +266,15 @@ resource "azurerm_container_app" "worker" {
   }
 
   lifecycle {
-    ignore_changes = [template[0].container[0].image]
+    # Azure stores the queue rule above in its "azureQueue" form, and azurerm 5.15 reads that back as
+    # azure_queue_scale_rule, which has no identity field (internal/services/containerapps/helpers/
+    # container_apps.go). Terraform would rewrite the rule on every apply, so it is set when the app
+    # is created and then left alone. Checked in Azure: the rule keeps its identity (M4a.md).
+    ignore_changes = [
+      template[0].container[0].image,
+      template[0].custom_scale_rule,
+      template[0].azure_queue_scale_rule,
+    ]
   }
 }
 
@@ -276,6 +288,7 @@ resource "azurerm_container_app_job" "migrate" {
   container_app_environment_id = azurerm_container_app_environment.main.id
   replica_timeout_in_seconds   = 600
   replica_retry_limit          = 0
+  workload_profile_name        = "Consumption"
   tags                         = local.tags
 
   manual_trigger_config {
@@ -325,6 +338,7 @@ resource "azurerm_container_app_job" "sweep" {
   container_app_environment_id = azurerm_container_app_environment.main.id
   replica_timeout_in_seconds   = 300
   replica_retry_limit          = 0
+  workload_profile_name        = "Consumption"
   tags                         = local.tags
 
   schedule_trigger_config {
