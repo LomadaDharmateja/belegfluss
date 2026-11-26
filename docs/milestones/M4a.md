@@ -89,7 +89,7 @@ It can't touch prod, the database server or its own trust.
 | Image scan | first run **blocked**: `libzstd1` (Debian fix available) and 5 HIGH in libraries bundled in the base image's pip. After the fix: no fixable HIGH/CRITICAL in the 3 images | [run 45766958861](https://github.com/LomadaDharmateja/belegfluss/actions/runs/45766958861) (blocked), later runs green |
 | Walkthrough in dev (owner signed in) | official XRechnung test file (`01.01a-INVOICE_uncefact.xml`): read and checked by the official validator, €336.90, "Checked". Synthetic PDF: read by Azure OpenAI through the app identity, "Please check" with the AI note | [inbox](evidence/m4a-01-dev-inbox.jpg), [AI review](evidence/m4a-02-dev-ai-review.jpg) |
 | Scale from zero on a queue message | 2 worker replicas about 20–40 s after the upload; validator started by the worker | `az containerapp replica list`, 2026-11-26 |
-| Cold starts | COLD_START_RESULTS | `curl` timings after both apps were at zero replicas, 2026-11-26 |
+| Cold starts (first request after both apps were at zero replicas) | API `/health` **30.2 s and 28.4 s** (49 s before the readiness check went from every 10 s to every 3 s); web **25.3 s and 20.1 s**; warm 0.20 s (API) and 0.26 s (web). A first visit therefore takes about half a minute to a minute; the first document after idle about a minute until checked (worker and validator start too) | two `curl` rounds, 07:24 and 07:31 UTC on 2026-11-26; walkthrough |
 | Image pulls | 4–6 s; images 73 MB (web), 130 MB (validator), 140 MB (API/worker) | Log Analytics `ContainerAppSystemLogs_CL`, 2026-11-26 |
 | Read back after apply | storage shared keys off, TLS 1.2, no public blobs; PostgreSQL password auth off, Entra on, `require_secure_transport` on, firewall "Azure services" only; encryption at rest with Microsoft-managed keys; registry admin off; validator `external: false`; worker no ingress; KEDA rule with identity and no secret | `az` read-backs, 2026-11-26 ([PROJECT_LOG](../PROJECT_LOG.md)) |
 | Pipeline identity rights | Reader (shared), Contributor (dev), Blob Data Contributor (own state container), AcrPush, Managed Identity Operator (own app identity), RBAC Administrator with the ABAC condition | `az role assignment list`, 2026-11-26 |
@@ -199,10 +199,10 @@ setup guide, this document.
 | 7 | The validator isn't reachable from the internet | ARCHITECTURE §7, M4a | ✅ confirmed | `ingress.external = false`, checked by the smoke test on every deploy |
 | 8 | Data at rest is encrypted, TLS required | ARCHITECTURE §7 | ✅ confirmed | storage `keySource = Microsoft.Storage`, PostgreSQL `SystemManaged`, `require_secure_transport = on` |
 | 9 | Year-one cost about €0.50–2 a month | COSTS, README | ⚠️ caveat | estimate from list prices and free offers; **the first bills must confirm** that the database and registry are free and no management fee appears |
-| 10 | Cold starts as measured | M4a | ⚠️ caveat | one measurement day, few samples |
+| 10 | Cold starts: API about 30 s, web 20–25 s, warm 0.2–0.3 s | M4a | ⚠️ caveat | two rounds on one day; Azure placement time varies |
 | 11 | Worker scales from zero on a queue message | M4a | ✅ confirmed | replica counts during the walkthrough |
 | 12 | Germany West Central / West Europe / Sweden Central failures | ADR-0021, M4a | ✅ confirmed | Terraform and capabilities API outputs, 2026-11-26 (PROJECT_LOG) |
-| 13 | Links in the changed docs resolve | all | to check before merge | link check |
+| 13 | Links in the changed docs resolve | all | ✅ confirmed | 2026-11-26: 133/133 relative links, 25/25 public web links, 8/8 private repo links (via `gh api`) |
 
 ## Next
 

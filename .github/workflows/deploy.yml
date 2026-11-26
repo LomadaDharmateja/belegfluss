@@ -8,6 +8,7 @@ on:
     # TEMPORARY (M4a): m4a-azure-dev proves the pipeline before the merge. Removed before merging,
     # together with the branch exception in the GitHub environment "dev".
     branches: [main, m4a-azure-dev]
+    paths-ignore: ["docs/**", "**/*.md"] # documentation alone doesn't need a release
   workflow_dispatch:
 
 permissions:
