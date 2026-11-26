@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 # Belegfluss web app: Next.js standalone server. Build context: repository root (pnpm workspace).
 
-FROM node:24-alpine@sha256:116b800c3754b440ee0aa3ed2f20f5bf3d99a554bfd9adeea09ea8017f6e85f5 AS base
+FROM node:26-alpine@sha256:6bd9ab43c0ec0190ca7b2d193906cb8b7edf6e7f4afa43ddeccd6452710bffb5 AS base
 ENV NEXT_TELEMETRY_DISABLED=1 COREPACK_ENABLE_DOWNLOAD_PROMPT=0
 RUN corepack enable
 WORKDIR /repo
@@ -15,7 +15,7 @@ FROM deps AS build
 COPY apps/web apps/web
 RUN pnpm --filter @belegfluss/web build
 
-FROM node:24-alpine@sha256:116b800c3754b440ee0aa3ed2f20f5bf3d99a554bfd9adeea09ea8017f6e85f5 AS runtime
+FROM node:26-alpine@sha256:6bd9ab43c0ec0190ca7b2d193906cb8b7edf6e7f4afa43ddeccd6452710bffb5 AS runtime
 ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1 PORT=3000 HOSTNAME=0.0.0.0
 # Security updates of the base image's packages, and no package managers in the running image: the
 # app runs with `node` only; npm, corepack and yarn bundle libraries that image scanners flag (M4a).
