@@ -304,7 +304,7 @@ flowchart TB
     subgraph edge["Edge: HTTPS only"]
         ingress["Ingress / TLS<br/>(managed certs)"]
     end
-    subgraph appzone["App zone (EU, Germany West Central)"]
+    subgraph appzone["App zone (EU, North Europe)"]
         subgraph public["Reachable through ingress"]
             web["Web"]
             api["API<br/>authn + authz + org isolation"]
@@ -320,7 +320,6 @@ flowchart TB
     subgraph datazone["Data zone (EU), encrypted at rest"]
         pg[("PostgreSQL")]
         blob[("Blob + Queue")]
-        kv["Key Vault"]
     end
 
     browser --> ingress
@@ -334,22 +333,26 @@ flowchart TB
     worker -- "Managed Identity" --> datazone
 ```
 
-Every arrow into the data and AI zones uses Managed Identity (no keys). The validator is reachable only from the
-worker.
+Every arrow into the data and AI zones uses Managed Identity (no keys).
+- As built in M4a there is no secret at all: storage keys, database passwords, the registry admin user and the
+  OpenAI keys are switched off. So there is no Key Vault yet; it comes with the first secret-like value (M5,
+  ADR-0021).
+- The validator has internal ingress only. In Container Apps that means reachable inside the environment, not only
+  by the worker; per-app network rules come with Kubernetes (M8).
 
 | Concern | Control |
 |---|---|
-| Data residency | All resources in EU regions (Germany West Central planned; Azure OpenAI via the EU Data Zone). Entra External ID data location to be confirmed when creating the tenant (§11) |
+| Data residency | All resources in EU regions. **As built (M4a):** apps, documents and database in North Europe (Ireland), because Germany West Central refused PostgreSQL for this subscription (ADR-0021). Identities, state and Azure OpenAI in Germany West Central, OpenAI processing in the EU Data Zone. Entra External ID: EU (§11) |
 | Authentication | Entra External ID (OIDC). API validates JWT signature, issuer, audience and expiry. No own password storage |
 | Authorisation / tenant isolation | Membership check on every request; `org_id` required in the data-access layer; tests for cross-tenant access |
-| Secrets | Managed Identity everywhere possible (DB, Blob, Queue, OpenAI). Key Vault for the rest. Nothing in git (`.env` ignored, `.env.example` documents variables). Secret scanning in CI |
+| Secrets | **As built (M4a): none exist.** Managed Identity for DB (Entra token as password), Blob, Queue, the queue scaler, image pulls and OpenAI; GitHub Actions via OIDC. Key Vault comes with the first secret (M5). Nothing in git (`.env` and `*.tfvars` ignored). Secret scanning in CI |
 | Untrusted files | Size/type limits; parse XML with a hardened parser (no external entities, no network); PDFs processed in the worker only; rendered invoice HTML is sandboxed (CSP, sandboxed iframe) because a JS-injection bug was found via attachment file names in the official visualisation (einvoicing §4.6) |
-| Validator | Never reachable from outside (internal ingress / ClusterIP + NetworkPolicy), because it has no authentication (F36) |
+| Validator | Never reachable from outside, because it has no authentication (F36). M4a: internal ingress, checked by the smoke test on every deploy; per-app rules (NetworkPolicy) in M8 |
 | Logging | Structured logs with an allowlist of fields. **No invoice content, names, IBANs or file names** in logs or traces |
 | Deletion & export (GDPR Art. 15/17/20) | "Export my data" (ZIP of originals + JSON) and "delete my organisation" (DB rows + blobs, then audit entry without content). Users are told that **they** must keep invoices 8 years (F18). Belegfluss is not their archive |
-| Encryption | TLS in transit; Azure storage and PostgreSQL encrypted at rest by default (to be confirmed per service in M4) |
+| Encryption | TLS in transit (storage minimum TLS 1.2; PostgreSQL `require_secure_transport = on`). At rest with Microsoft-managed keys: storage `keySource = Microsoft.Storage`, PostgreSQL `dataEncryption = SystemManaged` (read back 2026-11-26) |
 | Processor role | For pilot businesses, Belegfluss processes their supplier data as a **processor**. A data-processing agreement (AVV) template is needed before real users (M5) |
-| Supply chain | Pinned dependencies, Dependabot, container image scanning, SBOM (M4/M9) |
+| Supply chain | Pinned dependencies and base-image digests, Dependabot. **M4a:** every release image is scanned by Trivy (fails on fixable HIGH/CRITICAL) with a CycloneDX SBOM; runtime images have no package managers; tools in CI are pinned binaries with checked SHA-256 |
 
 ## 8. Deployment views
 
@@ -387,25 +390,47 @@ Central, keys switched off). The default stack and CI make no AI calls ([setup](
 
 ```mermaid
 flowchart TB
-    subgraph rg["Resource group per environment (dev, prod), Germany West Central"]
-        subgraph cae["Container Apps environment (consumption)"]
-            web["web<br/>external ingress"]
-            api["api<br/>external ingress"]
+    subgraph rg["Resource group per environment (dev, prod), North Europe"]
+        subgraph cae["Container Apps environment (Consumption profile)"]
+            web["web<br/>external ingress, min 0"]
+            api["api<br/>external ingress, min 0"]
             worker["worker<br/>no ingress, KEDA queue rule, min 0"]
-            validator["validator<br/>internal ingress"]
+            validator["validator<br/>internal ingress, min 0"]
+            jobs["jobs: migrate, sweep"]
         end
-        pg[("PostgreSQL Flexible Server<br/>Burstable")]
-        st[("Storage account<br/>blob + queue")]
-        kv["Key Vault"]
+        st[("Storage account<br/>blob + queue, keys off")]
+        logs["Log Analytics<br/>daily cap"]
+    end
+    subgraph shared["rg-belegfluss-shared (both environments)"]
+        pg[("PostgreSQL 18 B1ms<br/>Entra only, one DB per env")]
         acr["Container registry"]
-        ai["Application Insights"]
-        budget["Budget alert"]
+        ids["App identities"]
     end
     aoai["Azure OpenAI<br/>Data Zone Standard EU"]
     gh["GitHub Actions<br/>(OIDC federation, no secrets)"]
     gh -- "terraform apply, image push, deploy" --> rg
+    gh -- "push images" --> acr
+    cae --> pg
     worker --> aoai
 ```
+
+**As built (M4a, dev):**
+- **Terraform:** three stacks (ADR-0020): `infra/bootstrap` and `infra/shared` applied by the owner,
+  `infra/environment` by the pipeline.
+- **Shared, in `rg-belegfluss-shared`:**
+  - registry (Standard, free in year one, admin off)
+  - **one** PostgreSQL 18 B1ms server (free in year one, Entra-only) with a database per environment
+  - the app identities
+- **Per environment, in `rg-belegfluss-dev`:**
+  - Log Analytics with a daily cap
+  - the Container Apps environment (built-in Consumption profile)
+  - storage with shared keys off
+  - `web`, `api` (external), `validator` (internal), `worker` (KEDA queue rule using the app identity), all at
+    zero replicas when idle
+  - the `migrate` job (started by the pipeline) and the `sweep` job (every 15 minutes)
+- **Region:** North Europe, see ADR-0021.
+- **Releases:** `.github/workflows/deploy.yml` (ADR-0022).
+- **Cold starts:** measured in [M4a.md](milestones/M4a.md).
 
 ### 8.3 M8: AKS (Helm)
 
@@ -425,7 +450,7 @@ belegfluss/
 │   └── api/                 # Python package "belegfluss": API + worker entrypoints (M1/M2)
 ├── services/
 │   └── validator/           # Dockerfile + pinned official KoSIT config, no own code (M2)
-├── infra/terraform/         # modules/ and envs/dev, envs/prod (M4)
+├── infra/                 # Terraform: bootstrap/, shared/, environment/ (M4, ADR-0020)
 ├── deploy/helm/             # charts (M8)
 ├── automation/n8n/          # exported workflows (M6)
 ├── eval/                    # labelled-set manifest, eval runner, reports (M3)
@@ -509,8 +534,8 @@ numbers and Berater/Mandant numbers (F46). DATEV APIs not before real demand.
 | Typed API client | openapi-typescript + openapi-fetch · orval · hand-written | **Decided:** openapi-typescript + openapi-fetch, CI drift check | [ADR-0011](decisions/0011-typed-api-contract-openapi.md) |
 | XML parsing | own lxml mapping for UBL and CII · official KoSIT visualisation step-1 XSLT (UBL/CII → one semantic model) via Saxon | **Decided:** official transform via saxonche (spike: 86/86 files, 0 mismatches) | [ADR-0014](decisions/0014-read-xml-with-official-kosit-transform.md) |
 | Live updates in UI | polling · server-sent events · WebSockets | **Built (M2a):** polling every 2 s while documents are processing; SSE later if needed | M2a |
-| Container registry | Azure Container Registry · GitHub Container Registry | ACR (Azure story, Managed Identity pull) — check cost | M4 ADR |
-| Terraform state | Azure Storage backend · Terraform Cloud | Azure Storage backend with state locking | M4 ADR |
+| Container registry | Azure Container Registry · GitHub Container Registry | **Decided:** ACR Standard (free for 12 months), pulls with the app identity; Basic or GHCR after the free year | [ADR-0021](decisions/0021-keyless-runtime-shared-free-tier-database.md) |
+| Terraform state | Azure Storage backend · Terraform Cloud | **Decided:** Azure Storage, Entra auth, one container per stack, versioning | [ADR-0020](decisions/0020-terraform-layout-state-and-who-applies.md) |
 | Email ingestion (M6) | n8n IMAP/webhook workflow · own small ingestion service · inbound-email provider webhook | **Open.** n8n's Sustainable Use License allows use "for your own internal business purposes" and free non-commercial distribution. Using it for a customer-facing feature is unclear if Belegfluss ever charges. Option: n8n for internal workflows (exports, notifications), own code for ingestion | M6 ADR |
 | Fine-tuned model (M7) | small open vision-language model + LoRA; served with vLLM | choose model by licence + size against the M3 eval set | M7 ADR |
 

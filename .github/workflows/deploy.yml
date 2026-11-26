@@ -1,0 +1,161 @@
+name: deploy
+
+# Release pipeline (ADR-0022): every push to main is tested, built once, scanned, pushed, and
+# deployed to dev with a smoke test. Prod follows in M4b (manual approval, same image digests).
+# Signs in to Azure with OIDC as the environment's deploy identity: no secret exists (ADR-0019/0020).
+on:
+  push:
+    branches: [main]
+    paths-ignore: ["docs/**", "**/*.md"] # documentation alone doesn't need a release
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false # never stop a deploy halfway
+
+jobs:
+  # --- 1. Tests: the same workflows that run on pull requests ---
+  api:
+    uses: ./.github/workflows/api.yml
+  web:
+    uses: ./.github/workflows/web.yml
+  eval:
+    uses: ./.github/workflows/eval.yml
+  compose-smoke:
+    uses: ./.github/workflows/compose-smoke.yml
+  secret-scan:
+    uses: ./.github/workflows/secret-scan.yml
+  infra:
+    uses: ./.github/workflows/infra.yml
+
+  # --- 2. Build once, scan, push ---
+  build:
+    needs: [api, web, eval, compose-smoke, secret-scan, infra]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: dev # its deploy identity may push to the registry
+    permissions:
+      contents: read
+      id-token: write
+    outputs:
+      api: ${{ steps.push.outputs.api }}
+      web: ${{ steps.push.outputs.web }}
+      validator: ${{ steps.push.outputs.validator }}
+    env:
+      REGISTRY: crbelegfluss${{ vars.NAME_SUFFIX }}.azurecr.io
+      TAG: ${{ github.sha }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Build the three images
+        run: |
+          docker build --tag "$REGISTRY/belegfluss-api:$TAG" apps/api
+          docker build --tag "$REGISTRY/belegfluss-web:$TAG" --file apps/web/Dockerfile .
+          docker build --tag "$REGISTRY/belegfluss-validator:$TAG" services/validator
+      - name: Install trivy (pinned version, verified checksum)
+        run: |
+          curl -sSL -o trivy.tar.gz https://github.com/aquasecurity/trivy/releases/download/v0.76.2/trivy_0.76.2_Linux-64bit.tar.gz
+          echo "bc0fc726e017b8927a62b2d3531d7a84ee01769daf5c99ed866dced54089fdbf  trivy.tar.gz" | sha256sum --check -
+          tar -xzf trivy.tar.gz trivy
+      - name: Scan (fails on HIGH/CRITICAL with a fix available) and write SBOMs
+        run: |
+          status=0 # scan all three, then fail: one run shows every finding
+          for name in api web validator; do
+            ./trivy image --exit-code 1 --severity HIGH,CRITICAL --ignore-unfixed --no-progress "$REGISTRY/belegfluss-$name:$TAG" || status=1
+            ./trivy image --format cyclonedx --output "sbom-$name.cdx.json" --no-progress "$REGISTRY/belegfluss-$name:$TAG"
+          done
+          exit $status
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: sbom-${{ github.sha }}
+          path: sbom-*.cdx.json
+      - name: Sign in to Azure (OIDC, no secret)
+        uses: azure/login@a641126d1b8aa4d1fa005f4f92df94a3a4c4c906 # v3.1.0
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      - name: Push (registry sign-in with Entra ID, no registry password)
+        id: push
+        env:
+          NAME_SUFFIX: ${{ vars.NAME_SUFFIX }}
+        run: |
+          az acr login --name "crbelegfluss$NAME_SUFFIX"
+          for name in api web validator; do
+            docker push --quiet "$REGISTRY/belegfluss-$name:$TAG"
+            digest=$(docker inspect --format '{{index .RepoDigests 0}}' "$REGISTRY/belegfluss-$name:$TAG")
+            echo "$name=$digest" >> "$GITHUB_OUTPUT"
+          done
+
+  # --- 3. Deploy to dev and check it ---
+  deploy-dev:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment:
+      name: dev
+      url: ${{ steps.apply.outputs.web_url }}
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      RESOURCE_GROUP: rg-belegfluss-dev
+      API_IMAGE: ${{ needs.build.outputs.api }}
+      WEB_IMAGE: ${{ needs.build.outputs.web }}
+      VALIDATOR_IMAGE: ${{ needs.build.outputs.validator }}
+      # Terraform signs in with the same OIDC trust (no secret).
+      ARM_USE_OIDC: "true"
+      ARM_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
+      ARM_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      TFSTATE_ACCOUNT: ${{ vars.TFSTATE_ACCOUNT }}
+      TF_VAR_subscription_id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      TF_VAR_environment: dev
+      TF_VAR_name_suffix: ${{ vars.NAME_SUFFIX }}
+      TF_VAR_auth_issuer: ${{ vars.AUTH_ISSUER }}
+      TF_VAR_auth_jwks_url: ${{ vars.AUTH_JWKS_URL }}
+      TF_VAR_auth_audience: ${{ vars.AUTH_AUDIENCE }}
+      TF_VAR_entra_client_id: ${{ vars.ENTRA_CLIENT_ID }}
+      TF_VAR_entra_tenant_subdomain: ${{ vars.ENTRA_TENANT_SUBDOMAIN }}
+      TF_VAR_entra_tenant_id: ${{ vars.ENTRA_TENANT_ID }}
+      TF_VAR_entra_api_scope: ${{ vars.ENTRA_API_SCOPE }}
+      TF_VAR_openai_endpoint: ${{ vars.OPENAI_ENDPOINT }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
+        with:
+          terraform_version: "1.17.2"
+          terraform_wrapper: false
+      - name: Sign in to Azure (OIDC, no secret)
+        uses: azure/login@a641126d1b8aa4d1fa005f4f92df94a3a4c4c906 # v3.1.0
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      - name: Terraform plan and apply
+        id: apply
+        working-directory: infra/environment
+        run: |
+          terraform init -input=false -lockfile=readonly \
+            -backend-config="storage_account_name=$TFSTATE_ACCOUNT" \
+            -backend-config="container_name=tfstate-dev" \
+            -backend-config="key=dev.tfstate" \
+            -backend-config="use_oidc=true"
+          export TF_VAR_images="{\"api\":\"$API_IMAGE\",\"web\":\"$WEB_IMAGE\",\"validator\":\"$VALIDATOR_IMAGE\"}"
+          terraform plan -input=false -out=tfplan
+          terraform apply -input=false tfplan
+          echo "web_url=$(terraform output -raw web_url)" >> "$GITHUB_OUTPUT"
+          echo "api_url=$(terraform output -raw api_url)" >> "$GITHUB_OUTPUT"
+      - name: Container Apps CLI extension
+        run: az extension add --name containerapp --upgrade --yes --only-show-errors
+      - name: Migrate the database (job, waits for it)
+        run: scripts/deploy/migrate.sh "$RESOURCE_GROUP" "$API_IMAGE"
+      - name: Deploy the new images
+        run: scripts/deploy/update-apps.sh "$RESOURCE_GROUP" "$API_IMAGE" "$WEB_IMAGE" "$VALIDATOR_IMAGE"
+      - name: Smoke test
+        env:
+          API_URL: ${{ steps.apply.outputs.api_url }}
+          WEB_URL: ${{ steps.apply.outputs.web_url }}
+        run: scripts/deploy/smoke.sh "$API_URL" "$WEB_URL" "$RESOURCE_GROUP"

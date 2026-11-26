@@ -7,11 +7,17 @@ from typing import BinaryIO
 from azure.core.exceptions import ResourceExistsError, ResourceNotFoundError
 from azure.storage.blob import BlobServiceClient, ContentSettings
 
+from belegfluss import storage_clients
+from belegfluss.settings import Settings
+
 
 class BlobStore:
-    def __init__(self, connection_string: str, container: str) -> None:
-        service = BlobServiceClient.from_connection_string(connection_string)
+    def __init__(self, service: BlobServiceClient, container: str) -> None:
         self._container = service.get_container_client(container)
+
+    @classmethod
+    def from_settings(cls, settings: Settings) -> BlobStore:
+        return cls(storage_clients.blob_service(settings), settings.blob_container)
 
     @staticmethod
     def original_name(org_id: uuid.UUID, sha256: str) -> str:

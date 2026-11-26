@@ -2,12 +2,14 @@
 
 **A bilingual (German / English) e-invoice inbox for freelancers and small businesses in Germany.**
 
-> **Status: M3 done.** XRechnung and ZUGFeRD invoices are read exactly and checked by the official
-> KoSIT validator. Plain PDFs and photos are read by AI (Azure OpenAI, EU Data Zone, keyless), every value is checked
-> by code, and a person confirms it. Approved documents are exported for the accountant. AI reading is measured on
-> 206 labelled documents, and a CI gate blocks changes that make it worse. Next: Azure with Terraform (M4). See
-> [PLAN.md](PLAN.md) and the milestones [M1](docs/milestones/M1.md), [M2a](docs/milestones/M2a.md),
-> [M2b](docs/milestones/M2b.md), [M3](docs/milestones/M3.md).
+> **Status: M4a done.** A dev environment runs on Azure (Container Apps, North Europe), created with
+> Terraform and released by GitHub Actions without any secret. Earlier milestones: XRechnung and ZUGFeRD invoices are
+> read exactly and checked by the official KoSIT validator. Plain PDFs and photos are read by AI (Azure OpenAI, EU
+> Data Zone, keyless), every value is checked by code, and a person confirms it. Approved documents are exported for
+> the accountant. AI reading is measured on 206 labelled documents, and a CI gate blocks changes that make it worse.
+> Next: prod and a public repository (M4b). See [PLAN.md](PLAN.md) and the milestones [M1](docs/milestones/M1.md),
+> [M2a](docs/milestones/M2a.md), [M2b](docs/milestones/M2b.md), [M3](docs/milestones/M3.md),
+> [M4a](docs/milestones/M4a.md).
 
 ## The problem
 

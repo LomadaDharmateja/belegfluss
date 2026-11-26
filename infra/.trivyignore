@@ -1,0 +1,2 @@
+# Accepted findings of `trivy config infra`, each with its reason (ADR-0020). Keep this list short.
+# Resource-specific exceptions are written next to the resource instead (#trivy:ignore:<id> + reason).

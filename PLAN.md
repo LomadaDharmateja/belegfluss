@@ -1,7 +1,7 @@
 # Belegfluss — Plan
 
 > Living roadmap. Updated at the end of every session. Changes to the plan are explained in an ADR and logged in
-> [docs/PROJECT_LOG.md](docs/PROJECT_LOG.md). Last update: **2026-11-25 (M3 done, next M4)**.
+> [docs/PROJECT_LOG.md](docs/PROJECT_LOG.md). Last update: **2026-11-26 (M4a done, next M4b)**.
 
 ## Status
 
@@ -12,7 +12,7 @@
 | M2a | Reading & validating (deterministic) | XML/ZUGFeRD reading, official validator, worker, business checks, document page | ✅ done (PR #7, approved 2026-11-24, [M2a.md](docs/milestones/M2a.md)) |
 | M2b | LLM extraction, review, export | Azure OpenAI (EU Data Zone) for plain PDFs/photos, review step, ZIP + CSV export | ✅ done ([PR #9](https://github.com/LomadaDharmateja/belegfluss/pull/9), approved 2026-11-25, [M2b.md](docs/milestones/M2b.md)). Model changed to gpt-5.4-mini (no EU quota for gpt-5-mini) |
 | M3 | Evaluation & quality gates | Labelled set, field-level accuracy report, CI gate | ✅ done ([PR #11](https://github.com/LomadaDharmateja/belegfluss/pull/11), approved 2026-11-25, [M3.md](docs/milestones/M3.md)): test 71.7 % document accuracy, gate blocks regressions (PR #10) |
-| M4 | Azure with Terraform | Container Apps, Postgres, Blob/Queue, Key Vault, Managed Identity, Entra, Azure OpenAI, CI/CD, budget alert | ⏳ |
+| M4 | Azure with Terraform | Container Apps, Postgres, Blob/Queue, Managed Identity, Entra, Azure OpenAI, CI/CD, budget alert | 🟡 M4a ✅ done ([PR #13](https://github.com/LomadaDharmateja/belegfluss/pull/13), approved 2026-11-26, [M4a.md](docs/milestones/M4a.md)): dev live on Azure, keyless, released by the pipeline. M4b (prod, approval, going public) next |
 | M5 | First real users | Pilot onboarding, legal pages, App Insights, alerts, incident log, usage metrics | ⏳ |
 | M6 | Automation | Email ingestion, scheduled accountant export, notifications (n8n, see licence note) | ⏳ |
 | M7 | Fine-tuning & serving | LoRA fine-tune of a small open model, vLLM serving, comparison vs Azure OpenAI | ⏳ |
@@ -151,17 +151,19 @@ of gpt-5-mini ([ADR-0016](docs/decisions/0016-ai-extraction-azure-openai-verifie
     - Container Apps environment + apps
     - PostgreSQL Flexible Server
     - Storage (blob + queue)
-    - Key Vault
     - container registry
-    - Log Analytics + Application Insights
+    - Log Analytics (Key Vault and Application Insights moved to M5, ADR-0021: no secret exists to store yet)
     - Azure OpenAI deployment
     - Managed Identities + role assignments
     - **budget alert**
-  - Environments `dev` and `prod` (Germany West Central, availability confirmed).
+  - Environments `dev` and `prod`. Region as built: North Europe for apps and data (ADR-0021: Germany West
+    Central refused PostgreSQL for this subscription); AI and identities stay in Germany West Central.
   - GitHub Actions with OIDC federation (no cloud secrets in GitHub): test → build → scan → push → deploy dev → smoke
     test → manual approval → prod.
-  - Custom domain + managed TLS certificate. The free managed certificate needs the app reachable during issuance
-    and renewal, so decide min replicas for `web` (ARCHITECTURE §11).
+  - Split (agreed 2026-11-25): **M4a** Terraform foundation, dev, release pipeline to dev; **M4b** prod, manual
+    approval, budget alert test, repository goes public.
+  - Budget (agreed 2026-11-25): about €0.50–2 a month in year one. One free-tier database server for dev and prod;
+    everything scales to zero. Custom domain moved to M5 (default HTTPS addresses until then).
   - Cost estimate in COSTS.md **before** the first `apply`.
   - Before the repo goes public: choose a licence, re-check that no personal data or secrets are in the git
     history, and add THIRD_PARTY notices. Run logs become public too: `azure/login` prints the client,
@@ -183,7 +185,11 @@ of gpt-5-mini ([ADR-0016](docs/decisions/0016-ai-extraction-azure-openai-verifie
     - processing records
     - "export my data" and "delete my organisation" working
   - Pilot onboarding of 3–10 users from the interviews.
-  - Application Insights dashboards; alerts (error rate, queue age, validator health, budget).
+  - Application Insights with OpenTelemetry (privacy allowlist), and Key Vault for its connection string, the first
+    secret-like value (moved from M4, ADR-0021). Dashboards; alerts (error rate, queue age, validator health,
+    budget).
+  - Custom domain with a managed certificate (moved from M4), if needed for the pilot. Decide whether `web` keeps one
+    replica for certificate renewal (≈ €4 a month).
   - `docs/incidents/` with a post-mortem template.
   - Privacy-friendly usage metrics (no tracking cookies without consent).
   - A feedback channel.

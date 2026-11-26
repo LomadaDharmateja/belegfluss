@@ -15,6 +15,7 @@ from azure.core.exceptions import ServiceRequestError
 from fastapi.testclient import TestClient
 from sqlalchemy import func, select, update
 
+from belegfluss import sweep
 from belegfluss.models import Document, Finding, Invoice
 from belegfluss.pipeline import Services, process_document
 from belegfluss.queue import DocumentQueue
@@ -37,9 +38,9 @@ def make_worker(client: TestClient, settings: Settings, validator_url: str) -> W
         validator_config=settings.validator_config,
         max_pdf_pages=settings.max_pdf_pages,
     )
-    queue = DocumentQueue(settings.storage_connection_string, settings.queue_name)
+    queue = DocumentQueue.from_settings(settings)
     queue.ensure_exists()
-    return Worker(services, queue, visibility_timeout=1)
+    return Worker(services, queue, visibility_timeout=1, retry_delay=1)
 
 
 @pytest.fixture
@@ -249,6 +250,46 @@ def test_sweeper_picks_up_a_document_whose_enqueue_failed(
     assert worker.sweep(datetime.now(UTC)) == 1
     assert worker.run_once() == 1
     assert state_of(worker, document_id)[0].status == "ready"
+
+
+def test_the_scheduled_sweep_job_re_enqueues_a_stuck_document(
+    client: TestClient,
+    user: SignedInUser,
+    worker: Worker,
+    settings: Settings,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # In Azure the worker scales to zero, so its built-in sweep doesn't run; a scheduled job does.
+    def broken_send(_document_id: uuid.UUID) -> None:
+        raise ServiceRequestError("queue down")
+
+    monkeypatch.setattr(client.app.state.queue, "send", broken_send)  # type: ignore[attr-defined]
+    document_id = upload(client, user, "rechnung.xml", CII, "application/xml")
+    with worker.services.session_factory.begin() as session:
+        session.execute(
+            update(Document)
+            .where(Document.id == document_id)
+            .values(status_changed_at=datetime.now(UTC) - timedelta(minutes=3))
+        )
+
+    assert sweep.run(settings) == 1
+    assert worker.run_once() == 1
+    assert state_of(worker, document_id)[0].status == "ready"
+
+
+def test_after_a_transient_failure_the_job_is_retried_soon_not_after_the_long_timeout(
+    client: TestClient, user: SignedInUser, settings: Settings
+) -> None:
+    # A message stays hidden long enough for the slowest document (minutes). If the validator is
+    # still starting (scaled to zero in Azure), the retry must not wait that long.
+    unreachable = make_worker(client, settings, "http://127.0.0.1:9")
+    worker = Worker(unreachable.services, unreachable.queue, visibility_timeout=60, retry_delay=1)
+    upload(client, user, "rechnung.xml", CII, "application/xml")
+
+    assert worker.run_once() == 1
+    time.sleep(1.5)
+    assert worker.run_once() == 1  # visible again after the retry delay, not after 60 s
+    assert worker.queue.peek_poison() == []  # the message kept its content
 
 
 def test_document_that_keeps_failing_ends_failed_and_in_the_poison_queue(

@@ -3,9 +3,7 @@ name: api
 on:
   pull_request:
     paths: ["apps/api/**", "apps/web/src/api/openapi.json", "services/validator/**", "scripts/**", ".github/workflows/api.yml"]
-  push:
-    branches: [main]
-    paths: ["apps/api/**", "apps/web/src/api/openapi.json", "services/validator/**", "scripts/**", ".github/workflows/api.yml"]
+  workflow_call: # on main: run by deploy.yml before anything is deployed
 
 permissions:
   contents: read

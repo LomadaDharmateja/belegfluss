@@ -1,8 +1,8 @@
 """Background worker (ADR-0004). Run with: python -m belegfluss.worker
 
 - takes jobs from the queue and processes documents (pipeline.py)
-- transient errors (validator or storage unavailable): the message becomes visible again and is
-  retried
+- transient errors (validator or storage unavailable, for example still starting): the message
+  becomes visible again after a short delay and is retried
 - after MAX_DELIVERIES attempts the document becomes `failed`; the message goes to the poison queue
 - a sweeper re-enqueues documents stuck in `received` (enqueue failed) or `processing` (crashed)
 
@@ -31,7 +31,11 @@ from belegfluss.validation import ValidatorClient, ValidatorUnavailableError
 logger = logging.getLogger("belegfluss.worker")
 
 MAX_DELIVERIES = 5
-VISIBILITY_TIMEOUT_SECONDS = 300
+# One message at a time, hidden long enough for the slowest document (AI attempts + validator, see
+# tests/test_worker_unit.py). More throughput comes from more worker replicas (KEDA), not batches.
+JOBS_PER_RECEIVE = 1
+VISIBILITY_TIMEOUT_SECONDS = 900
+RETRY_DELAY_SECONDS = 30  # after a transient error; a validator scaled to zero needs a moment
 STUCK_IN_RECEIVED = timedelta(minutes=2)
 STUCK_IN_PROCESSING = timedelta(minutes=15)
 SWEEP_EVERY_SECONDS = 60
@@ -46,16 +50,22 @@ class Worker:
         queue: DocumentQueue,
         *,
         visibility_timeout: int = VISIBILITY_TIMEOUT_SECONDS,
+        retry_delay: int = RETRY_DELAY_SECONDS,
         max_deliveries: int = MAX_DELIVERIES,
     ) -> None:
         self.services = services
         self.queue = queue
         self.visibility_timeout = visibility_timeout
+        self.retry_delay = retry_delay
         self.max_deliveries = max_deliveries
 
     def run_once(self) -> int:
         """Handle the jobs that are waiting now. Returns how many were received."""
-        jobs = list(self.queue.receive(max_jobs=4, visibility_timeout=self.visibility_timeout))
+        jobs = list(
+            self.queue.receive(
+                max_jobs=JOBS_PER_RECEIVE, visibility_timeout=self.visibility_timeout
+            )
+        )
         for job in jobs:
             self._handle(job)
         return len(jobs)
@@ -76,7 +86,8 @@ class Worker:
             process_document(job.document_id, self.services)
         except TRANSIENT as exc:
             logger.warning("document %s: will retry (%s)", job.document_id, type(exc).__name__)
-            return  # not deleted: the message becomes visible again after the visibility timeout
+            self.queue.retry_later(job, self.retry_delay)
+            return
         except Exception as exc:
             # Unexpected (a bug). Type only: exception text could contain document content.
             logger.error("document %s: unexpected %s", job.document_id, type(exc).__name__)
@@ -124,17 +135,19 @@ def build_extractor(settings: Settings) -> Extractor | None:
 
 
 def build(settings: Settings) -> Worker:
-    _engine, session_factory = make_session_factory(settings.database_url)
+    _engine, session_factory = make_session_factory(
+        settings.database_url, settings.database_entra_auth
+    )
     services = Services(
         session_factory=session_factory,
-        blob_store=BlobStore(settings.storage_connection_string, settings.blob_container),
+        blob_store=BlobStore.from_settings(settings),
         validator=ValidatorClient(settings.validator_url),
         validator_config=settings.validator_config,
         max_pdf_pages=settings.max_pdf_pages,
         extractor=build_extractor(settings),
         ai_max_pages=settings.ai_max_pages,
     )
-    queue = DocumentQueue(settings.storage_connection_string, settings.queue_name)
+    queue = DocumentQueue.from_settings(settings)
     queue.ensure_exists()
     return Worker(services, queue)
 

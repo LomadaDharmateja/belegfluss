@@ -5,7 +5,7 @@
 ARG VALIDATOR_VERSION=1.6.3
 ARG CONFIG_VERSION=2026-08-31
 
-FROM alpine:3.24 AS fetch
+FROM alpine:3.24@sha256:f59abe656b692d901e184be3445e084786602108599d2a51d229c0f5a48c71bf AS fetch
 ARG VALIDATOR_VERSION
 ARG CONFIG_VERSION
 # Downloads are pinned by SHA-256 (same checksums as the M0 smoke test).
@@ -19,7 +19,7 @@ ADD --checksum=sha256:2530cd107c414511c5d0462ec10f886910395abfca820db82e83d70bf0
 RUN mkdir /fetch/config && unzip -q /fetch/config.zip -d /fetch/config && rm /fetch/config.zip \
     && chmod 0644 /fetch/validator.jar && chmod -R a+rX /fetch/config
 
-FROM eclipse-temurin:21-jre
+FROM eclipse-temurin:21-jre@sha256:d77e090ae1f6970c047b443c6f0a6c1358b0426d44432bb5a7753408cd43de0d
 ARG VALIDATOR_VERSION
 ARG CONFIG_VERSION
 LABEL org.opencontainers.image.title="belegfluss-validator" \
@@ -27,7 +27,9 @@ LABEL org.opencontainers.image.title="belegfluss-validator" \
 
 COPY --from=fetch /fetch/validator.jar /opt/validator/validator.jar
 COPY --from=fetch /fetch/config /opt/validator/config
-RUN useradd --system --uid 10002 --home-dir /nonexistent --shell /usr/sbin/nologin validator
+# Security updates of the base image's OS packages (image scan, M4a).
+RUN apt-get update && apt-get upgrade --yes --no-install-recommends && rm -rf /var/lib/apt/lists/* \
+    && useradd --system --uid 10002 --home-dir /nonexistent --shell /usr/sbin/nologin validator
 USER validator
 
 # Heap is capped: without it the JVM took ~1.9 GB in a container (M0). Size measured in M2a.

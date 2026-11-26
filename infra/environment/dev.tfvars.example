@@ -1,0 +1,20 @@
+# Locally: copy to dev.tfvars (git-ignored). In the pipeline these come from the GitHub environment
+# "dev" as TF_VAR_* variables. All are identifiers or URLs, none is a secret.
+subscription_id = "00000000-0000-0000-0000-000000000000"
+environment     = "dev"
+name_suffix     = "xxxx"
+
+images = {
+  api       = "crbelegflussxxxx.azurecr.io/belegfluss-api:<commit>"
+  web       = "crbelegflussxxxx.azurecr.io/belegfluss-web:<commit>"
+  validator = "crbelegflussxxxx.azurecr.io/belegfluss-validator:<commit>"
+}
+
+auth_issuer            = "https://<tenant-id>.ciamlogin.com/<tenant-id>/v2.0"
+auth_jwks_url          = "https://<subdomain>.ciamlogin.com/<tenant-id>/discovery/v2.0/keys"
+auth_audience          = "<API client ID>"
+entra_client_id        = "<web client ID>"
+entra_tenant_subdomain = "<subdomain>"
+entra_tenant_id        = "<tenant-id>"
+entra_api_scope        = "api://<API client ID>/access_as_user"
+openai_endpoint        = "https://<dev OpenAI account>.openai.azure.com/"

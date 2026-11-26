@@ -1,0 +1,6 @@
+# Copy to bootstrap.auto.tfvars (git-ignored) and fill in. None of these is a secret, but the
+# subscription and resource names stay out of the repository.
+subscription_id = "00000000-0000-0000-0000-000000000000" # az account show --query id -o tsv
+name_suffix     = "xxxx"                                 # 4 lowercase letters/digits
+github_owner_id = "0"                                    # gh api repos/LomadaDharmateja/belegfluss --jq .owner.id
+github_repo_id  = "0"                                    # gh api repos/LomadaDharmateja/belegfluss --jq .id

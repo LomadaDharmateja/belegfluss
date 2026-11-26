@@ -23,3 +23,6 @@ Format and rules: [ADR-0001](0001-record-architecture-decisions.md).
 | [0017](0017-review-approval-and-export.md) | Correct only AI-read fields; approve with an explicit override for errors; export only approved documents | Accepted |
 | [0018](0018-evaluation-dataset-metrics-and-gate.md) | Evaluate AI reading on a versioned labelled set; gate PRs by replaying recorded answers | Accepted |
 | [0019](0019-ci-to-azure-with-oidc-managed-identity.md) | GitHub Actions signs in to Azure with OIDC and a user-assigned managed identity | Accepted |
+| [0020](0020-terraform-layout-state-and-who-applies.md) | Terraform in three stacks; the owner applies shared parts, the pipeline applies environments | Accepted |
+| [0021](0021-keyless-runtime-shared-free-tier-database.md) | Keyless runtime, scale to zero, one shared free-tier database for dev and prod (supersedes one point of 0007) | Accepted |
+| [0022](0022-release-pipeline-build-once-deploy-dev.md) | Release pipeline: test, build once, scan, push, deploy dev, smoke test | Accepted |
