@@ -11,7 +11,7 @@ execution=$(az containerapp job start --name migrate --resource-group "$rg" --qu
 echo "migrate job started: $execution"
 
 for _ in $(seq 1 60); do
-  status=$(az containerapp job execution show --name "$execution" --job-name migrate \
+  status=$(az containerapp job execution show --name migrate --job-execution-name "$execution" \
     --resource-group "$rg" --query properties.status --output tsv)
   case "$status" in
     Succeeded) echo "migrations applied"; exit 0 ;;
