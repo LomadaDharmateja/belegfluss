@@ -5,7 +5,9 @@ name: deploy
 # Signs in to Azure with OIDC as the environment's deploy identity: no secret exists (ADR-0019/0020).
 on:
   push:
-    branches: [main]
+    # TEMPORARY (M4a): m4a-azure-dev proves the pipeline before the merge. Removed before merging,
+    # together with the branch exception in the GitHub environment "dev".
+    branches: [main, m4a-azure-dev]
   workflow_dispatch:
 
 permissions:
