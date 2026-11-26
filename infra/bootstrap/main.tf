@@ -61,6 +61,9 @@ resource "azurerm_resource_group" "environment" {
 
 # --- Terraform state: keys switched off, versioned, deletions recoverable ---
 
+# Reachable over the internet, but only with an Entra identity (shared keys off). GitHub-hosted
+# runners have no fixed addresses to allow-list; private networking is M9 hardening.
+#trivy:ignore:AZU-0012
 resource "azurerm_storage_account" "tfstate" {
   name                            = "stbelegflusstf${var.name_suffix}"
   resource_group_name             = azurerm_resource_group.tfstate.name

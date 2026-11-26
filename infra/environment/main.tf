@@ -72,6 +72,10 @@ resource "azurerm_container_app_environment" "main" {
 
 # --- Storage for originals (blob) and processing jobs (queue): no account keys ---
 
+# Reachable over the internet, but only with an Entra identity (shared keys off, no public
+# containers). Container Apps on the consumption plan have no fixed outbound address, and service
+# endpoints need a VNet: private networking is M9 hardening.
+#trivy:ignore:AZU-0012
 resource "azurerm_storage_account" "main" {
   name                            = "stbelegfluss${var.environment}${var.name_suffix}"
   resource_group_name             = data.azurerm_resource_group.environment.name

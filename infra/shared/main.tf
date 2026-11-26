@@ -4,6 +4,11 @@
 # Year one runs on free offers for new pay-as-you-go customers: one PostgreSQL B1MS server and one
 # Standard registry (docs/COSTS.md). dev and prod therefore share the server, each with its own
 # database and identity.
+#
+# Region: apps and data run in Sweden Central (var.app_location), see ADR-0021. For this new tenant
+# Germany West Central refuses PostgreSQL ("Provisioning is restricted in this region") and West
+# Europe refuses everything ("not accepting new customers"), both 2026-11-26. Identities, the AI
+# resources and the Terraform state stay in Germany West Central.
 
 terraform {
   required_version = "~> 1.17.0"
@@ -58,7 +63,7 @@ data "azurerm_user_assigned_identity" "deploy" {
 resource "azurerm_container_registry" "main" {
   name                   = "crbelegfluss${var.name_suffix}"
   resource_group_name    = data.azurerm_resource_group.shared.name
-  location               = var.location
+  location               = var.app_location # next to the apps: no cross-region image pulls
   sku                    = "Standard"
   admin_enabled          = false # pulls and pushes use Entra identities only
   anonymous_pull_enabled = false
@@ -70,7 +75,7 @@ resource "azurerm_container_registry" "main" {
 resource "azurerm_postgresql_flexible_server" "main" {
   name                          = "psql-belegfluss-${var.name_suffix}"
   resource_group_name           = data.azurerm_resource_group.shared.name
-  location                      = var.location
+  location                      = var.app_location
   version                       = "18"
   sku_name                      = "B_Standard_B1ms"
   storage_mb                    = 32768
@@ -125,6 +130,10 @@ resource "azurerm_role_assignment" "app_pulls_images" {
   role_definition_name = "AcrPull"
   principal_id         = azurerm_user_assigned_identity.app[each.key].principal_id
   principal_type       = "ServicePrincipal"
+
+  lifecycle {
+    replace_triggered_by = [azurerm_container_registry.main] # removed with a replaced registry
+  }
 }
 
 # --- What each environment's pipeline identity may do beyond its own resource group ---
@@ -135,6 +144,10 @@ resource "azurerm_role_assignment" "deploy_pushes_images" {
   role_definition_name = "AcrPush"
   principal_id         = data.azurerm_user_assigned_identity.deploy[each.key].principal_id
   principal_type       = "ServicePrincipal"
+
+  lifecycle {
+    replace_triggered_by = [azurerm_container_registry.main]
+  }
 }
 
 # Attaching the app identity to container apps needs ".../assign/action" on it.

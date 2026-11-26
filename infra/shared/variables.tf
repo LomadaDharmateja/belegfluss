@@ -3,8 +3,15 @@ variable "subscription_id" {
 }
 
 variable "location" {
-  type    = string
-  default = "germanywestcentral"
+  description = "Identities and the M2b/M3 AI resources."
+  type        = string
+  default     = "germanywestcentral"
+}
+
+variable "app_location" {
+  description = "Registry and database: next to the apps (ADR-0021)."
+  type        = string
+  default     = "swedencentral"
 }
 
 variable "name_suffix" {
