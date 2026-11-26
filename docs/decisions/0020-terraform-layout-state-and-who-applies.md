@@ -1,6 +1,6 @@
 # ADR-0020: Terraform in three stacks; the owner applies shared parts, the pipeline applies environments
 
-- **Status:** Proposed (2026-11-26)
+- **Status:** Accepted (2026-11-26)
 - **Date:** 2026-11-26
 - **Milestone:** M4a
 

@@ -2,7 +2,7 @@
 
 **A bilingual (German / English) e-invoice inbox for freelancers and small businesses in Germany.**
 
-> **Status: M4a built (in review).** A dev environment runs on Azure (Container Apps, North Europe), created with
+> **Status: M4a done.** A dev environment runs on Azure (Container Apps, North Europe), created with
 > Terraform and released by GitHub Actions without any secret. Earlier milestones: XRechnung and ZUGFeRD invoices are
 > read exactly and checked by the official KoSIT validator. Plain PDFs and photos are read by AI (Azure OpenAI, EU
 > Data Zone, keyless), every value is checked by code, and a person confirms it. Approved documents are exported for

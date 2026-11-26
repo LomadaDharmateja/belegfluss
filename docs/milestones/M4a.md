@@ -1,6 +1,6 @@
 # M4a — Azure foundation with Terraform, dev environment, release pipeline
 
-> **Status:** built, in review ([PR #13](https://github.com/LomadaDharmateja/belegfluss/pull/13)). Decisions:
+> **Status:** done ([PR #13](https://github.com/LomadaDharmateja/belegfluss/pull/13), accepted 2026-11-26). Decisions:
 > [ADR-0020](../decisions/0020-terraform-layout-state-and-who-applies.md) (Terraform stacks, who applies what),
 > [ADR-0021](../decisions/0021-keyless-runtime-shared-free-tier-database.md) (keyless runtime, shared free-tier
 > database, region), [ADR-0022](../decisions/0022-release-pipeline-build-once-deploy-dev.md) (release pipeline).
@@ -206,8 +206,8 @@ setup guide, this document.
 
 ## Next
 
-- **You:** review ADR-0020–0022 and PR #13. Before the merge I remove the temporary branch trigger and the branch
-  exception in the GitHub environment `dev`.
+- Review outcome (2026-11-26): ADR-0020–0022 accepted, PR #13 merged. The temporary branch trigger and the branch
+  exception in the GitHub environment `dev` were removed before the merge; the first release from `main` follows.
 - **Cost check:** in 1–2 days, the Azure cost view (free database and registry, no management fee).
 - **M4b:**
   - prod (own database on the shared server, own Azure OpenAI, own External ID tenant)

@@ -523,3 +523,13 @@ A dated diary: what was done, why, what was learned, what broke. Newest entry at
 - A drift check right after apply (`plan -detailed-exitcode`) finds the provider and platform quirks that
   `validate` can't.
 - Image scanning findings often come from tools the app doesn't need at runtime.
+
+## 2026-11-26 — M4a review outcome
+
+- Owner accepted ADR-0020, ADR-0021 and ADR-0022 and approved PR #13.
+- Before the merge: the temporary `m4a-azure-dev` push trigger in `deploy.yml` and the branch exception in the GitHub
+  environment `dev` were removed, so dev deploys only from `main` again.
+- **Next:**
+  - the first release from `main`
+  - the Azure cost view in 1–2 days (free tier applied, no management fee)
+  - the M4b plan (prod, manual approval, budget alert test, repository public)

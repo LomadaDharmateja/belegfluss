@@ -1,7 +1,7 @@
 # Belegfluss — Plan
 
 > Living roadmap. Updated at the end of every session. Changes to the plan are explained in an ADR and logged in
-> [docs/PROJECT_LOG.md](docs/PROJECT_LOG.md). Last update: **2026-11-26 (M4a built, in review; next M4b)**.
+> [docs/PROJECT_LOG.md](docs/PROJECT_LOG.md). Last update: **2026-11-26 (M4a done, next M4b)**.
 
 ## Status
 
@@ -12,7 +12,7 @@
 | M2a | Reading & validating (deterministic) | XML/ZUGFeRD reading, official validator, worker, business checks, document page | ✅ done (PR #7, approved 2026-11-24, [M2a.md](docs/milestones/M2a.md)) |
 | M2b | LLM extraction, review, export | Azure OpenAI (EU Data Zone) for plain PDFs/photos, review step, ZIP + CSV export | ✅ done ([PR #9](https://github.com/LomadaDharmateja/belegfluss/pull/9), approved 2026-11-25, [M2b.md](docs/milestones/M2b.md)). Model changed to gpt-5.4-mini (no EU quota for gpt-5-mini) |
 | M3 | Evaluation & quality gates | Labelled set, field-level accuracy report, CI gate | ✅ done ([PR #11](https://github.com/LomadaDharmateja/belegfluss/pull/11), approved 2026-11-25, [M3.md](docs/milestones/M3.md)): test 71.7 % document accuracy, gate blocks regressions (PR #10) |
-| M4 | Azure with Terraform | Container Apps, Postgres, Blob/Queue, Managed Identity, Entra, Azure OpenAI, CI/CD, budget alert | 🟡 M4a built, in review ([PR #13](https://github.com/LomadaDharmateja/belegfluss/pull/13), [M4a.md](docs/milestones/M4a.md), ADRs 0020–0022 proposed): dev live on Azure, keyless, released by the pipeline. M4b (prod, approval, going public) next |
+| M4 | Azure with Terraform | Container Apps, Postgres, Blob/Queue, Managed Identity, Entra, Azure OpenAI, CI/CD, budget alert | 🟡 M4a ✅ done ([PR #13](https://github.com/LomadaDharmateja/belegfluss/pull/13), approved 2026-11-26, [M4a.md](docs/milestones/M4a.md)): dev live on Azure, keyless, released by the pipeline. M4b (prod, approval, going public) next |
 | M5 | First real users | Pilot onboarding, legal pages, App Insights, alerts, incident log, usage metrics | ⏳ |
 | M6 | Automation | Email ingestion, scheduled accountant export, notifications (n8n, see licence note) | ⏳ |
 | M7 | Fine-tuning & serving | LoRA fine-tune of a small open model, vLLM serving, comparison vs Azure OpenAI | ⏳ |

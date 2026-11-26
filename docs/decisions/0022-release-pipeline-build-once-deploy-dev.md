@@ -1,6 +1,6 @@
 # ADR-0022: Release pipeline: test, build once, scan, push, deploy dev, smoke test
 
-- **Status:** Proposed (2026-11-26)
+- **Status:** Accepted (2026-11-26)
 - **Date:** 2026-11-26
 - **Milestone:** M4a (prod and the manual approval follow in M4b)
 

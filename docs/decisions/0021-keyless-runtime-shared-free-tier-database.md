@@ -1,6 +1,6 @@
 # ADR-0021: Keyless runtime, scale to zero, one shared free-tier database for dev and prod
 
-- **Status:** Proposed (2026-11-26)
+- **Status:** Accepted (2026-11-26)
 - **Date:** 2026-11-26
 - **Milestone:** M4a
 - **Supersedes:** [ADR-0007](0007-container-apps-first-aks-later.md) in one point: prod does not keep the API at one
