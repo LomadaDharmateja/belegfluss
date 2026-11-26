@@ -75,10 +75,13 @@ resource "azurerm_container_app" "api" {
         }
       }
 
+      # Checked every 3 s instead of the default 10 s: after a cold start the API is ready about 2 s
+      # after it starts, and requests wait for the first successful check (M4a.md, cold starts).
       readiness_probe {
-        transport = "HTTP"
-        port      = 8000
-        path      = "/health"
+        transport        = "HTTP"
+        port             = 8000
+        path             = "/health"
+        interval_seconds = 3
       }
       liveness_probe {
         transport = "HTTP"
