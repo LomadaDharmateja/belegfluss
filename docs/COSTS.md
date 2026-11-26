@@ -39,11 +39,12 @@ regions, and Cost Management lists it as unsupported (reasons in
 - **Failed creation attempts** in three regions (see ADR-0021) left nothing behind: checked with `az resource
   list`.
 - **AI calls in M4a:** one synthetic PDF in the dev walkthrough, about $0.005.
-- **Not yet confirmed:** the Azure cost view lags 1–2 days. To check then:
-  - the database and registry show as free
-  - no `Environment Management Hour` charge
-  - storage and logs a few cents
-  - measured total for the month
+- **First bill check (2026-11-27,** [evidence](milestones/evidence/m4a-cost-check-2026-11-27.md)**):**
+  - PostgreSQL B1MS and the Standard registry appear as **"Free" meters at €0**.
+  - Container Apps has no meter at all: no management fee, usage within the free grant.
+  - Storage and logs: €0.001.
+  - **Month to date: €3.07**, all of it Azure OpenAI tokens from M2b/M3, matching the token-based estimate.
+  - Data can lag a day: checked again before M4b goes live.
 
 ## Estimate for M4a (shared 2026-11-25, before anything is created)
 
