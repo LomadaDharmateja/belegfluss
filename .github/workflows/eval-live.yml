@@ -2,7 +2,8 @@ name: eval-live
 
 # A live evaluation against Azure, started by hand only (ADR-0018, ADR-0019). Costs money: the run
 # stops at max_usd. Signs in with OIDC: the managed identity trusts only this repository's "eval"
-# environment, which only runs from main. No secret exists; the IDs below are variables.
+# environment, which only runs from main. No credential exists; the IDs and endpoints below are
+# environment secrets only so that public logs mask them (ADR-0023).
 on:
   workflow_dispatch:
     inputs:
@@ -43,9 +44,9 @@ jobs:
       - name: Sign in to Azure (OIDC, no secret)
         uses: azure/login@a641126d1b8aa4d1fa005f4f92df94a3a4c4c906 # v3.1.0
         with:
-          client-id: ${{ vars.AZURE_CLIENT_ID }}
-          tenant-id: ${{ vars.AZURE_TENANT_ID }}
-          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
       # The GitHub OIDC token is short-lived; get both access tokens now (the CLI caches them).
       - name: Get access tokens
         run: |
@@ -59,8 +60,8 @@ jobs:
         id: live
         shell: bash # -o pipefail: a failed run fails the step despite tee
         env:
-          BELEGFLUSS_OPENAI_ENDPOINT: ${{ vars.BELEGFLUSS_OPENAI_ENDPOINT }}
-          BELEGFLUSS_DI_ENDPOINT: ${{ vars.BELEGFLUSS_DI_ENDPOINT }}
+          BELEGFLUSS_OPENAI_ENDPOINT: ${{ secrets.BELEGFLUSS_OPENAI_ENDPOINT }}
+          BELEGFLUSS_DI_ENDPOINT: ${{ secrets.BELEGFLUSS_DI_ENDPOINT }}
           SPLIT: ${{ inputs.split }}
           EXTRACTOR: ${{ inputs.extractor }}
           MAX_USD: ${{ inputs.max_usd }}

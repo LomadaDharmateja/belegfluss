@@ -8,7 +8,8 @@
 #      repository's "eval" environment (no secret exists)
 #   4. roles on single resources: CI identity -> OpenAI user (OpenAI) and Cognitive Services User (DI);
 #      you -> Cognitive Services User (DI)
-#   5. GitHub: environment "eval" (main branch only) and its variables (IDs and endpoints, not secrets)
+#   5. GitHub: environment "eval" (main branch only) and its IDs and endpoints, stored as environment secrets only
+#      so that public logs mask them (ADR-0023); none is a credential
 #
 # Sources (Microsoft Learn / GitHub Docs, read 2026-11-25): az cognitiveservices account / deployment,
 # az identity federated-credential, workload identity federation with a user-assigned managed identity,
@@ -111,7 +112,9 @@ $variables = [ordered]@{
     BELEGFLUSS_OPENAI_ENDPOINT = $openaiEndpoint; BELEGFLUSS_DI_ENDPOINT = $diEndpoint
 }
 foreach ($name in $variables.Keys) {
-    Invoke-Step "5c. Variable $name (not a secret)" "gh" @("variable", "set", $name, "--env", "eval", "--repo", $Repo, "--body", $variables[$name])
+    Write-Host "==> 5c. Secret $name (an identifier, masked in logs; value on stdin)" -ForegroundColor Cyan
+    $variables[$name] | gh secret set $name --env eval --repo $Repo
+    if ($LASTEXITCODE -ne 0) { throw "Step failed: 5c. $name" }
 }
 
 Write-Host ""
