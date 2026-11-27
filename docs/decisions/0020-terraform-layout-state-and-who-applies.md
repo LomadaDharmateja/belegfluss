@@ -53,7 +53,8 @@ Constraints:
 **Other rules:**
 - **Not in the repository:** resource names, the subscription and role-assignment IDs, the budget email.
   - They live in git-ignored `*.auto.tfvars` written by `scripts/azure/m4-tfvars.ps1`, which is read-only.
-  - The pipeline gets them as GitHub environment variables.
+  - The pipeline gets them from its GitHub environment: as secrets since M4b, only so that public logs mask them
+    ([ADR-0023](0023-public-repository.md)).
 - **Pre-Terraform resources** (the M1 budget, M2b/M3 AI resources) are taken over with `import` blocks.
 - **Container images** are ignored by Terraform after creation; the pipeline deploys them. So `terraform plan`
   shows no drift after a deploy.

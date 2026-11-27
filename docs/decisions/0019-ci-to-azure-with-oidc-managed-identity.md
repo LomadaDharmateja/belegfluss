@@ -39,7 +39,8 @@ in GitHub or code.
 - **Workflow `eval-live`:**
   - `workflow_dispatch` only, no schedule
   - `permissions: id-token: write, contents: read`
-  - client, tenant and subscription IDs are GitHub **variables** (identifiers, not secrets)
+  - client, tenant and subscription IDs are identifiers, not secrets. They were GitHub variables until M4b, and since
+    then environment secrets, only so that public logs mask them ([ADR-0023](0023-public-repository.md))
   - inputs reach the shell as environment variables, never inlined into scripts
   - cost cap per run
 

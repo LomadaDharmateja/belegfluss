@@ -56,7 +56,8 @@ az identity federated-credential update --name github-eval --identity-name id-be
 2. Document Intelligence F0, keys off
 3. managed identity `id-belegfluss-eval-ci` with a federated credential for the `eval` environment
 4. roles on single resources
-5. GitHub environment `eval` (main only) and its variables
+5. GitHub environment `eval` (main only). The IDs and endpoints are environment secrets since M4b, only so that
+   public logs mask them (ADR-0023)
 
 To remove the M3 parts:
 

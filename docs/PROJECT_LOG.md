@@ -533,3 +533,37 @@ A dated diary: what was done, why, what was learned, what broke. Newest entry at
   - the first release from `main`
   - the Azure cost view in 1–2 days (free tier applied, no management fee)
   - the M4b plan (prod, manual approval, budget alert test, repository public)
+
+## 2026-11-27 — First bill check; M4b part 1: ready to go public
+
+**Bill (Cost Management query, month to date):**
+- PostgreSQL B1MS and the Standard registry run on "Free" meters at €0.
+- Container Apps shows no meter, so there is no management fee.
+- **€3.07 total**, all Azure OpenAI tokens from M2b/M3. This matches the token estimate and confirms the open cost
+  claims of M2b and M3.
+
+**Plan for M4b (approved 2026-11-27):** two PRs. On GitHub Pro, environment required reviewers only work in public
+repositories, so the repository goes public before prod gets its approval gate.
+
+**Decided with the owner:**
+- MIT licence (holder: the GitHub handle)
+- own prod External ID tenant
+- noreply email from now on, history kept
+- delete the runs that show Azure IDs after saving excerpts, and mask identifiers from now on
+- cover the receipt file name in screenshots
+
+**Checked:**
+- No personal terms in any committed file version.
+- 179 commits carry the owner's email in metadata.
+- 10 deploy and eval-live runs print the IDs.
+- 5 screenshots showed the file name of the owner's own receipt.
+
+**Built (part 1):**
+- ADR-0023 (proposed)
+- `LICENSE` (MIT), `SECURITY.md`, THIRD_PARTY with build and infrastructure tools
+- the receipt file name covered in 5 screenshots
+- redacted excerpts of all 10 runs (`evidence/runs-m3-m4a.md`), with the M3/M4a links pointing there
+- workflows read IDs and resource names from environment secrets; only image digests pass between jobs, because
+  GitHub drops job outputs that contain a secret
+- `github-env.ps1` and `dev-eval.ps1` set secrets via stdin
+- the repository's commit email is now the GitHub noreply address
