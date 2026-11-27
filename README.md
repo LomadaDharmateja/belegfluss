@@ -104,4 +104,5 @@ Test results and screenshots per milestone: [M1](docs/milestones/M1.md#test-resu
 
 ## Licence
 
-To be decided before the repository is made public (planned with M4).
+[MIT](LICENSE) for the code in this repository. Third-party components keep their own licences ([docs/THIRD_PARTY.md](docs/THIRD_PARTY.md)).
+Security reports: [SECURITY.md](SECURITY.md).
