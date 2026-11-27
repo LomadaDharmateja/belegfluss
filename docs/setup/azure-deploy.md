@@ -37,7 +37,8 @@ Every step prints what it does. Steps 2–5 change Azure or GitHub: run them onl
    - Creates `belegfluss_dev` and the app identity's role, and revokes `CONNECT` from `PUBLIC`.
    - Opens the firewall for your IP only while it runs.
 5. **GitHub environment:** `scripts/azure/github-env.ps1 -NameSuffix <suffix>`.
-   - Creates environment `dev` (main only) with its variables. All are identifiers; there are no secrets.
+   - Creates environment `dev` (main only). Azure IDs and resource names become environment **secrets**, only so
+     that public logs mask them; sign-in IDs become variables. None is a credential (ADR-0023).
 6. **First deploy:** merge to `main` (or run **deploy** manually from `main`). The pipeline then runs, in order:
    - tests, build, scan, push
    - `terraform apply` of `infra/environment`

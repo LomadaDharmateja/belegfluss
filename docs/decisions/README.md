@@ -26,3 +26,4 @@ Format and rules: [ADR-0001](0001-record-architecture-decisions.md).
 | [0020](0020-terraform-layout-state-and-who-applies.md) | Terraform in three stacks; the owner applies shared parts, the pipeline applies environments | Accepted |
 | [0021](0021-keyless-runtime-shared-free-tier-database.md) | Keyless runtime, scale to zero, one shared free-tier database for dev and prod (supersedes one point of 0007) | Accepted |
 | [0022](0022-release-pipeline-build-once-deploy-dev.md) | Release pipeline: test, build once, scan, push, deploy dev, smoke test | Accepted |
+| [0023](0023-public-repository.md) | Make the repository public: MIT, history kept, ID logs removed, identifiers masked | Proposed |
